@@ -19,7 +19,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 
-
+#
 # 클래스 호출
 manager = DBManager()
 
