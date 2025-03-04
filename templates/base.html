@@ -93,7 +93,51 @@
                 <div class="pole"></div>
             </div>
             <div class="streetlight">
-                <div class="light"></div>
+                <div class="light"></div><!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>홈페이지</title>
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css">
+                    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+                </head>
+                <body>
+                    <header>
+                        <h1>스마트 도시</h1>
+                    </header>
+                    <div class="swiper-container">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide">
+                                <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
+                            </div>
+                            <div class="swiper-slide">
+                                <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
+                            </div>
+                            <div class="swiper-slide">
+                                <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
+                            </div>
+                        </div>
+                    
+                        <!-- 이전/다음 버튼 -->
+                        <div class="swiper-button-prev"></div>
+                        <div class="swiper-button-next"></div>
+                    
+                        <!-- 페이지네이션 (점 표시) -->
+                        <div class="swiper-pagination"></div>
+                    </div>
+                    
+                    <!-- Swiper JS -->
+                    <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+                    <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
+                    
+                    
+                
+                </body>
+                </html>
+                
+                
+                
                 <div class="pole"></div>
             </div>
         </div>

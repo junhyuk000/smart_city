@@ -1,6 +1,160 @@
+/* 기본 스타일 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+/* 헤더 스타일 */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+/* 팀 정보 스타일 */
+.team-info {
+    margin-left: 45px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
+}
+
+/* 내비게이션 스타일 */
+.header-nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 100px;
+}
+
+.nav-link {
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #007bff;
+}
+
+
+/* 드롭다운 컨테이너 스타일 */
+.dropdown-container {
+    position: absolute;
+    top: 100%; /* 상단 메뉴 바로 아래 */
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px); /* 위로 살짝 숨김 */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* 부드러운 애니메이션 */
+    z-index: 10;
+    border-bottom: 1px solid #ddd; /* 아래에 선 추가 */
+}
+
+/* 호버 시 드롭다운 표시 */
+.header-nav:hover .dropdown-container {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0); /* 원래 위치로 이동 */
+}
+
+/* 드롭다운 콘텐츠 스타일 */
+.dropdown-content {
+    min-width: 160px;
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.2s;
+}
+
+.dropdown-content a:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+}
+
+/* 오른쪽 내비게이션 스타일 */
+.right-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.right-nav button {
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.right-nav button:hover {
+    background-color: #e9ecef;
+}
+
+/* 컨텐츠 영역 */
+.content-area {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 푸터 스타일 */
+footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+/* 슬라이더 관련 스타일 */
 .swiper-container {
     width: 100%;
-    height: 300px; /* 원하는 높이 조절 */
+    height: 800px;
+    margin: 20px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.swiper-slide {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .swiper-slide img {
@@ -9,42 +163,29 @@
     object-fit: cover;
 }
 
-/* Swiper 컨테이너 크기 설정 */
-.swiper-container {
-    width: 80%; /* 원하는 크기로 조정 */
-    max-width: 800px; /* 너무 커지지 않도록 최대 크기 설정 */
-    height: 400px; /* 이미지 높이 고정 */
-    position: relative;
-    overflow: hidden;
-}
-
-/* 슬라이드 이미지 크기 조정 */
-.swiper-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* 이미지 비율 유지하며 크기 조절 */
-}
-
-/* 버튼 위치 조정 */
-.swiper-button-prev,
-.swiper-button-next {
-    top: 50%;
-    transform: translateY(-50%);
-    color: white; /* 버튼 색상 */
-    background-color: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
-    padding: 10px;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
+/* Swiper 네비게이션 버튼 스타일 */
+.swiper-button-next,
 .swiper-button-prev {
-    left: 10px; /* 왼쪽 여백 */
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 30px 20px;
+    border-radius: 5px;
 }
 
-.swiper-button-next {
-    right: 10px; /* 오른쪽 여백 */
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 20px;
+}
+
+/* Swiper 페이지네이션 스타일 */
+.swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+    opacity: 1;
+    background-color: #fff;
 }

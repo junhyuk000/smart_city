@@ -3,42 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>홈페이지</title>
+    <title>스마트 도시</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
-        <h1>스마트 도시</h1>
-    </header>
-    <div class="swiper-container">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
-            </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
-            </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
-            </div>
+        <div class="team-info">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
+            <span class="team-name">팀명</span>
         </div>
-    
-        <!-- 이전/다음 버튼 -->
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-button-next"></div>
-    
-        <!-- 페이지네이션 (점 표시) -->
-        <div class="swiper-pagination"></div>
-    </div>
-    
-    <!-- Swiper JS -->
+        <nav class="header-nav">
+            <div class="nav-menu">
+                <a href="#" class="nav-link">소개</a>
+                <a href="#" class="nav-link">CCTV 보기</a>
+                <a href="#" class="nav-link">문의</a>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-content">
+                    <a href="#">소개 상세 1</a>
+                    <a href="#">소개 상세 2</a>
+                </div>
+                <div class="dropdown-content">
+                    <a href="#">CCTV 상세 1</a>
+                    <a href="#">CCTV 상세 2</a>
+                </div>
+                <div class="dropdown-content">
+                    <a href="#">문의 상세 1</a>
+                    <a href="#">문의 상세 2</a>
+                </div>
+            </div>
+        </nav>
+        <nav class="right-nav">
+            <button>다크 모드</button>
+            <button>로그인</button>
+            <button>회원가입</button>
+        </nav>
+    </header>
+
+    <main class="content-area">
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
+                </div>
+            </div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-left">
+            <p>프로젝트 이름: 스마트 도시 프로젝트</p>
+            <p>프로젝트 팀장: 신준혁</p>
+            <p>프로젝트 팀원: 황수용, 이지엽, 손유빈</p>
+        </div>
+        <div class="footer-right" id="current-date"></div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
-    
-    
-
 </body>
 </html>
-
-
