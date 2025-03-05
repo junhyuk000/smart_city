@@ -1,8 +1,14 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}로그인{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4" style="text-align:center;">      
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-3">
         <h2 class="text-center">로그인</h2>
         <form method="POST" action="/login">
             <div class="mb-3">
@@ -13,19 +19,15 @@
                 <label for="password" class="form-label">비밀번호</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <!--div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
-                <label class="form-check-label" for="rememberMe">로그인 상태 유지</label>
-            </div-->
             <button type="submit" class="btn btn-primary w-100">로그인</button>
         </form>
         <div class="text-center mt-3">
-            <a href="/register">계정이 없으신가요? 등록하기</a><br>
-            <a href="/edit_password">비밀번호를 잊어버리셨나요? 비밀번호 변경하기</a>
+            <a href="/register">계정이 없으신가요? 등록하기</a>
         </div>
     </div>
 </div>
+{% endblock %}
 
-
-    </div>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}

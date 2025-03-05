@@ -10,27 +10,28 @@ class DBManager:
         self.connection = None
         self.cursor = None
     
-    ## 데이터베이스 연결
-    def connect(self): 
-        try :
+    # 데이터베이스 연결
+    def connect(self):
+        try:
+            # MySQL 데이터베이스 연결
             self.connection = mysql.connector.connect(
-                host = "10.0.66.13",
-                user = "suyong",
-                password="1234",
-                database="smart_city",
-                charset="utf8mb4"
+                host="10.0.66.11",  # DB 서버 주소
+                user="sejong",  # 사용자
+                password="1234",  # 비밀번호
+                database="smart_city",  # 데이터베이스 이름
+                charset="utf8mb4"  # 문자셋
             )
-            self.cursor = self.connection.cursor(dictionary=True)
-        
-        except mysql.connector.Error as error :
+            self.cursor = self.connection.cursor(dictionary=True)  # dictionary=True로 쿼리 결과를 딕셔너리 형태로 반환
+            return self.connection  # 연결된 커넥션 반환
+        except mysql.connector.Error as error:
             print(f"데이터베이스 연결 실패 : {error}")
+            return None  # 연결 실패 시 None 반환
     
-    ## 데이터베이스 연결해제
+    # 데이터베이스 연결 해제
     def disconnect(self):
         if self.connection and self.connection.is_connected():
             self.cursor.close()
             self.connection.close()
-    
     
     
     # 선택한 회원 정보 가져오기
@@ -123,9 +124,9 @@ class DBManager:
         try:
             self.connect()
             sql = """
-                  INSERT INTO members (userid, username, password, birthday, email, status, gender)
-                  VALUES (%s, %s, %s, %s, %s, 'pending', %s)
-                  """
+                INSERT INTO members (userid, username, password, birthday, email, status, gender)
+                VALUES (%s, %s, %s, %s, %s, 'pending', %s)
+                """
             values = (userid, username, password, email, birthday, gender)
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -150,8 +151,6 @@ class DBManager:
             return False
         finally:
             self.disconnect()
-    
-   
     
     #일반회원들 가져오기
     def get_all_members(self):
@@ -182,7 +181,6 @@ class DBManager:
         finally:
             self.disconnect()
 
-  
 
     # 데이터베이스(members)에서 회원지우기
     def delete_member(self, userid):
@@ -370,10 +368,3 @@ class DBManager:
         finally:
             self.disconnect()
     
-    
-   
-
-    
-       
-        
-          

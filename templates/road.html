@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}도로용 CCTV - 스마트 도시{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto 20px;
+    }
+    .search-results-info {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">도로용 CCTV 보기</h2>
+    
+    <!-- 검색 폼 -->
+    <div class="search-container">
+        <form action="{{ url_for('road') }}" method="get" class="d-flex">
+            <select name="search_type" class="form-select me-2" style="width: 30%;">
+                <option value="street_light_id" {% if search_type == 'street_light_id' %}selected{% endif %}>가로등 번호</option>
+                <option value="street_light_location" {% if search_type == 'street_light_location' %}selected{% endif %}>가로등 위치</option>
+            </select>
+            <input type="text" name="search_query" class="form-control me-2" 
+                   placeholder="검색어를 입력하세요" 
+                   value="{{ search_query or '' }}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> 검색
+            </button>
+        </form>
+    </div>
+
+    <!-- 검색 결과 정보 -->
+    {% if search_query %}
+    <div class="search-results-info">
+        {% if posts %}
+            "{{ search_query }}"에 대한 검색 결과 (총 {{ total_count }}개)
+        {% else %}
+            "{{ search_query }}"에 대한 검색 결과가 없습니다.
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- CCTV 목록 -->
+    <div class="list-group">
+        {% for post in posts %}
+        <a href="{{ url_for('view_cctv', post_id=post.street_light_id) }}" 
+            class="list-group-item list-group-item-action">
+            <h5 class="mb-1">가로등 번호: {{ post.street_light_id }}</h5>
+            <p class="mb-1">가로등 위치: {{ post.street_light_location }}</p>
+            <button class="btn btn-info btn-sm mt-2">자세히 보기</button>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- 페이지네이션 코드 -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if prev_page %}
+                <li class="page-item">
+                    <a class="page-link" 
+                        href="{{ url_for('road', page=prev_page, search_query=search_query, search_type=search_type) }}" 
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+            {% endif %}
+
+            {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" 
+                        href="{{ url_for('road', page=p, search_query=search_query, search_type=search_type) }}">
+                        {{ p }}
+                    </a>
+                </li>
+            {% endfor %}
+
+            {% if next_page %}
+                <li class="page-item">
+                    <a class="page-link" 
+                        href="{{ url_for('road', page=next_page, search_query=search_query, search_type=search_type) }}" 
+                        aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    #cctv-map { 
+        height: 500px; 
+        width: 100%; 
+    }
+    .cctv-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .cctv-item {
+        cursor: pointer;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .cctv-item:hover {
+        background-color: #f0f0f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4 cctv-list">
+            <h3>CCTV 목록</h3>
+            {% for cctv in cctv_list %}
+            <div class="cctv-item" data-lat="{{ cctv.latitude }}" data-lng="{{ cctv.longitude }}">
+                <h5>{{ cctv.name }}</h5>
+                <p>위치: {{ cctv.address }}</p>
+                <p>종류: {{ cctv.type }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="col-md-8">
+            <div id="cctv-map"></div>
+            <div class="mt-3">
+                <h4>선택된 CCTV 라이브 스트림</h4>
+                <img id="cctv-stream" src="" class="img-fluid" alt="CCTV 스트림">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
