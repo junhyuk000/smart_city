@@ -1,0 +1,105 @@
+/* static/css/register.css */
+
+.sign-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.signup-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.signup-card h2 {
+    color: #4a5568;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.signup-card .form-label {
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.signup-card .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.signup-card .form-control:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.signup-card .btn-primary {
+    background-color: #4299e1;
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 4px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.signup-card .btn-primary:hover {
+    background-color: #3182ce;
+}
+
+.signup-card .form-check-label {
+    font-size: 14px;
+    color: #718096;
+}
+
+.signup-card .terms_of_service,
+.signup-card .privacy_policy {
+    color: #4299e1;
+    text-decoration: none;
+}
+
+.signup-card .terms_of_service:hover,
+.signup-card .privacy_policy:hover {
+    text-decoration: underline;
+}
+
+.signup-card .text_login {
+    color: #718096;
+    text-decoration: none;
+    font-size: 14px;
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+}
+
+.signup-card .text_login:hover {
+    color: #4299e1;
+}
+
+.signup-card .reg-number-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.signup-card #regNumberInput,
+.signup-card #regNumberInput2 {
+    flex: 1;
+}

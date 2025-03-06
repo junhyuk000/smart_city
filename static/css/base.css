@@ -282,3 +282,60 @@ body {
 body {
     font-family: "CustomFont", sans-serif;
 }
+/* 기본적인 플래시 메시지 스타일 */
+.flash-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 25px;
+    border-radius: 5px;
+    font-size: 16px;
+    z-index: 1000;
+    width: 400px;
+    height: 50px;
+    box-shadow: 0 4px 6px rgba(81, 139, 14, 0.1);
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    text-align:center;
+}
+
+/* .show 클래스를 추가하면 보이도록 */
+.flash-message.show {
+    display: block;
+    opacity: 1; /* 보이도록 설정 */
+}
+
+/* 예시: 성공 메시지 스타일 */
+.flash-message.success {
+    background-color: green;
+    color: white;
+}
+
+/* 예시: 오류 메시지 스타일 */
+.flash-message.error {
+    background-color: red;
+    color: white;
+}
+
+.flash-message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.flash-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.flash-message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}

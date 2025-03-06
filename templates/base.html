@@ -20,17 +20,46 @@
         
         <div class="right-nav">
             <button id="dark-mode-toggle" class="btn btn-secondary">다크모드</button>
-            <a href="{{ url_for('login') }}" class="btn btn-primary me-2">
-                <i class="fas fa-sign-in-alt"></i>
-                로그인
-            </a>
-            <a href="{{ url_for('register') }}" class="btn btn-warning" style="margin-right: 20px;">
-                <i class="fas fa-user-plus"></i>
-                회원가입
-            </a>
+            {% if session.get('userid') %}
+                <!-- 로그인된 상태일 때 -->
+                <span class="me-2">{{ session.get('username') }}님 환영합니다</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger me-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    로그아웃
+                </a>
+            {% elif session.get('adminid') %}
+                <!-- 관리자 로그인 상태일 때 -->
+                <span class="me-2">관리자 {{ session.get('adminname') }}님</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger me-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    로그아웃
+                </a>
+            {% else %}
+                <!-- 로그인되지 않은 상태일 때 -->
+                <a href="{{ url_for('login') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-sign-in-alt"></i>
+                    로그인
+                </a>
+                <a href="{{ url_for('register') }}" class="btn btn-warning" style="margin-right: 20px;">
+                    <i class="fas fa-user-plus"></i>
+                    회원가입
+                </a>
+            {% endif %}
         </div>
     </header>
     {% endblock %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div>
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
     {% block navigation %}
     <nav class="header-nav">
@@ -47,14 +76,25 @@
             <div class="dropdown-content">
                 <a href="#">소개</a>
             </div>
+            {% if not session.get('userid') %}
+            <div class="dropdown-content">
+                <a href="{{ url_for('login') }}" class="nav-link">도로용 CCTV 보기</a>
+                <a href="{{ url_for('login') }}" class="nav-link">인도용 CCTV 보기</a>
+            </div>
+            <div class="dropdown-content">
+                <a href="{{ url_for('login') }}" class="nav-link">문의 보기</a>
+                <a href="{{ url_for('login') }}" class="nav-link">문의 하기</a>
+            </div>
+            {% else %}
             <div class="dropdown-content">
                 <a href="road">도로용 CCTV 보기</a>
-                <a href="india">인도용 CCTV 보기 </a>
+                <a href="india">인도용 CCTV 보기</a>
             </div>
             <div class="dropdown-content">
                 <a href="#">문의 보기</a>
                 <a href="#">문의 하기</a>
             </div>
+            {% endif %}
         </div>
     </nav>
     {% endblock %}
@@ -74,6 +114,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

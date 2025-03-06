@@ -1,0 +1,30 @@
+{% extends "base.html" %}  
+{% block title %}스마트 도시 메인{% endblock %}  
+
+{% block content %} 
+{% if session.get("userid") %} 
+<main class="content-area">     
+    <div class="swiper-container">         
+        <div class="swiper-wrapper">             
+            <div class="swiper-slide">                 
+                <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">             
+            </div>             
+            <div class="swiper-slide">                 
+                <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">             
+            </div>             
+            <div class="swiper-slide">                 
+                <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">             
+            </div>         
+        </div>         
+        <div class="swiper-button-prev"></div>         
+        <div class="swiper-button-next"></div>         
+        <div class="swiper-pagination"></div>     
+    </div> 
+</main>    
+{% else %} 
+<!-- 로그인하지 않은 경우 로그인 페이지로 이동 --> 
+<script>     
+    window.location.href = "{{ url_for('login') }}"; 
+</script> 
+{% endif %} 
+{% endblock %}

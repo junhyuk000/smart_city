@@ -86,3 +86,20 @@ document.getElementById("dark-mode-toggle").addEventListener("click", function (
 if (localStorage.getItem("darkMode") === "enabled") {
     document.body.classList.add("dark-mode");
 }
+
+// 페이지 로드 시 다크모드 설정 유지
+if (localStorage.getItem("darkMode") === "enabled") {
+    document.body.classList.add("dark-mode");
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var flashMessages = document.querySelectorAll('.flash-message');
+
+    flashMessages.forEach(function(message) {
+        message.classList.add('show');
+        
+        setTimeout(function() {
+            message.classList.remove('show');
+        }, 3000); // 3초 후 메시지 사라짐
+    });
+});
