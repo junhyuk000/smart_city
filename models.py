@@ -1,5 +1,5 @@
 import mysql.connector 
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import jsonify
 import json
 import requests
@@ -14,7 +14,7 @@ class DBManager:
     def connect(self): 
         try :
             self.connection = mysql.connector.connect(
-                host = "10.0.66.94",
+                host = "10.0.66.32",
                 user = "sejong",
                 password="1234",
                 database="smart_city",
@@ -99,7 +99,7 @@ class DBManager:
         finally:
             self.disconnect()
     
-    # 선택한 관리자 정보 가져오기
+    # 선택한 관리자 아이디/비밀번호 조회
     def get_admin_by_id(self, id):
         try:
             self.connect()
@@ -113,6 +113,7 @@ class DBManager:
         finally:
             self.disconnect()
 
+    #선택한 관리자 모든정보 가져오기
     def get_admin_by_info(self, id):
         try:
             self.connect()
@@ -125,6 +126,23 @@ class DBManager:
             return None 
         finally:
             self.disconnect()
+    
+    #선택한 관리자 권한 가져오기
+    def get_admin_role(self, id):
+        try:
+            self.connect()
+            sql = "SELECT role FROM admins WHERE admin_id = %s"
+            value = (id,)
+            self.cursor.execute(sql,value)
+            return self.cursor.fetchone()
+        except mysql.connector.Error as error :
+            print(f"관리자 권한 가져오기 연결 실패: {error}")
+            return None 
+        finally:
+            self.disconnect()
+
+
+
 
     # 회원 마지막 로그인 시간 업데이트
     def update_last_login(self, id):
@@ -591,7 +609,7 @@ class DBManager:
             self.disconnect()
     
     ## 가로등 센서 데이터 DB저장
-    #센서 테이블 최근 데이터 가져오기 
+    #센서 테이블에 저장된 최근 가져오기 
     def get_latest_sensor_data(self, table_name, street_light_id):
         try:
             self.connect() 
@@ -600,7 +618,7 @@ class DBManager:
             if table_name not in allowed_tables:
                 raise ValueError("❌ 허용되지 않은 테이블 이름입니다!")
             
-            sql = """SELECT * FROM {} 
+            sql = """SELECT record_time FROM {} 
                     WHERE street_light_id = %s ORDER BY record_time DESC LIMIT 1
                   """.format(table_name)
             value = (street_light_id,)
@@ -627,31 +645,28 @@ class DBManager:
         # 목적에 따라 테이블 선택
         table_name = "road_sensors" if street_light['purpose'] == '도로' else "sidewalk_sensors"
 
-        # 최신 데이터 가져오기
-        latest_data = self.get_latest_sensor_data(table_name, street_light_id)
+        # 최신 저장된 시간 가져오기
+        latest_record_time = self.get_latest_sensor_data(table_name, street_light_id)
+        current_time = datetime.now()
 
-        # 새로운 값과 비교하여 변화 확인
-        sensor_columns = ["TILT Value", "MAIN LDR Value", "Temperature", "Humidity", "Switch State"]
-        if table_name == "road_sensors":
-            sensor_columns.extend(["SUB1 LDR Value", "SUB2 LDR Value"])
-        
-        if latest_data:
-            is_changed = any(
-                str(latest_data.get(col, "")) != str(received_data.get(col, ""))
-                for col in sensor_columns if col in received_data
-            )
-            if not is_changed:
-                print("⚡ 변화 없음 → 저장 안 함")
+        if not latest_record_time:
+            print("✅ 기존 데이터 없음. 새 데이터 저장")
+        else:
+            last_time = latest_record_time['record_time']
+            time_diff = (current_time - last_time).total_seconds()
+
+            if time_diff < 10 :
+                print(f"⏳ {time_diff}초 경과 또는 값 변화 없음 → 데이터 저장 안 함")
                 return
 
-        # 변화가 있으면 데이터 저장
+        # 데이터 저장
         try:
             self.connect()
             if table_name == "road_sensors":
                 sql = f"""
                 INSERT INTO {table_name} 
-                (street_light_id, main_light_level, sub1_light_level_, sub2_light_level_, tilt_angle, temperature, humidity, perceived_temperature, switch_state)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (street_light_id, main_light_level, sub1_light_level_, sub2_light_level_, tilt_angle, temperature, humidity, perceived_temperature, switch_state, inspection)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 values = (
                     street_light_id,
@@ -663,12 +678,13 @@ class DBManager:
                     received_data.get("Humidity", "0"),
                     received_data.get("Heat Index", "0"),
                     int(received_data.get("Switch State", 0)),
+                    int(received_data.get("Check", 0)),
                 )
             else:  # sidewalk_sensors
                 sql = f"""
                 INSERT INTO {table_name} 
-                (street_light_id, main_light_level, sub1_light_level_, sub2_light_level_, tilt_angle, switch_state)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                (street_light_id, main_light_level, sub1_light_level_, sub2_light_level_, tilt_angle, switch_state, inspection)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
                 values = (
                     street_light_id,
@@ -677,6 +693,7 @@ class DBManager:
                     int(received_data.get("SUB2 LDR Value", 0)),
                     int(received_data.get("TILT Value", 0)),
                     int(received_data.get("Switch State", 0)),
+                    int(received_data.get("Check", 0)),
                 )
 
             self.cursor.execute(sql, values)
