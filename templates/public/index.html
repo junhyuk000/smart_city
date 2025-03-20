@@ -1,34 +1,17 @@
+{# templates/public/index.html #}
 {% extends "base.html" %}
 
 {% block title %}스마트 도시 프로젝트{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-{% endblock %}
-
-{% block header %}
-<div class="toggle-container">
-  <span class="mode-text" id="mode-text">다크모드</span>
-  <div class="toggle-switch">
-    <input type="checkbox" id="dark-mode-toggle" class="toggle-input">
-    <label for="dark-mode-toggle" class="toggle-label"></label>
-  </div>
-</div>
-
-<div class="logo-container">
-    <a href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
-        <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
-    </a>
-</div>
-<div class="right-nav" style="margin-right: 80px;">
-    <a href="{{ url_for('login') }}" class="btn btn-primary me-2">
-        <i class="fas fa-sign-in-alt"></i> 로그인
-    </a>
-    <a href="{{ url_for('register') }}" class="btn btn-warning">
-        <i class="fas fa-user-plus"></i> 회원가입
-    </a>
-</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+<style>
+    .slider-intro p {
+        text-align: center;
+        line-height: 1.8;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -36,7 +19,7 @@
     <div class="intro-container">
         <div class="slider-intro">
             <h1>스마트 가로등 시스템</h1>
-            <p>첨단 IoT 기술로 구현된 도시 안전 솔루션, 실시간 모니터링과 에너지 효율을 통해 더 안전하고 스마트한 도시를 구현합니다.</p>
+            <p>실시간 모니터링과 스마트한 가로등 시스템 더 안전하고 스마트한 도시를 구현합니다.</p>
         </div>
     </div>
     
@@ -109,6 +92,9 @@
     
     <!-- 슬라이더 영역 (바로가기 위젯 아래에 배치) -->
     <div class="slider-wrapper">
+        <!-- 왼쪽 화살표 -->
+        <div class="swiper-button-prev">&lt;</div>
+        
         <div class="swiper-container">
             <div class="swiper-wrapper">
                 <div class="swiper-slide">
@@ -123,11 +109,20 @@
             </div>
             <!-- 페이지네이션 -->
             <div class="swiper-pagination"></div>
-            
-            <!-- 네비게이션 버튼 -->
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
         </div>
+        
+        <!-- 오른쪽 화살표 -->
+        <div class="swiper-button-next">&gt;</div>
     </div>
+    
+    <!-- 플래시 메시지 컨테이너 추가 -->
+    <div id="flash-messages-container" class="flash-messages-container" aria-live="polite"></div>
+    
+    <!-- 채팅 위젯 추가 -->
+    {% include 'public/chat_widget.html' %}
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

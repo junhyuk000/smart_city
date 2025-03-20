@@ -1,10 +1,20 @@
 /* static/css/index.css */
 
-html, body {
+html,
+body {
     height: 100%;
     margin: 0;
     padding: 0;
     line-height: 1.6;
+}
+
+/* 안녕하새우 폰트 정의 - 슬라이더 화살표용 */
+@font-face {
+    font-family: "AnnyeongHasaewoo";
+    src: url("../fonts/210 안녕하새우OTF L.OTF") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
 }
 
 /* 다크모드와 라이트모드 색상 변수 */
@@ -12,13 +22,14 @@ html, body {
     --background-color: #f4f4f4;
     --text-color: #333333;
     --heading-color: #333333;
-    --primary-color: #28a745;
+    --widget-green: #28a745; /* 초록색 버튼 및 아이콘용 변수 */
+    --widget-green-hover: #218838; /* 초록색 버튼 호버 효과 */
     --secondary-color: #fff;
     --widget-bg: #ffffff;
     --widget-shadow: rgba(0, 0, 0, 0.1);
     --widget-title: #333333;
     --widget-text: #666666;
-    --widget-link-hover: #218838;
+    --widget-link-hover-text: #dddddd; /* 바로가기 버튼 호버 시 텍스트 색상 */
     --table-header-bg: #fff;
     --table-row-hover-bg: #f5f5f5;
     --table-border: #e0e0e0;
@@ -29,19 +40,24 @@ html, body {
     --pagination-border: #ddd;
     --pagination-hover: #f5f5f5;
     --transition-speed: 0.3s;
+    --button-gray: #6c757d; /* 회색 버튼 색상 추가 */
+    --button-gray-hover: #495057; /* 회색 버튼 호버 효과 - 더 진하게 수정 */
+    --arrow-color: #000000; /* 화살표 색상 - 검정색 */
+    --arrow-hover-color: #333333; /* 화살표 호버 색상 - 진한 회색 */
 }
 
 .dark-mode {
     --background-color: #1a1a1a;
     --text-color: #f0f0f0;
     --heading-color: #ffffff;
-    --primary-color: #2ea44f;
+    --widget-green: #28a745; /* 다크모드에서도 동일한 초록색 사용 */
+    --widget-green-hover: #218838; /* 다크모드에서도 동일한 호버 효과 색상 */
     --secondary-color: #333;
     --widget-bg: #333333;
     --widget-shadow: rgba(0, 0, 0, 0.2);
     --widget-title: #f0f0f0;
     --widget-text: #d0d0d0;
-    --widget-link-hover: #3dc066;
+    --widget-link-hover-text: #dddddd; /* 다크모드에서도 동일하게 유지 */
     --table-header-bg: #222;
     --table-row-hover-bg: #2c2c2c;
     --table-border: #444444;
@@ -51,6 +67,10 @@ html, body {
     --pagination-color: #f0f0f0;
     --pagination-border: #444;
     --pagination-hover: #444;
+    --button-gray: #495057; /* 다크모드에서 더 어두운 회색 */
+    --button-gray-hover: #212529; /* 다크모드에서 더 어두운 회색 호버 - 더 진하게 수정 */
+    --arrow-color: #ffffff; /* 화살표 색상 - 흰색 */
+    --arrow-hover-color: #cccccc; /* 화살표 호버 색상 - 연한 회색 */
 }
 
 body {
@@ -91,7 +111,7 @@ body {
 }
 
 .widget:focus-within {
-    box-shadow: 0 0 0 3px var(--primary-color), 0 12px 20px var(--widget-shadow);
+    box-shadow: 0 0 0 3px var(--widget-green), 0 12px 20px var(--widget-shadow);
     outline: none;
 }
 
@@ -101,7 +121,7 @@ body {
     align-items: center;
     width: 60px;
     height: 60px;
-    background-color: var(--primary-color);
+    background-color: var(--widget-green); /* 초록색 아이콘 배경 */
     border-radius: 50%;
     margin-right: 18px;
     flex-shrink: 0;
@@ -136,47 +156,57 @@ body {
 .widget-link {
     display: inline-block;
     padding: 10px 18px;
-    background-color: var(--primary-color);
+    background-color: var(--widget-green); /* 초록색 버튼 */
     color: white;
     text-decoration: none;
     border-radius: 6px;
     font-size: 15px;
     font-weight: 500;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease, color 0.3s ease;
 }
 
+/* 바로가기 버튼 hover 효과 - 텍스트 색상을 연한 회색으로 변경 */
 .widget-link:hover {
-    background-color: var(--widget-link-hover);
+    background-color: var(--widget-green-hover);
+    color: var(--widget-link-hover-text);
     transform: translateY(-2px);
 }
 
 .widget-link:focus {
-    outline: 3px solid rgba(46, 164, 79, 0.4);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: none;
 }
 
 .widget-link:active {
     transform: translateY(0);
 }
 
-/* 슬라이더 관련 스타일 */
+/* 슬라이더 관련 스타일 - 수정됨 */
 .slider-wrapper {
     position: relative;
-    width: 70%;
-    max-width: 1000px;
+    width: 100%; /* 가로 폭 조정 */
+    max-width: 1400px; /* 최대 너비 조정 */
     margin: 40px auto 70px auto;
-    padding: 0 60px;
+    padding: 0 80px; /* 화살표 위치 조정을 위해 패딩 유지 */
     overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .swiper-container {
     width: 100%;
-    height: 500px;
+    height: 650px;
     overflow: hidden;
     position: relative;
     z-index: 1;
     border-radius: 12px;
     box-shadow: 0 6px 20px var(--widget-shadow);
+}
+
+/* 슬라이드 컨테이너가 화살표를 가리지 않도록 설정 */
+.swiper-wrapper {
+    overflow: visible !important;
 }
 
 /* 슬라이드 아이템 스타일 */
@@ -197,56 +227,55 @@ body {
     transition: transform 0.5s ease;
 }
 
-/* 네비게이션 버튼 스타일 */
+/* 네비게이션 버튼 스타일 - 주아체로 수정 */
 .swiper-button-next,
 .swiper-button-prev {
-    width: 50px;
-    height: 50px;
-    background-color: rgba(255, 255, 255, 0.6);
-    color: #333;
-    display: flex;
+    width: 80px; /* 영역 크기 확대 */
+    height: 80px; /* 영역 크기 확대 */
+    background-color: transparent; /* 배경색 제거 */
+    color: var(--arrow-color); /* 색상 변수 사용 */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    z-index: 100;
+    cursor: pointer;
+    border-radius: 0;
+    transition: color 0.3s ease;
+    box-shadow: none;
+    font-size: 150px; /* 폰트 크기 3배 확대 */
+    font-family: "AnnyeongHasaewoo", sans-serif; /* 안녕하새우체 폰트 적용 */
+    font-weight: normal;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    z-index: 10;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode .swiper-button-next,
-.dark-mode .swiper-button-prev {
-    background-color: rgba(60, 60, 60, 0.6);
-    color: #f0f0f0;
+    padding: 0;
+    line-height: 0; /* 라인 높이 제거 - 영역 조정 */
+    margin-top: 0; /* 기본 margin 제거 */
 }
 
 .swiper-button-next {
-    right: -50px;
+    right: -40px; /* 오른쪽으로 더 멀리 이동 */
+    left: auto;
 }
 
 .swiper-button-prev {
-    left: -50px;
+    left: -40px; /* 왼쪽으로 더 멀리 이동 */
+    right: auto;
 }
 
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
-    background-color: rgba(255, 255, 255, 0.8);
-    transform: translateY(-50%) scale(1.1);
+    background-color: transparent;
+    color: var(--arrow-hover-color); /* 호버 색상 변수 사용 */
+    transform: translateY(-50%) scale(1.1); /* 살짝 확대 효과 추가 */
+    opacity: 0.7; /* 살짝 투명하게 */
+    transition: color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
-.dark-mode .swiper-button-next:hover,
-.dark-mode .swiper-button-prev:hover {
-    background-color: rgba(80, 80, 80, 0.8);
-}
-
-/* 화살표 크기 조정 */
+/* 화살표 after 의사 요소 제거 - 텍스트로 대체했기 때문 */
 .swiper-button-next:after,
 .swiper-button-prev:after {
-    font-size: 20px;
-    font-weight: bold;
+    content: none;
 }
 
 /* 슬라이더 페이지네이션 스타일 */
@@ -276,11 +305,11 @@ body {
 }
 
 .dark-mode .swiper-pagination-bullet {
-    background-color: rgba(120, 120, 120, 0.7);
+    background-color: rgba(255, 255, 255, 0.7);
 }
 
 .dark-mode .swiper-pagination-bullet-active {
-    background-color: #aaa;
+    background-color: #fff;
 }
 
 /* 인트로 영역 스타일 */
@@ -369,7 +398,8 @@ tbody tr:hover {
 }
 
 /* 각 열의 너비 조정 */
-td:first-child, th:first-child {
+td:first-child,
+th:first-child {
     width: 10%;
     text-align: center;
 }
@@ -383,7 +413,8 @@ th:nth-child(2) {
     text-align: center;
 }
 
-td:last-child, th:last-child {
+td:last-child,
+th:last-child {
     width: 25%;
     text-align: center;
 }
@@ -391,7 +422,7 @@ td:last-child, th:last-child {
 td:last-child a {
     display: inline-block;
     padding: 6px 12px;
-    background-color: var(--primary-color);
+    background-color: var(--widget-green);
     color: white;
     text-decoration: none;
     border-radius: 4px;
@@ -399,7 +430,7 @@ td:last-child a {
 }
 
 td:last-child a:hover {
-    background-color: var(--widget-link-hover);
+    background-color: var(--widget-green-hover);
 }
 
 .empty-row {
@@ -418,7 +449,7 @@ td:last-child a:hover {
     gap: 5px;
 }
 
-.pagination a, 
+.pagination a,
 .pagination span {
     color: var(--pagination-color);
     background-color: var(--pagination-bg);
@@ -439,9 +470,9 @@ td:last-child a:hover {
 }
 
 .pagination .active {
-    background-color: var(--primary-color);
+    background-color: var(--widget-green);
     color: white;
-    border-color: var(--primary-color);
+    border-color: var(--widget-green);
 }
 
 .pagination .disabled {
@@ -501,7 +532,7 @@ label {
     transition: color 0.3s ease;
 }
 
-select, 
+select,
 input[type="text"] {
     padding: 10px;
     border: 1px solid var(--input-border-color);
@@ -514,14 +545,14 @@ input[type="text"] {
 
 select:focus,
 input[type="text"]:focus {
-    border-color: var(--primary-color);
+    border-color: var(--widget-green);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.2);
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
 }
 
 button {
     padding: 10px 18px;
-    background-color: var(--primary-color);
+    background-color: var(--widget-green);
     color: var(--button-text-color);
     border: none;
     border-radius: 4px;
@@ -532,59 +563,195 @@ button {
 }
 
 button:hover {
-    background-color: var(--widget-link-hover);
+    background-color: var(--widget-green-hover);
 }
 
 button:focus {
-    outline: 3px solid rgba(46, 164, 79, 0.4);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: none;
 }
 
-/* 반응형 디자인 최적화 */
+/* 로그인 알림창 스타일 */
+.login-alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: background-color 0.4s ease;
+}
+
+.login-alert.show {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.alert-content {
+    background-color: var(--widget-bg);
+    color: var(--text-color);
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transition: background-color 0.5s ease, color 0.3s ease, transform 0.4s ease, opacity 0.4s ease;
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+.login-alert.show .alert-content {
+    transform: translateY(0);
+    opacity: 1;
+    transition-delay: 0.1s;
+}
+
+.alert-content h3 {
+    margin-top: 0;
+    color: var(--widget-title);
+    transition: color 0.3s ease;
+}
+
+.alert-content p {
+    margin-bottom: 20px;
+    color: var(--widget-text);
+    transition: color 0.3s ease;
+}
+
+.alert-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* 로그인 버튼 스타일 - 초록색 유지 */
+.login-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--widget-green);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: var(--widget-green-hover);
+}
+
+/* 취소 버튼 스타일 - 회색으로 변경 */
+.close-alert-btn,
+#close-alert-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--button-gray);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.close-alert-btn:hover,
+#close-alert-btn:hover {
+    background-color: var(--button-gray-hover);
+}
+
+/* 로그아웃 버튼 스타일 - 회색으로 변경 */
+.logout-btn,
+.nav-logout {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--button-gray);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover,
+.nav-logout:hover {
+    background-color: var(--button-gray-hover);
+}
+
+/* 취소 버튼 스타일 */
+.btn-secondary,
+#close-alert-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--button-gray);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover,
+#close-alert-btn:hover {
+    background-color: var(--button-gray-hover);
+}
+
+/* 헤더 메뉴 관련 추가 스타일 */
+.navbar-nav .nav-link:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* 다른 링크 요소들에 대한 포커스 스타일 제거 */
+a:focus,
+button:focus,
+.nav-item a:focus,
+.navbar-brand:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* 반응형 디자인 최적화 - 수정됨 */
 @media (max-width: 1400px) {
     .slider-wrapper {
-        width: 80%;
+        width: 95%;
+        padding: 0 70px;
     }
-    
-    .swiper-container {
-        height: 450px;
-    }
-}
 
-@media (max-width: 1200px) {
-    .slider-wrapper {
-        width: 85%;
-        padding: 0 60px;
-    }
-    
     .swiper-container {
-        height: 400px;
+        height: 600px;
     }
     
-    .swiper-button-next {
-        right: -40px;
-    }
-    
+    .swiper-button-next,
     .swiper-button-prev {
-        left: -40px;
+        font-size: 120px;
     }
-    
-    .intro-container {
-        width: 90%;
+
+    .swiper-button-next {
+        right: -30px;
     }
-    
-    .slider-intro h1 {
-        font-size: 28px;
-    }
-    
-    .slider-intro p {
-        font-size: 16px;
+
+    .swiper-button-prev {
+        left: -30px;
     }
 }
 
+/* Improved widget responsiveness */
 @media (max-width: 992px) {
     .dashboard-widgets {
         padding: 0 15px;
+        margin: 25px auto 40px;
     }
     
     .widget {
@@ -596,16 +763,14 @@ button:focus {
         height: 50px;
     }
     
-    .widget-icon i {
-        font-size: 20px;
-    }
-    
     .widget-content h3 {
         font-size: 18px;
+        margin-bottom: 10px;
     }
     
     .widget-content p {
         font-size: 14px;
+        margin-bottom: 15px;
     }
     
     .widget-link {
@@ -613,90 +778,81 @@ button:focus {
         font-size: 14px;
     }
     
-    .slider-wrapper {
+    .intro-container {
         width: 90%;
-        padding: 0 50px;
+        margin: 40px auto 25px auto;
     }
     
-    .swiper-container {
-        height: 350px;
+    .slider-intro h1 {
+        font-size: 28px;
     }
     
-    .swiper-button-next {
-        right: -35px;
-    }
-    
-    .swiper-button-prev {
-        left: -35px;
+    .slider-intro p {
+        font-size: 16px;
     }
 }
 
 @media (max-width: 768px) {
     .widget-row {
         flex-direction: column;
+        gap: 15px;
     }
     
     .widget {
-        min-width: 100%;
-    }
-    
-    .intro-container {
-        margin: 30px auto 20px;
-    }
-    
-    .slider-intro h1 {
-        font-size: 24px;
-    }
-    
-    .slider-intro p {
-        font-size: 15px;
+        min-width: unset;
+        width: 100%;
     }
     
     .slider-wrapper {
-        width: 95%;
-        padding: 0 40px;
-        margin: 30px auto 50px;
+        width: 100%;
+        padding: 0 50px;
+        margin: 30px auto 50px auto;
     }
     
     .swiper-container {
-        height: 300px;
+        height: 450px;
     }
     
     .swiper-button-next,
     .swiper-button-prev {
-        width: 40px;
-        height: 40px;
+        font-size: 80px;
+        width: 50px;
+        height: 50px;
     }
     
     .swiper-button-next {
-        right: -30px;
+        right: -10px;
     }
     
     .swiper-button-prev {
-        left: -30px;
+        left: -10px;
     }
     
-    .swiper-button-next:after,
-    .swiper-button-prev:after {
-        font-size: 16px;
+    .swiper-pagination-bullet {
+        width: 10px;
+        height: 10px;
     }
     
+    .swiper-pagination-bullet-active {
+        width: 12px;
+        height: 12px;
+    }
+    
+    /* Search container improvements */
     .search-container {
         flex-direction: column;
         align-items: flex-start;
+        padding: 15px;
     }
     
-    .search-container .total-count {
-        margin-bottom: 10px;
-    }
-    
-    form {
+    .search-container form {
         width: 100%;
-        justify-content: flex-start;
+        justify-content: space-between;
     }
     
-    .table-container {
-        width: 95%;
+    .search-container select,
+    .search-container input[type="text"] {
+        flex: 1;
     }
 }
 
@@ -709,40 +865,88 @@ button:focus {
         padding: 15px;
     }
     
+    .widget-icon {
+        width: 45px;
+        height: 45px;
+        margin-right: 12px;
+    }
+    
+    .widget-icon i {
+        font-size: 20px;
+    }
+    
     .slider-wrapper {
         padding: 0 30px;
+        margin: 20px auto 40px auto;
     }
     
     .swiper-container {
-        height: 250px;
+        height: 350px;
         border-radius: 8px;
     }
     
     .swiper-button-next,
     .swiper-button-prev {
-        width: 35px;
-        height: 35px;
+        font-size: 60px;
+        width: 40px;
+        height: 40px;
     }
     
     .swiper-button-next {
-        right: -25px;
+        right: -5px;
     }
     
     .swiper-button-prev {
-        left: -25px;
-    }
-    
-    .pagination a, 
-    .pagination span {
-        padding: 6px 12px;
-        min-width: 35px;
+        left: -5px;
     }
     
     .slider-intro h1 {
-        font-size: 22px;
+        font-size: 24px;
     }
     
     .slider-intro p {
-        font-size: 14px;
+        font-size: 15px;
+    }
+    
+    /* Alert styles optimization */
+    .alert-content {
+        padding: 20px 15px;
+    }
+    
+    .alert-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .alert-buttons button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 400px) {
+    .swiper-container {
+        height: 250px;
+    }
+    
+    .swiper-button-next,
+    .swiper-button-prev {
+        font-size: 40px;
+        width: 30px;
+        height: 30px;
+    }
+    
+    /* Further widget optimization */
+    .widget {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .widget-icon {
+        margin: 0 0 15px 0;
+    }
+    
+    .widget-content {
+        width: 100%;
     }
 }
