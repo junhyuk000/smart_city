@@ -5,41 +5,65 @@ html, body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
-    background-color: var(--background-color);
-    color: var(--text-color);
 }
 
 /* 다크모드와 라이트모드 색상 변수 */
 :root {
     --background-color: #f4f4f4;
-    --text-color: #000;
+    --text-color: #333333;
+    --heading-color: #333333;
     --primary-color: #28a745;
     --secondary-color: #fff;
+    --widget-bg: #ffffff;
+    --widget-shadow: rgba(0, 0, 0, 0.1);
+    --widget-title: #333333;
+    --widget-text: #666666;
+    --widget-link-hover: #218838;
     --table-header-bg: #fff;
     --table-row-hover-bg: #f5f5f5;
+    --table-border: #e0e0e0;
     --input-border-color: #ddd;
     --button-text-color: #fff;
-    --header-bg: #fff;
-    --header-text-color: #333;
+    --pagination-bg: #fff;
+    --pagination-color: #333;
+    --pagination-border: #ddd;
+    --pagination-hover: #f5f5f5;
+    --transition-speed: 0.3s;
 }
 
 .dark-mode {
-    --background-color: #121212;
-    --text-color: #fff;
-    --primary-color: #28a745;
+    --background-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --heading-color: #ffffff;
+    --primary-color: #2ea44f;
     --secondary-color: #333;
+    --widget-bg: #333333;
+    --widget-shadow: rgba(0, 0, 0, 0.2);
+    --widget-title: #f0f0f0;
+    --widget-text: #d0d0d0;
+    --widget-link-hover: #3dc066;
     --table-header-bg: #222;
-    --table-row-hover-bg: #222;
-    --input-border-color: #222;
-    --header-bg: #222;
-    --header-text-color: #f1f1f1;
+    --table-row-hover-bg: #2c2c2c;
+    --table-border: #444444;
+    --input-border-color: #444;
+    --button-text-color: #fff;
+    --pagination-bg: #333;
+    --pagination-color: #f0f0f0;
+    --pagination-border: #444;
+    --pagination-hover: #444;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 /* 대시보드 위젯 스타일 */
 .dashboard-widgets {
     max-width: 1200px;
     margin: 30px auto 50px;
-    padding: 0 15px;
+    padding: 0 20px;
 }
 
 .widget-row {
@@ -52,18 +76,23 @@ html, body {
 .widget {
     flex: 1;
     min-width: 280px;
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: var(--widget-bg);
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 12px var(--widget-shadow);
     display: flex;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease;
     overflow: hidden;
 }
 
 .widget:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 20px var(--widget-shadow);
+}
+
+.widget:focus-within {
+    box-shadow: 0 0 0 3px var(--primary-color), 0 12px 20px var(--widget-shadow);
+    outline: none;
 }
 
 .widget-icon {
@@ -72,9 +101,11 @@ html, body {
     align-items: center;
     width: 60px;
     height: 60px;
-    background-color: #28a745;
+    background-color: var(--primary-color);
     border-radius: 50%;
-    margin-right: 15px;
+    margin-right: 18px;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
 }
 
 .widget-icon i {
@@ -87,69 +118,65 @@ html, body {
 }
 
 .widget-content h3 {
-    margin: 0 0 10px;
-    color: #333;
-    font-size: 18px;
+    margin: 0 0 12px;
+    color: var(--widget-title);
+    font-size: 20px;
+    transition: color 0.3s ease;
 }
 
 .widget-content p {
-    margin: 0 0 15px;
-    color: #666;
-    opacity: 0.8;
-    font-size: 14px;
+    margin: 0 0 18px;
+    color: var(--widget-text);
+    opacity: 0.9;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: color 0.3s ease;
 }
 
 .widget-link {
     display: inline-block;
-    padding: 8px 15px;
-    background-color: #28a745;
+    padding: 10px 18px;
+    background-color: var(--primary-color);
     color: white;
     text-decoration: none;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .widget-link:hover {
-    background-color: #218838;
+    background-color: var(--widget-link-hover);
+    transform: translateY(-2px);
 }
 
-/* 다크모드에서의 위젯 스타일 */
-.dark-mode .widget {
-    background-color: #333;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+.widget-link:focus {
+    outline: 3px solid rgba(46, 164, 79, 0.4);
+    outline-offset: 2px;
 }
 
-.dark-mode .widget-content h3 {
-    color: #f0f0f0;
-}
-
-.dark-mode .widget-content p {
-    color: #d0d0d0;
+.widget-link:active {
+    transform: translateY(0);
 }
 
 /* 슬라이더 관련 스타일 */
 .slider-wrapper {
     position: relative;
-    width: 60%;
-    margin: 30px auto 60px auto;
-    padding: 0 70px; /* 화살표를 위한 공간 확보 */
-    overflow: visible; /* 화살표가 컨테이너 밖으로 나가도 보이게 */
+    width: 70%;
+    max-width: 1000px;
+    margin: 40px auto 70px auto;
+    padding: 0 60px;
+    overflow: visible;
 }
 
 .swiper-container {
     width: 100%;
     height: 500px;
-    overflow: visible; /* 화살표가 바깥에 있어도 보이게 변경 */
+    overflow: hidden;
     position: relative;
     z-index: 1;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* 슬라이더 배경 제거 */
-.swiper-container::before {
-    display: none;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px var(--widget-shadow);
 }
 
 /* 슬라이드 아이템 스타일 */
@@ -175,8 +202,8 @@ html, body {
 .swiper-button-prev {
     width: 50px;
     height: 50px;
-    background-color: transparent;
-    color: #000;
+    background-color: rgba(255, 255, 255, 0.6);
+    color: #333;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -185,34 +212,41 @@ html, body {
     transform: translateY(-50%);
     z-index: 10;
     cursor: pointer;
+    border-radius: 50%;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .swiper-button-next,
+.dark-mode .swiper-button-prev {
+    background-color: rgba(60, 60, 60, 0.6);
+    color: #f0f0f0;
 }
 
 .swiper-button-next {
-    right: -60px; /* 화살표를 이미지 바깥으로 이동 */
+    right: -50px;
 }
 
 .swiper-button-prev {
-    left: -60px; /* 화살표를 이미지 바깥으로 이동 */
+    left: -50px;
 }
 
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
+    background-color: rgba(255, 255, 255, 0.8);
     transform: translateY(-50%) scale(1.1);
+}
+
+.dark-mode .swiper-button-next:hover,
+.dark-mode .swiper-button-prev:hover {
+    background-color: rgba(80, 80, 80, 0.8);
 }
 
 /* 화살표 크기 조정 */
 .swiper-button-next:after,
 .swiper-button-prev:after {
-    font-size: 32px;
+    font-size: 20px;
     font-weight: bold;
-}
-
-/* 다크모드에서의 네비게이션 버튼 */
-.dark-mode .swiper-button-next,
-.dark-mode .swiper-button-prev {
-    background-color: transparent;
-    color: #fff;
 }
 
 /* 슬라이더 페이지네이션 스타일 */
@@ -242,7 +276,7 @@ html, body {
 }
 
 .dark-mode .swiper-pagination-bullet {
-    background-color: rgba(80, 80, 80, 0.7);
+    background-color: rgba(120, 120, 120, 0.7);
 }
 
 .dark-mode .swiper-pagination-bullet-active {
@@ -251,9 +285,9 @@ html, body {
 
 /* 인트로 영역 스타일 */
 .intro-container {
-    width: 80%;
+    width: 85%;
     max-width: 1200px;
-    margin: 40px auto 30px auto;
+    margin: 50px auto 30px auto;
     text-align: center;
     position: relative;
     z-index: 1;
@@ -265,56 +299,73 @@ html, body {
     width: 100%;
     text-align: center;
     z-index: 10;
-    margin-bottom: 0;
+    margin-bottom: 20px;
 }
 
 .slider-intro h1 {
-    font-size: 28px;
-    margin-bottom: 10px;
-    color: #333;
+    font-size: 32px;
+    margin-bottom: 15px;
+    color: var(--heading-color);
+    transition: color 0.3s ease;
 }
 
 .slider-intro p {
-    font-size: 16px;
-    color: #666;
-    line-height: 1.5;
+    font-size: 18px;
+    color: var(--text-color);
+    line-height: 1.6;
     max-width: 800px;
     margin: 0 auto 20px auto;
-}
-
-/* 다크모드에서 슬라이더 인트로 텍스트 */
-.dark-mode .slider-intro h1 {
-    color: #f0f0f0;
-}
-
-.dark-mode .slider-intro p {
-    color: #d0d0d0;
+    opacity: 0.9;
+    transition: color 0.3s ease;
 }
 
 /* 테이블 스타일 */
+.table-container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 30px auto;
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--widget-shadow);
+    background-color: var(--widget-bg);
+    transition: background-color 0.5s ease, box-shadow 0.3s ease;
+}
+
 table {
-    width: 70%;
+    width: 100%;
     border-collapse: collapse;
-    border: 2px solid var(--text-color);
-    margin: 0 auto;
-    background-color: var(--secondary-color);
+    border: 1px solid var(--table-border);
+    background-color: var(--widget-bg);
     color: var(--text-color);
+    margin: 0;
+    transition: background-color 0.5s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* 테이블 헤더 스타일 */
 thead th {
     text-align: center;
     background-color: var(--table-header-bg);
-    padding: 10px;
-    border: 0.3px solid var(--text-color);
+    padding: 15px 10px;
+    border: 1px solid var(--table-border);
     font-weight: bold;
     color: var(--text-color);
+    transition: background-color 0.5s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* 테이블 셀 스타일 */
 td {
-    padding: 8px;
-    border: 0.3px solid var(--text-color);
+    padding: 12px 10px;
+    border: 1px solid var(--table-border);
+    transition: border-color 0.3s ease;
+}
+
+/* 테이블 행 호버 효과 */
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: var(--table-row-hover-bg);
 }
 
 /* 각 열의 너비 조정 */
@@ -337,51 +388,65 @@ td:last-child, th:last-child {
     text-align: center;
 }
 
+td:last-child a {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
 td:last-child a:hover {
-    background-color: #0056b3;
+    background-color: var(--widget-link-hover);
 }
 
 .empty-row {
-    height: 40px;
+    height: 60px;
+    text-align: center;
+    color: var(--widget-text);
 }
 
 /* 페이지네이션 */
 .pagination {
-    margin-top: 20px;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    gap: 5px;
 }
 
-.pagination a, .pagination span {
-    color: var(--text-color);
-    background-color: var(--secondary-color);
+.pagination a, 
+.pagination span {
+    color: var(--pagination-color);
+    background-color: var(--pagination-bg);
     padding: 8px 16px;
     text-decoration: none;
-    transition: background-color 0.3s;
-    border: 1px solid var(--input-border-color);
-    margin: 0 4px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    border: 1px solid var(--pagination-border);
+    border-radius: 4px;
+    min-width: 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .pagination a:hover {
-    background-color: var(--table-row-hover-bg);
+    background-color: var(--pagination-hover);
 }
 
-/* 다크 모드 추가 스타일 */
-.dark-mode table {
-    border-color: var(--text-color);
+.pagination .active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
-.dark-mode thead th,
-.dark-mode td {
-    border-color: var(--text-color);
-}
-
-.dark-mode a {
-    color: #fff;
-}
-
-.dark-mode button:hover,
-.dark-mode .button:hover {
-    background-color: #2E7D32;
+.pagination .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* 플래시 메시지 컨테이너 */
@@ -396,23 +461,30 @@ td:last-child a:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 10px;
 }
 
 /* 검색 컨테이너 */
 .search-container {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* 왼쪽 정렬 + 오른쪽 정렬 */
-    width: 100%;
-    background-color: var(--secondary-color);
+    justify-content: space-between;
+    width: 90%;
+    max-width: 1000px;
+    background-color: var(--widget-bg);
     padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--widget-shadow);
+    margin: 30px auto 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+    transition: background-color 0.5s ease, box-shadow 0.3s ease;
 }
 
 .search-container .total-count {
     font-weight: bold;
+    color: var(--text-color);
+    transition: color 0.3s ease;
 }
 
 form {
@@ -425,41 +497,68 @@ form {
 
 label {
     font-weight: bold;
+    color: var(--text-color);
+    transition: color 0.3s ease;
 }
 
-select, input[type="text"] {
-    padding: 8px;
+select, 
+input[type="text"] {
+    padding: 10px;
     border: 1px solid var(--input-border-color);
     border-radius: 4px;
-    font-size: 14px;
-    background-color: var(--background-color);
+    font-size: 15px;
+    background-color: var(--widget-bg);
     color: var(--text-color);
+    transition: border-color 0.3s ease, background-color 0.5s ease, color 0.3s ease;
+}
+
+select:focus,
+input[type="text"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.2);
 }
 
 button {
-    padding: 8px 15px;
+    padding: 10px 18px;
     background-color: var(--primary-color);
     color: var(--button-text-color);
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
+    transition: background-color 0.3s ease;
+    font-size: 15px;
+    font-weight: 500;
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: var(--widget-link-hover);
 }
 
-/* 테이블 크기 조정 및 중앙 정렬 */
-.table-container {
-    max-width: 800px;
-    margin: 0 auto;
+button:focus {
+    outline: 3px solid rgba(46, 164, 79, 0.4);
+    outline-offset: 2px;
 }
 
-/* 반응형 조정 */
+/* 반응형 디자인 최적화 */
 @media (max-width: 1400px) {
     .slider-wrapper {
+        width: 80%;
+    }
+    
+    .swiper-container {
+        height: 450px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .slider-wrapper {
         width: 85%;
+        padding: 0 60px;
+    }
+    
+    .swiper-container {
+        height: 400px;
     }
     
     .swiper-button-next {
@@ -469,38 +568,66 @@ button:hover {
     .swiper-button-prev {
         left: -40px;
     }
-}
-
-@media (max-width: 1200px) {
-    .slider-wrapper {
+    
+    .intro-container {
         width: 90%;
     }
     
-    .swiper-button-next {
-        right: -30px;
+    .slider-intro h1 {
+        font-size: 28px;
     }
     
-    .swiper-button-prev {
-        left: -30px;
+    .slider-intro p {
+        font-size: 16px;
     }
 }
 
 @media (max-width: 992px) {
+    .dashboard-widgets {
+        padding: 0 15px;
+    }
+    
+    .widget {
+        padding: 20px;
+    }
+    
+    .widget-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .widget-icon i {
+        font-size: 20px;
+    }
+    
+    .widget-content h3 {
+        font-size: 18px;
+    }
+    
+    .widget-content p {
+        font-size: 14px;
+    }
+    
+    .widget-link {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+    
     .slider-wrapper {
-        width: 95%;
-        padding: 0 40px;
+        width: 90%;
+        padding: 0 50px;
     }
     
     .swiper-container {
-        height: 400px;
+        height: 350px;
     }
     
     .swiper-button-next {
-        right: -20px;
+        right: -35px;
     }
     
     .swiper-button-prev {
-        left: -20px;
+        left: -35px;
     }
 }
 
@@ -510,15 +637,48 @@ button:hover {
     }
     
     .widget {
-        min-width: auto;
+        min-width: 100%;
+    }
+    
+    .intro-container {
+        margin: 30px auto 20px;
+    }
+    
+    .slider-intro h1 {
+        font-size: 24px;
+    }
+    
+    .slider-intro p {
+        font-size: 15px;
+    }
+    
+    .slider-wrapper {
+        width: 95%;
+        padding: 0 40px;
+        margin: 30px auto 50px;
     }
     
     .swiper-container {
         height: 300px;
     }
     
-    table {
-        width: 100%;
+    .swiper-button-next,
+    .swiper-button-prev {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .swiper-button-next {
+        right: -30px;
+    }
+    
+    .swiper-button-prev {
+        left: -30px;
+    }
+    
+    .swiper-button-next:after,
+    .swiper-button-prev:after {
+        font-size: 16px;
     }
     
     .search-container {
@@ -526,21 +686,63 @@ button:hover {
         align-items: flex-start;
     }
     
+    .search-container .total-count {
+        margin-bottom: 10px;
+    }
+    
     form {
         width: 100%;
         justify-content: flex-start;
-        margin-top: 10px;
+    }
+    
+    .table-container {
+        width: 95%;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-widgets {
+        margin: 20px auto 30px;
+    }
+    
+    .widget {
+        padding: 15px;
     }
     
     .slider-wrapper {
         padding: 0 30px;
     }
     
+    .swiper-container {
+        height: 250px;
+        border-radius: 8px;
+    }
+    
+    .swiper-button-next,
+    .swiper-button-prev {
+        width: 35px;
+        height: 35px;
+    }
+    
     .swiper-button-next {
-        right: -15px;
+        right: -25px;
     }
     
     .swiper-button-prev {
-        left: -15px;
+        left: -25px;
+    }
+    
+    .pagination a, 
+    .pagination span {
+        padding: 6px 12px;
+        min-width: 35px;
+    }
+    
+    .slider-intro h1 {
+        font-size: 22px;
+    }
+    
+    .slider-intro p {
+        font-size: 14px;
     }
 }
