@@ -14,7 +14,7 @@ class DBManager:
     def connect(self): 
         try :
             self.connection = mysql.connector.connect(
-                host = "10.0.66.32",
+                host = "10.0.66.94",
                 user = "sejong",
                 password="1234",
                 database="smart_city",
@@ -630,18 +630,21 @@ class DBManager:
         finally:
             self.disconnect()
             
-    # 센서 데이터 DB저장
+    # 센서 데이터 DB 저장
     def save_sensor_data(self, received_data):
-        if "ID" not in received_data:
+        if "ID" not in received_data or not str(received_data["ID"]).isdigit():
             print("🚨 ID 없음: 데이터 저장 안 함")
             return  
-        else :
-            street_light_id = int(received_data["ID"])
-            street_light = self.get_streetlight_by_info(street_light_id)
-            if not street_light or street_light_id != street_light['street_light_id']:
-                print("❌ 유효하지 않은 센서 ID")
-                return
-            
+
+        street_light_id = int(received_data["ID"])
+        street_light = self.get_streetlight_by_info(street_light_id)
+
+        if not street_light or 'street_light_id' not in street_light:
+            print("❌ 유효하지 않은 센서 ID")
+            return
+
+        print(f"✅ 유효한 센서 ID: {street_light_id}")
+
         # 목적에 따라 테이블 선택
         table_name = "road_sensors" if street_light['purpose'] == '도로' else "sidewalk_sensors"
 
@@ -649,19 +652,28 @@ class DBManager:
         latest_record_time = self.get_latest_sensor_data(table_name, street_light_id)
         current_time = datetime.now()
 
-        if not latest_record_time:
-            print("✅ 기존 데이터 없음. 새 데이터 저장")
-        else:
+        if latest_record_time and latest_record_time['record_time']:
             last_time = latest_record_time['record_time']
             time_diff = (current_time - last_time).total_seconds()
-
-            if time_diff < 10 :
+            if time_diff < 60:
                 print(f"⏳ {time_diff}초 경과 또는 값 변화 없음 → 데이터 저장 안 함")
                 return
+        else:
+            print("✅ 기존 데이터 없음. 새 데이터 저장")
 
         # 데이터 저장
         try:
             self.connect()
+            if not self.connection or not self.cursor:
+                print("❌ 데이터베이스 연결 실패")
+                return False
+
+            def safe_int(value, default=0):
+                try:
+                    return int(value)
+                except (ValueError, TypeError):
+                    return default
+
             if table_name == "road_sensors":
                 sql = f"""
                 INSERT INTO {table_name} 
@@ -670,15 +682,15 @@ class DBManager:
                 """
                 values = (
                     street_light_id,
-                    int(received_data.get("MAIN LDR Value", 0)),
-                    int(received_data.get("SUB1 LDR Value", 0)),
-                    int(received_data.get("SUB2 LDR Value", 0)),
-                    int(received_data.get("TILT Value", 0)),
+                    safe_int(received_data.get("MAIN LDR Value")),
+                    safe_int(received_data.get("SUB1 LDR Value")),
+                    safe_int(received_data.get("SUB2 LDR Value")),
+                    safe_int(received_data.get("TILT Value")),
                     received_data.get("Temperature", "0"),
                     received_data.get("Humidity", "0"),
                     received_data.get("Heat Index", "0"),
-                    int(received_data.get("Switch State", 0)),
-                    int(received_data.get("Check", 0)),
+                    safe_int(received_data.get("Switch State")),
+                    safe_int(received_data.get("Check")),
                 )
             else:  # sidewalk_sensors
                 sql = f"""
@@ -688,24 +700,26 @@ class DBManager:
                 """
                 values = (
                     street_light_id,
-                    int(received_data.get("MAIN LDR Value", 0)),
-                    int(received_data.get("SUB1 LDR Value", 0)),
-                    int(received_data.get("SUB2 LDR Value", 0)),
-                    int(received_data.get("TILT Value", 0)),
-                    int(received_data.get("Switch State", 0)),
-                    int(received_data.get("Check", 0)),
+                    safe_int(received_data.get("MAIN LDR Value")),
+                    safe_int(received_data.get("SUB1 LDR Value")),
+                    safe_int(received_data.get("SUB2 LDR Value")),
+                    safe_int(received_data.get("TILT Value")),
+                    safe_int(received_data.get("Switch State")),
+                    safe_int(received_data.get("Check")),
                 )
 
             self.cursor.execute(sql, values)
             self.connection.commit()
             print(f"✅ 데이터 저장 완료 → {table_name} (ID: {street_light_id})")
             return True
+
         except Exception as error:
             print(f"❌ 센서 테이블 데이터 저장 실패: {error}")
             return False
 
         finally:
             self.disconnect()
+
 
     
     
