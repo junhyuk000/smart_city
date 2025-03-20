@@ -1,3 +1,5 @@
+/* static\css\base.css */
+
 /* 기본 스타일 초기화 */
 * {
     margin: 0;
@@ -15,25 +17,44 @@ body {
     font-family: "CustomFont", sans-serif;
     background-color: white;
     color: black;
-    /* 부드러운 전환을 위한 transition 추가 */
     transition: background-color 0.8s ease, color 0.8s ease, background-image 0.8s ease;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* 헤더 스타일 */
+/* 통합된 헤더 스타일 */
 .header {
     position: relative;
     display: flex;
+    flex-direction: column;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.8s ease, box-shadow 0.8s ease;
+}
+
+/* 상단 헤더 영역 - 로고와 로그인/회원가입 버튼 */
+.header-top {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 2rem; /* 패딩 증가 */
-    height: 85px; /* 원래 헤더 높이로 복원 */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    flex-wrap: wrap;
+    padding: 0.75rem 2rem;
+    height: 90px;
+    width: 100%;
+    position: relative;
     gap: clamp(0.5rem, 2vw, 1rem);
-    transition: background-color 0.8s ease, box-shadow 0.8s ease;
+    flex-wrap: wrap;
+    background-color: white;
+}
+
+/* 헤더 영역 구분을 위한 hr 선 */
+.header-divider {
+    width: 100%;
+    height: 1px;
+    background-color: #e5e5e5;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 /* 로고 컨테이너 스타일 */
@@ -52,9 +73,9 @@ body {
 
 /* 로고 이미지 스타일 */
 .logo, .logo-dark {
-    height: clamp(50px, 10vw, 70px); /* 화면 크기에 따라 로고 크기 조정 */
+    height: clamp(50px, 10vw, 70px);
     width: auto;
-    transition: opacity 0.8s ease; /* 모든 요소와 동일한 transition 적용 */
+    transition: opacity 0.8s ease;
 }
 
 /* 다크모드 로고 기본 스타일 */
@@ -62,26 +83,26 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    opacity: 0; /* 처음에는 숨김 상태 */
+    opacity: 0;
 }
 
 /* 다크모드일 때 로고 표시 변경 */
 .dark-mode .logo {
-    opacity: 0; /* 기본 로고 숨김 */
+    opacity: 0;
 }
 
 .dark-mode .logo-dark {
-    opacity: 1; /* 다크모드 로고 표시 */
+    opacity: 1;
 }
 
-/* 토글 스위치 컨테이너 스타일 - 헤더 중앙에 위치하도록 수정 */
+/* 토글 스위치 컨테이너 스타일 */
 .toggle-container {
     display: flex;
     align-items: center;
     position: absolute;
-    left: 50px; /* 35px에서 50px로 더 오른쪽으로 이동 */
-    top: 50%; /* 중앙 정렬 */
-    transform: translateY(-50%); /* 정확히 중앙에 위치 */
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 10;
 }
 
@@ -92,8 +113,8 @@ body {
     margin-right: 10px;
     white-space: nowrap;
     transition: color 0.8s ease;
-    width: 75px; /* 85px에서 75px로 줄여서 텍스트를 왼쪽으로 이동 */
-    text-align: right; /* 오른쪽 정렬로 텍스트 위치 고정 */
+    width: 75px;
+    text-align: right;
 }
 
 .dark-mode .mode-text {
@@ -151,22 +172,22 @@ body {
     align-items: center;
     gap: clamp(0.5rem, 2vw, 1rem);
     margin-left: auto;
-    margin-right: 80px !important; /* 오른쪽으로 더 이동 (!important 추가) */
+    margin-right: 80px !important;
     flex-wrap: wrap;
 }
 
 .right-nav button,
 .right-nav a {
-    padding: 0.6rem 1.1rem; /* 패딩 축소 */
+    padding: 0.6rem 1.1rem;
     border-radius: 5px;
     text-decoration: none;
     transition: background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease;
-    font-size: 0.95rem; /* 폰트 크기 약간 축소 */
+    font-size: 0.95rem;
     margin-right: 1rem;
     flex: 0 1 auto;
     display: flex;
     align-items: center;
-    justify-content: center; /* 텍스트 정확히 중앙 정렬 */
+    justify-content: center;
 }
 
 .right-nav a:last-child {
@@ -174,7 +195,7 @@ body {
 }
 
 .right-nav .btn i {
-    margin-right: 6px; /* 아이콘과 텍스트 사이 간격 */
+    margin-right: 6px;
 }
 
 .right-nav button {
@@ -187,45 +208,36 @@ body {
     background-color: #e9ecef;
 }
 
-.home-button-container {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
 .welcome-text {
-    font-size: 20px; /* 26px에서 20px로 크기 줄임 */
-    color: #666; /* 회색으로 색상을 연하게 조정 */
-    margin-right: 10px; /* 버튼과의 간격 유지 */
-    min-width: 150px; /* 이 너비에 닿으면 아래로 이동 */
-    white-space: nowrap; /* 텍스트가 줄바꿈되지 않도록 */
-    flex: 0 1 auto; /* 유연한 크기 조정 */
-    transition: color 0.8s ease; /* 부드러운 색상 전환 */
+    font-size: 20px;
+    color: #666;
+    margin-right: 10px;
+    min-width: 150px;
+    white-space: nowrap;
+    flex: 0 1 auto;
+    transition: color 0.8s ease;
 }
 
-/* 다크모드에서 환영 텍스트 흰색으로 변경 */
 .dark-mode .welcome-text {
-    color: #ffffff; /* 완전한 흰색으로 설정 */
+    color: #ffffff;
 }
 
-/* 내비게이션 스타일 - 높이 증가 및 정렬 개선 */
+/* 내비게이션 영역 - 홈, 소개, CCTV, 문의 링크 */
 .header-nav {
     display: flex;
     justify-content: center;
-    padding: 0.5rem;
-    position: relative;
+    padding: 0;
     width: 100%;
-    height: 65px; /* 네비게이션 높이 증가 */
-    transition: background-color 0.8s ease;
-    background-color: #ffffff; /* 흰색 배경 */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 아래쪽 그림자 효과 */
-    z-index: 5; /* 다른 요소보다 위에 표시 */
+    height: 65px;
+    background-color: white;
+    box-shadow: none;
+    z-index: 5;
 }
 
 .btn {
     padding: 0.5em 1em;
     font-size: 1em;
-    transition: background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease; /* 버튼 색상 전환 */
+    transition: background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease;
 }
 
 /* 내비게이션 메뉴 */
@@ -233,30 +245,31 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: clamp(1rem, 7vw, 7rem); /* 화면 크기에 따라 간격 조정 */
+    gap: clamp(2rem, 10vw, 10rem);
     flex-shrink: 0;
     flex-wrap: wrap;
-    height: 100%; /* 높이를 100%로 설정하여 수직 중앙 정렬 용이하게 */
+    height: 100%;
 }
 
 .nav-link {
-    padding: 0 clamp(10px, 2vw, 15px); /* 좌우 패딩만 유지 */
+    padding: 0.8rem clamp(15px, 3vw, 25px);
     color: #333;
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.8s ease, background-color 0.3s ease; /* 부드러운 색상 전환 */
-    border-radius: 4px;
-    height: 100%; /* 전체 높이 차지 */
-    display: flex; /* Flexbox 사용 */
-    align-items: center; /* 수직 중앙 정렬 */
-    justify-content: center; /* 수평 중앙 정렬 */
+    transition: color 0.3s ease, background-color 0.3s ease;
+    border-radius: 5px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
 }
 
-/* 네비게이션 링크 호버 효과 - 업데이트 */
+/* 네비게이션 링크 호버 효과 */
 .nav-link:hover {
-    color: #007bff;
-    background-color: #f5f5f5;
-    height: 100%; /* 호버 효과도 전체 높이에 적용 */
+    color: #888; /* 연한 회색으로 변경 */
+    background-color: #f9f9f9; /* 더 연한 배경색 */
+    box-shadow: none; /* 그림자 제거 */
 }
 
 /* 드롭다운 관련 스타일 */
@@ -272,16 +285,16 @@ body {
     vertical-align: middle;
 }
 
-/* 메뉴와 드롭다운을 묶는 컨테이너 - 패딩 추가하여 영역 확장 */
+/* 메뉴와 드롭다운을 묶는 컨테이너 */
 .menu-item {
     position: relative;
     display: inline-block;
-    height: 100%; /* 높이 100%로 설정 */
+    height: 100%;
 }
 
 /* 메뉴 아이템의 링크 스타일 */
 .menu-item .nav-link {
-    height: 100%; /* 높이 100%로 설정 */
+    height: 100%;
 }
 
 /* 메뉴 아이템에 가상 요소를 추가해 영역 확장 */
@@ -290,15 +303,15 @@ body {
     position: absolute;
     display: block;
     width: 100%;
-    height: 10px; /* 드롭다운 메뉴와 메인 메뉴 사이 영역 축소 */
+    height: 10px;
     top: 100%;
     left: 0;
 }
 
-/* 드롭다운 컨테이너 스타일 - 수정된 부분 */
+/* 드롭다운 컨테이너 스타일 */
 .dropdown-content {
     position: absolute;
-    min-width: 160px;
+    min-width: 180px;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
@@ -307,18 +320,18 @@ body {
     visibility: hidden;
     transform: translateX(-50%) translateY(-20px);
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease, background-color 0.8s ease, box-shadow 0.8s ease;
-    z-index: 20; /* z-index 값 증가 */
+    z-index: 20;
     text-align: left;
-    top: calc(100% + 10px); /* 상단 위치 조정 */
+    top: calc(100% + 10px);
     left: 50%;
     margin-top: 0px;
     display: none;
 }
 
-/* 드롭다운 메뉴 아이템 스타일 - 업데이트된 호버 효과 */
+/* 드롭다운 메뉴 아이템 스타일 */
 .dropdown-content a {
     color: #333;
-    padding: 8px 15px;
+    padding: 10px 15px;
     text-decoration: none;
     display: block;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -327,90 +340,76 @@ body {
 }
 
 .dropdown-content a:hover {
-    background-color: #e9effd; /* 약간 더 진한 배경색 */
-    color: #007bff;
+    background-color: #f9f9f9; /* 더 연한 배경색 */
+    color: #888; /* 연한 회색으로 변경 */
+    padding-left: 15px; /* 이동 효과 제거 */
 }
 
-/* 메뉴 항목에 마우스 올렸을 때 드롭다운 표시 - 페이드 인 효과 추가 */
+/* 메뉴 항목에 마우스 올렸을 때 드롭다운 표시 */
 .menu-item:hover .dropdown-content {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0); /* 수정된 위치로 이동 */
+    transform: translateX(-50%) translateY(0);
     display: block;
     animation: fadeIn 0.3s ease-in-out;
 }
 
-/* 페이드 인 애니메이션 정의 - 방향 수정 */
+/* 페이드 인 애니메이션 정의 */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(-20px); /* 위에서 시작 */
+        transform: translateX(-50%) translateY(-20px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0); /* 제자리로 */
+        transform: translateX(-50%) translateY(0);
     }
 }
 
 .content-area {
     width: 100%;
-    flex: 1; /* 남은 공간 채우기 */
+    flex: 1;
     margin: 0;
-    padding: 0; /* 패딩 제거 */
+    padding: 0;
     box-sizing: border-box;
-    transition: background-color 0.8s ease; /* 배경색 전환 */
+    transition: background-color 0.8s ease;
 }
 
-/* 푸터 스타일 - 더 진한 갈색 배경 */
+/* 푸터 스타일 */
 footer {
     display: flex;
-    justify-content: center; /* 중앙 정렬 */
+    justify-content: center;
     align-items: center;
-    padding: 18px; /* 패딩 증가 */
+    padding: 12px;
     text-align: center;
-    font-size: 16px;
+    font-size: 14px;
     color: white;
-    background-color: #2D1E17; /* 더 진한 갈색으로 변경 */
-    font-family: Arial, sans-serif; /* 기본 폰트 */
-    width: 100%; /* 전체 너비 차지 */
+    background-color: #2D1E17;
+    font-family: Arial, sans-serif;
+    width: 100%;
+    height: 50px;
 }
 
 /* 푸터 컨텐츠 영역 */
 .footer-content {
     width: 90%;
     display: flex;
-    justify-content: space-between; /* 양쪽 정렬로 변경 */
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    position: relative; /* 상대 위치 */
+    text-align: center;
 }
 
 /* 푸터 왼쪽 영역 */
 .footer-left {
     text-align: center;
-    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    white-space: nowrap;
+    margin: 0;
 }
 
 .footer-left p {
     display: inline-block;
-    margin: 0 10px;
-}
-
-/* 푸터 오른쪽 영역 */
-.footer-right {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-/* 회원 탈퇴 섹션 */
-.delete-section {
-    margin: 0; /* 마진 제거 */
-}
-
-.delete-section .delete-btn {
-    padding: 8px 15px; /* 버튼 패딩 증가 */
-    font-size: 14px; /* 폰트 크기 조정 */
+    margin: 0;
 }
 
 /* 현재 날짜 표시 */
@@ -418,99 +417,6 @@ footer {
     font-size: 14px;
     color: #ddd;
     margin-bottom: 5px;
-}
-
-/* 대시보드 위젯 스타일 - 메인 페이지에서도 표시되도록 */
-.dashboard-widgets {
-    max-width: 1200px;
-    margin: 30px auto 50px;
-    padding: 0 15px;
-}
-
-.widget-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.widget {
-    flex: 1;
-    min-width: 280px;
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden;
-}
-
-.widget:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-}
-
-.widget-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 60px;
-    height: 60px;
-    background-color: #28a745;
-    border-radius: 50%;
-    margin-right: 15px;
-}
-
-.widget-icon i {
-    font-size: 24px;
-    color: white;
-}
-
-.widget-content {
-    flex: 1;
-}
-
-.widget-content h3 {
-    margin: 0 0 10px;
-    color: #333;
-    font-size: 18px;
-}
-
-.widget-content p {
-    margin: 0 0 15px;
-    color: #666;
-    opacity: 0.8;
-    font-size: 14px;
-}
-
-.widget-link {
-    display: inline-block;
-    padding: 8px 15px;
-    background-color: #28a745;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.widget-link:hover {
-    background-color: #218838;
-}
-
-/* 다크모드에서의 위젯 스타일 */
-.dark-mode .widget {
-    background-color: #333;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-.dark-mode .widget-content h3 {
-    color: #f0f0f0;
-}
-
-.dark-mode .widget-content p {
-    color: #d0d0d0;
 }
 
 /* 로그인 알림 모달 스타일 */
@@ -581,231 +487,6 @@ footer {
     color: #fff;
 }
 
-/* 슬라이더 관련 스타일 */
-.swiper-container {
-    width: 63%;
-    height: 650px;
-    margin: 30px auto 60px auto;
-    position: relative;
-    z-index: 1;
-    overflow: hidden; /* 다시 hidden으로 설정하여 슬라이드가 바깥으로 넘어가지 않도록 함 */
-}
-
-/* 슬라이더 배경 제거 */
-.swiper-container::before {
-    display: none;
-}
-
-/* 네비게이션 버튼 위치 및 스타일 조정 */
-.swiper-button-next,
-.swiper-button-prev {
-    color: #000;
-    background-color: transparent;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    transition: color 0.3s ease;
-}
-
-/* 버튼 위치 조정 - 슬라이더 완전히 바깥으로 */
-.swiper-button-next {
-    right: -120px; /* -80px에서 -120px로 더 바깥으로 */
-}
-
-.swiper-button-prev {
-    left: -120px; /* -80px에서 -120px로 더 바깥으로 */
-}
-
-/* 화살표 크기 증가 및 스타일 조정 */
-.swiper-button-next:after,
-.swiper-button-prev:after {
-    font-size: 45px; /* 40px에서 45px로 약간 키움 */
-    font-weight: bold;
-}
-
-/* 화살표 색상 - 라이트모드에서 검정색(기본값 유지) */
-.swiper-button-next,
-.swiper-button-prev {
-    color: #000; /* 라이트모드에서 검정색 */
-    background-color: transparent; /* 배경 투명 유지 */
-}
-
-/* 다크모드에서의 화살표 스타일 */
-.dark-mode .swiper-button-next,
-.dark-mode .swiper-button-prev {
-    color: #fff; /* 다크모드에서 흰색 */
-    background-color: transparent; /* 배경 투명 유지 */
-}
-
-/* 호버 효과 - 강화 */
-.swiper-button-next:hover,
-.swiper-button-prev:hover {
-    color: #28a745; /* 라이트모드에서 호버시 초록색 */
-    transform: scale(1.1); /* 호버시 약간 확대 효과 */
-    transition: color 0.3s ease, transform 0.3s ease;
-}
-
-.dark-mode .swiper-button-next:hover,
-.dark-mode .swiper-button-prev:hover {
-    color: #4caf50; /* 다크모드에서 호버시 밝은 초록색 */
-    transform: scale(1.1); /* 호버시 약간 확대 효과 */
-}
-
-/* 슬라이드 아이템 스타일 */
-.swiper-slide {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 1;
-    /* 슬라이더 영역 내에서만 표시되도록 설정 */
-    overflow: hidden;
-}
-
-.swiper-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* 이미지 전환 시 애니메이션 효과 */
-    transition: transform 0.5s ease;
-}
-
-/* 슬라이더 페이지네이션 스타일 */
-.swiper-pagination-bullet {
-    width: 10px;
-    height: 10px;
-    background-color: #fff; /* 모든 모드에서 흰색으로 통일 */
-    opacity: 0.5;
-}
-
-.swiper-pagination-bullet-active {
-    opacity: 1;
-}
-
-/* 인트로 영역 스타일 */
-.intro-container {
-    width: 80%;
-    max-width: 1200px;
-    margin: 40px auto 30px auto;
-    text-align: center;
-    position: relative;
-    z-index: 1;
-}
-
-/* 슬라이더 인트로 텍스트 */
-.slider-intro {
-    position: relative;
-    width: 100%;
-    text-align: center;
-    z-index: 10;
-    margin-bottom: 0;
-}
-
-.slider-intro h1 {
-    font-size: 28px;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.slider-intro p {
-    font-size: 16px;
-    color: #666;
-    line-height: 1.5;
-    max-width: 800px;
-    margin: 0 auto 20px auto;
-}
-
-/* 다크 모드 - 그라데이션 회색 톤으로 업데이트 */
-.dark-mode {
-    background-color: #3a3a3a;
-    color: white;
-    background-image: linear-gradient(to bottom, #262626, #3a3a3a, #4a4a4a);
-    background-attachment: fixed;
-}
-
-.dark-mode .header {
-    background-color: #262626;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-.dark-mode .header-nav {
-    background-color: #323232;
-}
-
-.dark-mode .btn-warning {
-    background-color: #ffcc00;
-    color: black;
-}
-
-.dark-mode .nav-link {
-    color: #e1e1e1;
-}
-
-.dark-mode .nav-link:hover {
-    color: #ffcc00;
-    background-color: #404040; /* 다크모드에서 호버 배경색 */
-}
-
-.dark-mode .dropdown-content {
-    background-color: #383838;
-    border: 1px solid #505050;
-}
-
-.dark-mode .dropdown-content a {
-    color: #d8d8d8;
-}
-
-.dark-mode .dropdown-content a:hover {
-    background-color: #404040; /* 다크모드에서 더 진한 배경색 */
-    color: #ffcc00;
-}
-
-.dark-mode .right-nav button {
-    background-color: #404040;
-    color: white;
-    border: 1px solid #555;
-}
-
-.dark-mode .right-nav button:hover {
-    background-color: #505050;
-}
-
-/* 다크 모드 푸터 - 다크모드에서도 같은 색상 유지 */
-.dark-mode footer {
-    background-color: #2D1E17; /* 일반 모드와 동일한 색상 유지 */
-    color: white;
-}
-
-.dark-mode footer a {
-    color: #f0f0f0;
-}
-
-.dark-mode footer a:hover {
-    color: #ffcc00;
-}
-
-/* 다크모드에서의 화살표 색상 */
-.dark-mode .swiper-button-next,
-.dark-mode .swiper-button-prev {
-    color: #fff; /* 다크모드에서는 흰색으로 변경 */
-}
-
-/* 슬라이더 인트로 텍스트 - 다크모드 */
-.dark-mode .slider-intro h1 {
-    color: #f0f0f0;
-}
-
-.dark-mode .slider-intro p {
-    color: #d0d0d0;
-}
-
 /* 플래시 메시지 */
 .flash-message {
     position: fixed;
@@ -843,39 +524,16 @@ footer {
     color: white;
 }
 
-/* 애니메이션 정의 */
-@keyframes fadeInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
 /* 관리자 메뉴를 위한 추가 스타일 */
 /* 관리자 드롭다운 메뉴 스타일 */
 #admin-cctv-dropdown,
 #admin-lamp-dropdown,
 #admin-monitor-dropdown,
 #admin-inquiry-dropdown {
-    min-width: 180px; /* 드롭다운 메뉴 너비 조정 */
+    min-width: 180px;
 }
 
-/* 관리자 메뉴 특별 스타일 - 더 강조된 느낌을 위해 */
+/* 관리자 메뉴 특별 스타일 */
 .admin-menu-highlight {
     background-color: #f8f9fa;
     border-left: 3px solid #007bff;
@@ -916,52 +574,93 @@ footer {
 
 /* 관리자 영역 강조를 위한 추가 스타일 */
 .admin-area {
-    background-color: #f5f8ff; /* 관리자 영역 배경색 */
+    background-color: #f5f8ff;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
 }
 
 .dark-mode .admin-area {
-    background-color: #363c4a; /* 다크모드에서 관리자 영역 배경색 */
+    background-color: #363c4a;
+}
+
+/* 다크 모드 - 그라데이션 회색 톤으로 업데이트 */
+.dark-mode {
+    background-color: #3a3a3a;
+    color: white;
+    background-image: linear-gradient(to bottom, #262626, #3a3a3a, #4a4a4a);
+    background-attachment: fixed;
+}
+
+.dark-mode .header {
+    background-color: #262626;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .header-divider {
+    background-color: #444; /* 다크모드에서 분리선 색상 */
+}
+
+.dark-mode .header-top, .dark-mode .header-nav {
+    background-color: #262626;
+}
+
+.dark-mode .btn-warning {
+    background-color: #ffcc00;
+    color: black;
+}
+
+.dark-mode .nav-link {
+    color: #e1e1e1;
+}
+
+.dark-mode .nav-link:hover {
+    color: #aaa; /* 다크모드에서 연한 회색으로 */
+    background-color: #333; /* 다크모드에서 살짝 더 밝은 배경 */
+}
+
+.dark-mode .dropdown-content {
+    background-color: #383838;
+    border: 1px solid #505050;
+}
+
+.dark-mode .dropdown-content a {
+    color: #d8d8d8;
+}
+
+.dark-mode .dropdown-content a:hover {
+    background-color: #333;
+    color: #aaa;
+}
+
+.dark-mode .right-nav button {
+    background-color: #404040;
+    color: white;
+    border: 1px solid #555;
+}
+
+.dark-mode .right-nav button:hover {
+    background-color: #505050;
+}
+
+/* 다크 모드 푸터 */
+.dark-mode footer {
+    background-color: #2D1E17;
+    color: white;
+}
+
+.dark-mode footer a {
+    color: #f0f0f0;
+}
+
+.dark-mode footer a:hover {
+    color: #ffcc00;
 }
 
 /* 반응형 조정 */
-@media (max-width: 1400px) {
-    .swiper-button-next {
-        right: -30px; /* 화면이 작아지면 화살표 위치 조정 */
-    }
-    
-    .swiper-button-prev {
-        left: -30px; /* 화면이 작아지면 화살표 위치 조정 */
-    }
-}
-
-@media (max-width: 1200px) {
-    .swiper-button-next {
-        right: -20px; /* 더 작은 화면에서 화살표 위치 조정 */
-    }
-    
-    .swiper-button-prev {
-        left: -20px; /* 더 작은 화면에서 화살표 위치 조정 */
-    }
-    
-    .nav-menu {
-        gap: clamp(0.8rem, 5vw, 5rem); /* 메뉴 간격 줄임 */
-    }
-}
-
 @media (max-width: 992px) {
-    .swiper-button-next {
-        right: 10px; /* 작은 화면에서는 슬라이더 내부로 이동 */
-    }
-    
-    .swiper-button-prev {
-        left: 10px; /* 작은 화면에서는 슬라이더 내부로 이동 */
-    }
-    
     .header-nav {
-        height: auto !important; /* 모바일에서 높이 자동 조정 */
+        height: auto;
         padding-bottom: 10px;
     }
     
@@ -969,6 +668,7 @@ footer {
         flex-wrap: wrap;
         justify-content: flex-start;
         gap: 0.5rem;
+        padding-top: 5px;
     }
     
     .menu-item {
@@ -988,22 +688,10 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .widget-row {
+    .header-top {
         flex-direction: column;
-    }
-    
-    .widget {
-        min-width: auto;
-    }
-    
-    .swiper-container {
-        width: 90%;
-        height: 400px;
-    }
-    
-    .header {
-        flex-direction: column;
-        align-items: center;
+        height: auto;
+        padding: 15px;
     }
 
     .logo-container {
@@ -1013,7 +701,7 @@ footer {
     }
 
     .logo, .logo-dark {
-        height: 50px; /* 작은 화면에서 고정 크기 */
+        height: 50px;
     }
 
     .right-nav {
@@ -1021,6 +709,7 @@ footer {
         align-items: center;
         width: 100%;
         gap: 0.5rem;
+        margin-right: 0 !important;
     }
 
     .toggle-container {
@@ -1034,6 +723,7 @@ footer {
         width: 100%;
         margin-bottom: 5px;
         text-align: center;
+        margin-right: 0;
     }
 
     .header-nav {
@@ -1052,6 +742,7 @@ footer {
         width: 100%;
         text-align: center;
         padding: 10px;
+        margin-bottom: 0;
     }
 
     .dropdown-content {
@@ -1087,14 +778,8 @@ footer {
         align-items: center;
     }
 
-    .footer-left, .footer-right {
+    .footer-left {
         width: 100%;
         text-align: center;
-        margin: 10px 0;
-    }
-
-    .footer-right {
-        position: static;
-        transform: none;
     }
 }

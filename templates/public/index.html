@@ -2,6 +2,10 @@
 
 {% block title %}스마트 도시 프로젝트{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
 {% block header %}
 <div class="toggle-container">
   <span class="mode-text" id="mode-text">다크모드</span>
@@ -104,23 +108,26 @@
     </div>
     
     <!-- 슬라이더 영역 (바로가기 위젯 아래에 배치) -->
-    <div class="swiper-container">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
+    <div class="slider-wrapper">
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
+                </div>
             </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
-            </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
-            </div>
+            <!-- 페이지네이션 -->
+            <div class="swiper-pagination"></div>
+            
+            <!-- 네비게이션 버튼 -->
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
         </div>
-        <!-- 네비게이션 버튼 -->
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-        <!-- 페이지네이션 -->
-        <div class="swiper-pagination"></div>
     </div>
 </main>
 {% endblock %}

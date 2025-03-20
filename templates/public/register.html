@@ -1,126 +1,107 @@
 {% extends "base.html" %}
 
-{% block title %}스마트 도시 프로젝트{% endblock %}
+{% block title %}회원가입 페이지{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+{% endblock %}
 
 {% block header %}
 <div class="toggle-container">
-  <span class="mode-text" id="mode-text">다크모드</span>
-  <div class="toggle-switch">
-    <input type="checkbox" id="dark-mode-toggle" class="toggle-input">
-    <label for="dark-mode-toggle" class="toggle-label"></label>
-  </div>
+    <span class="mode-text" id="mode-text">다크모드</span>
+    <div class="toggle-switch">
+        <input type="checkbox" id="dark-mode-toggle" class="toggle-input">
+        <label for="dark-mode-toggle" class="toggle-label"></label>
+    </div>
 </div>
-
 <div class="logo-container">
     <a href="{{ url_for('index') }}">
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
         <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
     </a>
 </div>
-<div class="right-nav" style="margin-right: 80px;">
-    <a href="{{ url_for('login') }}" class="btn btn-primary me-2">
-        <i class="fas fa-sign-in-alt"></i> 로그인
-    </a>
-    <a href="{{ url_for('register') }}" class="btn btn-warning">
-        <i class="fas fa-user-plus"></i> 회원가입
-    </a>
+<div class="right-nav">
+    <!-- 회원가입 페이지이므로 로그인/회원가입 버튼 모두 제거 -->
 </div>
 {% endblock %}
 
 {% block content %}
-<main class="content-area">
-    <div class="intro-container">
-        <div class="slider-intro">
-            <h1>스마트 가로등 시스템</h1>
-            <p>첨단 IoT 기술로 구현된 도시 안전 솔루션, 실시간 모니터링과 에너지 효율을 통해 더 안전하고 스마트한 도시를 구현합니다.</p>
-        </div>
-    </div>
-    
-    <!-- 바로가기 위젯 영역 - 로그인 상태와 관계없이 표시 -->
-    <div class="dashboard-widgets">
-        <div class="widget-row">
-            <div class="widget">
-                <div class="widget-icon">
-                    <i class="fas fa-road"></i>
-                </div>
-                <div class="widget-content">
-                    <h3>도로용 CCTV</h3>
-                    <p>실시간 도로 모니터링 및 가로등 관리 시스템</p>
-                    {% if 'user_id' in session %}
-                    <a href="{{ url_for('user_dashboard_road_cctv') }}" class="widget-link">바로가기</a>
-                    {% else %}
-                    <a href="#" class="widget-link login-required">바로가기</a>
-                    {% endif %}
-                </div>
+<div class="sign-form-container">
+    <div class="signup-card">
+        <h2 class="text-center mb-4">회원가입</h2>
+        <form method="POST" action="{{ url_for('register')}}" onsubmit="handleSubmit(event)">
+            <div class="mb-3">
+                <label for="name" class="form-label">이름</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="userid" class="form-label">아이디</label>
+                <input type="text" class="form-control" id="userid" name="userid" required>
             </div>
             
-            <div class="widget">
-                <div class="widget-icon">
-                    <i class="fas fa-walking"></i>
-                </div>
-                <div class="widget-content">
-                    <h3>인도용 CCTV</h3>
-                    <p>보행자 안전을 위한 실시간 인도 모니터링 시스템</p>
-                    {% if 'user_id' in session %}
-                    <a href="{{ url_for('user_dashboard_sidewalk_cctv') }}" class="widget-link">바로가기</a>
-                    {% else %}
-                    <a href="#" class="widget-link login-required">바로가기</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="widget-row">
-            <div class="widget">
-                <div class="widget-icon">
-                    <i class="fas fa-question-circle"></i>
-                </div>
-                <div class="widget-content">
-                    <h3>문의하기</h3>
-                    <p>서비스 이용 중 문의사항이나 불편사항을 등록해주세요</p>
-                    {% if 'user_id' in session %}
-                    <a href="{{ url_for('user_dashboard_inquiries') }}" class="widget-link">바로가기</a>
-                    {% else %}
-                    <a href="#" class="widget-link login-required">바로가기</a>
-                    {% endif %}
-                </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">비밀번호</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="8글자~12글자" minlength="8" maxlength="12" required>
+                <div id="passwordError" style="color: red; display: none;">비밀번호는 숫자 2개 이상과 특수문자 1개 이상을 포함해야 합니다.</div>
             </div>
             
-            <div class="widget">
-                <div class="widget-icon">
-                    <i class="fas fa-list"></i>
-                </div>
-                <div class="widget-content">
-                    <h3>문의 목록</h3>
-                    <p>이전에 등록한 문의사항과 답변을 확인하세요</p>
-                    {% if 'user_id' in session %}
-                    <a href="{{ url_for('user_dashboard_inquiries_view') }}" class="widget-link">바로가기</a>
-                    {% else %}
-                    <a href="#" class="widget-link login-required">바로가기</a>
-                    {% endif %}
-                </div>
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">비밀번호 확인</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="8글자~12글자" minlength="8" maxlength="12" required>
+                <div id="password_confirmError" style="color: red; display: none;">비밀번호와 일치하지 않습니다.</div>
             </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">이메일</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="birthday" class="form-label">생년월일</label>
+                <input type="date" class="form-control" id="birthday" name="birthday" required onchange="updateRegNumber()">
+                <div id="birthdayError" style="color: red; display: none;">18세 이상만 가입 가능합니다.</div>
+                <div id="dayError" style="color: red; display: none;">유효한 날짜가 아닙니다.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="regNumberInput2" class="form-label">주민등록번호</label>
+                <input type="text" id="regNumberInput" name="regNumberInput" minlength="6" readonly>
+                <input type="text" id="regNumberInput2" name="regNumberInput2" minlength="7" maxlength="7" required>
+                <div id="regNumberError" style="color: red; display: none;">유효한 주민등록번호가 아닙니다.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="address" class="form-label">주소(도로명,동)</label>
+                <button type="button" id="searchAddressBtn" class="btn btn-secondary" onclick="openAddressSearch()">주소 검색</button>
+                <input type="text" id="address" name="address" class="form-control" required placeholder="주소를 검색하세요" readonly>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="agree_terms" name="agree_terms" required>
+                <label class="form-check-label" for="agree_terms">
+                    <a class="terms_of_service" href="{{ url_for('terms_of_service') }}" target="_blank">이용 약관</a> 및 
+                    <a class="privacy_policy" href="{{ url_for('privacy_policy') }}" target="_blank">개인정보 처리방침</a>에 동의합니다.
+                </label>
+            </div>
+
+            <input type="hidden" id="totalRegNumberField" name="total_regnumber">
+            <input type="hidden" id="genderField" name="gender">
+            <button type="submit" class="btn btn-primary w-100">회원가입</button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a class="text_login" href="{{ url_for('login') }}">이미 계정이 있으신가요? 로그인하기</a>
+        </div>
+        <div class="text-center mt-4">
+            <a class="btn btn-secondary" href="{{ url_for('index') }}">홈페이지</a>
         </div>
     </div>
-    
-    <!-- 슬라이더 영역 (바로가기 위젯 아래에 배치) -->
-    <div class="swiper-container">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
-            </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
-            </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
-            </div>
-        </div>
-        <!-- 네비게이션 버튼 -->
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-        <!-- 페이지네이션 -->
-        <div class="swiper-pagination"></div>
-    </div>
-</main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 카카오 주소 검색 API 로드 -->
+<script src="https://ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
+<script src="{{ url_for('static', filename='js/register.js') }}"></script>
 {% endblock %}

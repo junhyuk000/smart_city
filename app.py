@@ -460,7 +460,7 @@ def search_account():
 
         if search_type == "id":
             userid = manager.get_user_id_by_name_regnumber(username, regnumber)
-            return render_template('search_account.html', userid=userid, search_type=search_type )
+            return render_template('public/search_account.html', userid=userid, search_type=search_type)
 
         elif search_type == "password":
             userid = request.form.get('userid')
@@ -470,8 +470,8 @@ def search_account():
             if password_data: 
                 raw_password = password_data['password']  # 딕셔너리에서 비밀번호 값 가져오기
                 password = raw_password[:4] + '*' * (len(raw_password) - 4)  # 앞 4자리만 표시, 나머지는 '*'
-            return render_template('search_account.html', password = password, userid=userid, search_type=search_type)
-    return render_template('search_account.html')
+            return render_template('public/search_account.html', password=password, userid=userid, search_type=search_type)
+    return render_template('public/search_account.html')
 
 #계정찾기 이후 새비밀번호 업데이트
 @app.route('/index/search_account/edit_password/<userid>', methods=['GET','POST'])
@@ -481,7 +481,7 @@ def edit_password(userid):
         password = request.form['new_password']
         success = manager.update_user_password(userid, password)
         return jsonify({"success": success})
-    return render_template('edit_password.html', user = user)
+    return render_template('public/edit_password.html', user=user)
     
 
 ## 로그아웃 라우트

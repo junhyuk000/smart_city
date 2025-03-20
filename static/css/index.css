@@ -1,0 +1,546 @@
+/* static/css/index.css */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* 다크모드와 라이트모드 색상 변수 */
+:root {
+    --background-color: #f4f4f4;
+    --text-color: #000;
+    --primary-color: #28a745;
+    --secondary-color: #fff;
+    --table-header-bg: #fff;
+    --table-row-hover-bg: #f5f5f5;
+    --input-border-color: #ddd;
+    --button-text-color: #fff;
+    --header-bg: #fff;
+    --header-text-color: #333;
+}
+
+.dark-mode {
+    --background-color: #121212;
+    --text-color: #fff;
+    --primary-color: #28a745;
+    --secondary-color: #333;
+    --table-header-bg: #222;
+    --table-row-hover-bg: #222;
+    --input-border-color: #222;
+    --header-bg: #222;
+    --header-text-color: #f1f1f1;
+}
+
+/* 대시보드 위젯 스타일 */
+.dashboard-widgets {
+    max-width: 1200px;
+    margin: 30px auto 50px;
+    padding: 0 15px;
+}
+
+.widget-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.widget {
+    flex: 1;
+    min-width: 280px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.widget:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.widget-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+    background-color: #28a745;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.widget-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.widget-content {
+    flex: 1;
+}
+
+.widget-content h3 {
+    margin: 0 0 10px;
+    color: #333;
+    font-size: 18px;
+}
+
+.widget-content p {
+    margin: 0 0 15px;
+    color: #666;
+    opacity: 0.8;
+    font-size: 14px;
+}
+
+.widget-link {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.widget-link:hover {
+    background-color: #218838;
+}
+
+/* 다크모드에서의 위젯 스타일 */
+.dark-mode .widget {
+    background-color: #333;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .widget-content h3 {
+    color: #f0f0f0;
+}
+
+.dark-mode .widget-content p {
+    color: #d0d0d0;
+}
+
+/* 슬라이더 관련 스타일 */
+.slider-wrapper {
+    position: relative;
+    width: 60%;
+    margin: 30px auto 60px auto;
+    padding: 0 70px; /* 화살표를 위한 공간 확보 */
+    overflow: visible; /* 화살표가 컨테이너 밖으로 나가도 보이게 */
+}
+
+.swiper-container {
+    width: 100%;
+    height: 500px;
+    overflow: visible; /* 화살표가 바깥에 있어도 보이게 변경 */
+    position: relative;
+    z-index: 1;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 슬라이더 배경 제거 */
+.swiper-container::before {
+    display: none;
+}
+
+/* 슬라이드 아이템 스타일 */
+.swiper-slide {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+/* 네비게이션 버튼 스타일 */
+.swiper-button-next,
+.swiper-button-prev {
+    width: 50px;
+    height: 50px;
+    background-color: transparent;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.swiper-button-next {
+    right: -60px; /* 화살표를 이미지 바깥으로 이동 */
+}
+
+.swiper-button-prev {
+    left: -60px; /* 화살표를 이미지 바깥으로 이동 */
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* 화살표 크기 조정 */
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+/* 다크모드에서의 네비게이션 버튼 */
+.dark-mode .swiper-button-next,
+.dark-mode .swiper-button-prev {
+    background-color: transparent;
+    color: #fff;
+}
+
+/* 슬라이더 페이지네이션 스타일 */
+.swiper-pagination {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+}
+
+.swiper-pagination-bullet {
+    width: 12px;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.swiper-pagination-bullet-active {
+    background-color: #fff;
+    width: 15px;
+    height: 15px;
+}
+
+.dark-mode .swiper-pagination-bullet {
+    background-color: rgba(80, 80, 80, 0.7);
+}
+
+.dark-mode .swiper-pagination-bullet-active {
+    background-color: #aaa;
+}
+
+/* 인트로 영역 스타일 */
+.intro-container {
+    width: 80%;
+    max-width: 1200px;
+    margin: 40px auto 30px auto;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+/* 슬라이더 인트로 텍스트 */
+.slider-intro {
+    position: relative;
+    width: 100%;
+    text-align: center;
+    z-index: 10;
+    margin-bottom: 0;
+}
+
+.slider-intro h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.slider-intro p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.5;
+    max-width: 800px;
+    margin: 0 auto 20px auto;
+}
+
+/* 다크모드에서 슬라이더 인트로 텍스트 */
+.dark-mode .slider-intro h1 {
+    color: #f0f0f0;
+}
+
+.dark-mode .slider-intro p {
+    color: #d0d0d0;
+}
+
+/* 테이블 스타일 */
+table {
+    width: 70%;
+    border-collapse: collapse;
+    border: 2px solid var(--text-color);
+    margin: 0 auto;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+/* 테이블 헤더 스타일 */
+thead th {
+    text-align: center;
+    background-color: var(--table-header-bg);
+    padding: 10px;
+    border: 0.3px solid var(--text-color);
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* 테이블 셀 스타일 */
+td {
+    padding: 8px;
+    border: 0.3px solid var(--text-color);
+}
+
+/* 각 열의 너비 조정 */
+td:first-child, th:first-child {
+    width: 10%;
+    text-align: center;
+}
+
+td:nth-child(2) {
+    width: 65%;
+    text-align: left;
+}
+
+th:nth-child(2) {
+    text-align: center;
+}
+
+td:last-child, th:last-child {
+    width: 25%;
+    text-align: center;
+}
+
+td:last-child a:hover {
+    background-color: #0056b3;
+}
+
+.empty-row {
+    height: 40px;
+}
+
+/* 페이지네이션 */
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a, .pagination span {
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    border: 1px solid var(--input-border-color);
+    margin: 0 4px;
+}
+
+.pagination a:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+/* 다크 모드 추가 스타일 */
+.dark-mode table {
+    border-color: var(--text-color);
+}
+
+.dark-mode thead th,
+.dark-mode td {
+    border-color: var(--text-color);
+}
+
+.dark-mode a {
+    color: #fff;
+}
+
+.dark-mode button:hover,
+.dark-mode .button:hover {
+    background-color: #2E7D32;
+}
+
+/* 플래시 메시지 컨테이너 */
+.flash-messages-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 100%;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 검색 컨테이너 */
+.search-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 왼쪽 정렬 + 오른쪽 정렬 */
+    width: 100%;
+    background-color: var(--secondary-color);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.search-container .total-count {
+    font-weight: bold;
+}
+
+form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+label {
+    font-weight: bold;
+}
+
+select, input[type="text"] {
+    padding: 8px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+button {
+    padding: 8px 15px;
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* 테이블 크기 조정 및 중앙 정렬 */
+.table-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 반응형 조정 */
+@media (max-width: 1400px) {
+    .slider-wrapper {
+        width: 85%;
+    }
+    
+    .swiper-button-next {
+        right: -40px;
+    }
+    
+    .swiper-button-prev {
+        left: -40px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .slider-wrapper {
+        width: 90%;
+    }
+    
+    .swiper-button-next {
+        right: -30px;
+    }
+    
+    .swiper-button-prev {
+        left: -30px;
+    }
+}
+
+@media (max-width: 992px) {
+    .slider-wrapper {
+        width: 95%;
+        padding: 0 40px;
+    }
+    
+    .swiper-container {
+        height: 400px;
+    }
+    
+    .swiper-button-next {
+        right: -20px;
+    }
+    
+    .swiper-button-prev {
+        left: -20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .widget-row {
+        flex-direction: column;
+    }
+    
+    .widget {
+        min-width: auto;
+    }
+    
+    .swiper-container {
+        height: 300px;
+    }
+    
+    table {
+        width: 100%;
+    }
+    
+    .search-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    form {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 10px;
+    }
+    
+    .slider-wrapper {
+        padding: 0 30px;
+    }
+    
+    .swiper-button-next {
+        right: -15px;
+    }
+    
+    .swiper-button-prev {
+        left: -15px;
+    }
+}
