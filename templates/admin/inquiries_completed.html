@@ -9,8 +9,22 @@
     }
 </style>
 {% endblock %}
+{% block navigation %}
+<nav class="header-nav">
+    <div class="nav-menu" id="favorites-nav">
+        <span class="favorites-label">즐겨찾기:</span>
+        <!-- 즐겨찾기 항목들이 여기에 자바스크립트로 추가됩니다 -->
+        <span id="no-favorites-message">등록된 즐겨찾기가 없습니다</span>
+    </div>
+</nav>
+{% endblock %}
 {% block content %}
 <div class="container">
     <h2 style="text-align:center;">답변 완료된 문의 조회</h2>
 </div>
 {%endblock%}
+
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

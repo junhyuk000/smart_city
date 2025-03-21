@@ -720,6 +720,64 @@ class DBManager:
         finally:
             self.disconnect()
 
+    def get_all_lamp_data(self, per_page, offset, search_type=None, search_query=None):
+        """
+        전체 가로등 데이터 조회 (페이지네이션 + 검색 지원)
+        """
+        base_query = "FROM street_lights"
+        where_clause = ""
+        params = []
 
-    
-    
+        # 검색 조건 처리
+        if search_query and search_type != 'all':
+            if search_type == 'street_light_id':
+                where_clause = "WHERE street_light_id LIKE %s"
+                params.append(f"%{search_query}%")
+            elif search_type == 'street_light_location':
+                where_clause = "WHERE location LIKE %s"
+                params.append(f"%{search_query}%")
+
+        # 데이터 조회 쿼리
+        data_sql = f"""
+            SELECT * 
+            {base_query} 
+            {where_clause}
+            ORDER BY street_light_id 
+            LIMIT %s OFFSET %s
+        """
+        data_params = params + [per_page, offset]
+
+        # 전체 개수 조회 쿼리
+        count_sql = f"""
+            SELECT COUNT(*) AS total 
+            {base_query} 
+            {where_clause}
+        """
+        
+        return data_sql, count_sql, data_params
+
+    def get_paginated_lamps(self, per_page, offset, search_type=None, search_query=None):
+        """
+        페이지네이션된 가로등 데이터 반환
+        """
+        try:
+            data_sql, count_sql, params = self.get_all_lamp_data(
+                per_page, offset, search_type, search_query
+            )
+            
+            # 데이터 조회
+            self.connect()
+            self.cursor.execute(data_sql, params)
+            lamp_data = self.cursor.fetchall()
+
+            # 전체 개수 조회
+            self.cursor.execute(count_sql, params[:-2])  # LIMIT, OFFSET 제외
+            total = self.cursor.fetchone()['total']
+
+            return lamp_data, total
+
+        except Exception as e:
+            print(f"가로등 조회 오류: {str(e)}")
+            return [], 0
+        finally:
+            self.disconnect()
