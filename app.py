@@ -881,5 +881,10 @@ def street_light_delete():
     return render_template('admin/street_light_delete.html')
 
 
+@app.route('/admin/inquries_completed')
+def admin_inquries_completed():
+    return render_template('public/index.html')
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)
