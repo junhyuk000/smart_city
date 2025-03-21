@@ -1,3 +1,4 @@
+# C:\Users\facec\Desktop\smart_city\app.py
 from flask import Flask, session, url_for, render_template, flash, before_render_template, send_from_directory, jsonify, request, redirect, Response
 import os
 import requests
@@ -148,6 +149,11 @@ def set_command():
 @app.route('/')
 def index():
     return render_template('public/index.html')
+
+### 소개 페이지 (로그인 없이 접속 가능)
+@app.route('/about')
+def about():
+    return render_template('user/about.html')
 
 ### 회원가입 페이지등록 
 #회원가입
@@ -525,6 +531,7 @@ def edit_password(userid):
         password = request.form['new_password']
         success = manager.update_user_password(userid, password)
         return jsonify({"success": success})
+    return render_template('public/edit_password.html', user=user)
     return render_template('public/edit_password.html', user=user)
     
 
