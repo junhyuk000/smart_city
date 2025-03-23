@@ -1,4 +1,4 @@
-// static\js\chat.js
+// C:\Users\facec\Desktop\smart_city\static\js\chat.js
 
 document.addEventListener('DOMContentLoaded', function() {
     initFloatingChat();
@@ -10,10 +10,6 @@ function initFloatingChat() {
     const closePanel = document.getElementById('closePanel');
     const chatPanel = document.getElementById('chatPanel');
     const startChat = document.getElementById('startChat');
-    const loginAlert = document.getElementById('login-alert');
-    
-    // 로그인 상태 확인 - data-is-logged-in 속성을 사용
-    const isLoggedIn = floatingChat && floatingChat.getAttribute('data-is-logged-in') === 'true';
     
     if (!floatingChat || !chatIcon || !closePanel || !chatPanel) return;
     
@@ -42,33 +38,7 @@ function initFloatingChat() {
     if (startChat) {
         startChat.addEventListener('click', function(e) {
             e.stopPropagation(); // 이벤트 버블링 방지
-            
-            // 로그인 상태 확인 후 처리
-            if (isLoggedIn) {
-                showChatInterface();
-            } else {
-                // 로그인 필요 알림 표시
-                if (loginAlert) {
-                    // 채팅 패널 닫기
-                    floatingChat.classList.remove('active');
-                    chatIcon.setAttribute('aria-expanded', false);
-                    chatPanel.setAttribute('aria-hidden', true);
-                    
-                    // 로그인 알림 모달 표시
-                    loginAlert.style.display = 'flex';
-                    setTimeout(() => {
-                        loginAlert.classList.add('show');
-                    }, 10);
-                    
-                    // 접근성 - 모달이 열렸을 때 포커스 이동
-                    const focusableElements = loginAlert.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
-                    if (focusableElements.length) {
-                        setTimeout(() => {
-                            focusableElements[0].focus();
-                        }, 300);
-                    }
-                }
-            }
+            showChatInterface();
         });
     }
     
@@ -127,23 +97,7 @@ function initFloatingChat() {
             if (newStartChat) {
                 newStartChat.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    if (isLoggedIn) {
-                        showChatInterface();
-                    } else {
-                        // 로그인 필요 알림 표시
-                        if (loginAlert) {
-                            // 채팅 패널 닫기
-                            floatingChat.classList.remove('active');
-                            chatIcon.setAttribute('aria-expanded', false);
-                            chatPanel.setAttribute('aria-hidden', true);
-                            
-                            // 로그인 알림 모달 표시
-                            loginAlert.style.display = 'flex';
-                            setTimeout(() => {
-                                loginAlert.classList.add('show');
-                            }, 10);
-                        }
-                    }
+                    showChatInterface();
                 });
             }
         });

@@ -45,7 +45,7 @@
     position: absolute;
     bottom: 70px;
     right: 0;
-    width: 335px; /* 5px 줄임 (원래 350px) */
+    width: 350px;
     background-color: var(--bg-color);
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -55,7 +55,6 @@
     transform-origin: bottom right;
     pointer-events: none;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    margin-right: 5px; /* 오른쪽으로 5px 이동 */
 }
 
 /* 채팅 패널 활성화 시 스타일 */
@@ -320,7 +319,6 @@
     font-size: 13px;
     padding: 6px 10px;
     opacity: 0.8;
-    max-width: 90%; /* 환영 메시지 컨테이너 좌우 크기 늘림 (원래 80%) */
 }
 
 .dark-mode .system .message-content {

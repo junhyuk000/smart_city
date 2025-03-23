@@ -1,7 +1,7 @@
-{# templates\public\chat_widget.html #}
+{# C:\Users\facec\Desktop\smart_city\templates\public\chat_widget.html #}
 
 <!-- 플로팅 채팅 위젯 -->
-<div class="floating-chat" id="floatingChat" data-is-logged-in="{{ 'true' if 'user_id' in session or 'admin_id' in session else 'false' }}">
+<div class="floating-chat" id="floatingChat">
     <!-- 채팅 아이콘 -->
     <div class="chat-icon" id="chatIcon" aria-expanded="false" aria-label="고객 지원 열기">
         <i class="fas fa-comments"></i>
@@ -10,10 +10,7 @@
     <!-- 채팅 패널 -->
     <div class="chat-panel" id="chatPanel" aria-hidden="true">
         <div class="panel-header">
-            <button class="back-button" id="mainBackButton" style="display: none;">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <h3 id="panelTitle">고객 지원</h3>
+            <h3>고객 지원</h3>
             <button class="close-panel" id="closePanel" aria-label="패널 닫기">
                 <i class="fas fa-times"></i>
             </button>
@@ -25,7 +22,7 @@
                     <h4>카카오톡 문의</h4>
                     <p>카카오톡으로 빠르게 문의하세요</p>
                 </div>
-                <a href="https://open.kakao.com/o/s68XDGmh" target="_blank" class="option-button">문의하기</a>
+                <a href="https://kakao.com" target="_blank" class="option-button">문의하기</a>
             </div>
             
             <div class="support-option chat">
