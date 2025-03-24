@@ -894,101 +894,36 @@ def admin_view_posts_member(userid):
 @admin_required
 def admin_answer_inquiry():
     try:
-        # 폼에서 데이터 가져오기
-        # inquiry_id는 사용하지 않지만 폼에서 받을 수 있으므로 일단 유지
-        inquiry_id = request.form.get('inquiry_id')  # inquiries 테이블 업데이트에 필요
+        inquiry_id = request.form.get('inquiry_id')
         user_id = request.form.get('user_id')
-        enquired_at = request.form.get('enquired_at')
-        answer_content = request.form.get('answer_content')
         admin_id = session.get('admin_id')
-        
-        print(f"데이터 확인: user_id={user_id}, admin_id={admin_id}, inquiry_id={inquiry_id}")
-        
-        # 현재 시간 가져오기
-        from datetime import datetime
-        
-        # enquired_at 처리 - 문자열이면 datetime으로 변환
-        if isinstance(enquired_at, str):
-            try:
-                enquired_at = datetime.strptime(enquired_at, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                print(f"잘못된 날짜 형식: {enquired_at}")
-                flash('잘못된 날짜 형식입니다.', 'error')
-                return redirect(url_for('admin_inquiries_view'))
-        
-        # 현재 시간
+        answer_content = request.form.get('answer_content')
         answer_time = datetime.now()
+        enquired_at = datetime.now()  # 직접 현재 시간 사용
         
-        # DB 연결
         db = DBManager()
         db.connect()
         
-        # admin_id로 기존 답변이 있는지 확인
-        db.cursor.execute("SELECT admin_id FROM inquiry_answers WHERE admin_id = %s", (admin_id,))
-        existing_answer = db.cursor.fetchone()
+        # inquiry_answers 테이블에 삽입
+        db.cursor.execute("""
+            INSERT INTO inquiry_answers 
+            (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time))
         
-        if existing_answer:
-            # 답변 업데이트 (admin_id가 기본 키이므로 WHERE 절에 admin_id 사용)
-            db.cursor.execute("""
-                UPDATE inquiry_answers 
-                SET user_id = %s, answer_content = %s, enquired_at = %s, answer_time = %s 
-                WHERE admin_id = %s
-            """, (user_id, answer_content, enquired_at, answer_time, admin_id))
-            print(f"기존 답변 업데이트 완료 (admin_id: {admin_id})")
-        else:
-            # 새 답변 삽입
-            db.cursor.execute("""
-                INSERT INTO inquiry_answers 
-                (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time) 
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time))
-            print(f"새 답변 삽입 완료 (admin_id: {admin_id})")
+        # inquiries 테이블 상태 업데이트
+        db.cursor.execute("UPDATE inquiries SET answer_status = 'completed' WHERE inquiries_id = %s", (inquiry_id,))
         
-        # inquiries 테이블의 answer_status 업데이트
-        # 이 부분에서는 기존 오류가 발생했으므로 테이블 구조 확인 필요
-        try:
-            db.cursor.execute("DESCRIBE inquiries")
-            columns = db.cursor.fetchall()
-            print("inquiries 테이블 구조:")
-            for column in columns:
-                print(column)
-            
-            # 먼저 inquiries_id로 시도
-            db.cursor.execute("""
-                UPDATE inquiries 
-                SET answer_status = 'completed' 
-                WHERE inquiries_id = %s
-            """, (inquiry_id,))
-            
-        except Exception as table_error:
-            print(f"inquiries 테이블 업데이트 오류: {str(table_error)}")
-            # 오류 발생 시 다른 컬럼명 시도
-            try:
-                db.cursor.execute("""
-                    UPDATE inquiries 
-                    SET answer_status = 'completed' 
-                    WHERE id = %s
-                """, (inquiry_id,))
-            except Exception as e2:
-                print(f"대체 쿼리도 실패: {str(e2)}")
-                # 여기서는 실패해도 계속 진행 (inquiry_answers에 데이터는 저장됨)
-        
-        # 변경사항 저장 및 연결 종료
         db.connection.commit()
         db.disconnect()
         
-        print("답변이 성공적으로 저장되었습니다.")
         flash('답변이 성공적으로 저장되었습니다.', 'success')
         return redirect(url_for('admin_inquiries_view'))
         
     except Exception as e:
         print(f"오류 발생: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        
-        if 'db' in locals() and hasattr(db, 'connection') and db.connection:
+        if 'db' in locals():
             db.disconnect()
-        
         flash('답변 저장 중 오류가 발생했습니다.', 'error')
         return redirect(url_for('admin_inquiries_view'))
 
@@ -1008,19 +943,13 @@ def admin_inquiries_pending():
     db.connect()
     
     try:
-        # 수정된 쿼리: users 테이블과 조인하여 user_name 포함
+        # 테이블 구조에 맞게 컬럼명을 수정합니다.
         query = """
-            SELECT i.inquiries_id, i.user_id, u.user_name, i.inquiry_reason, i.detail_reason, i.inquiry_time
-            FROM inquiries i
-            JOIN users u ON i.user_id = u.user_id
-            WHERE i.answer_status = 'pending'
+            SELECT inquiries_id, user_id, inquiry_reason, detail_reason, inquiry_time
+            FROM inquiries
+            WHERE answer_status = 'pending'
         """
-        count_query = """
-            SELECT COUNT(*) as total
-            FROM inquiries i
-            JOIN users u ON i.user_id = u.user_id
-            WHERE i.answer_status = 'pending'
-        """
+        count_query = "SELECT COUNT(*) as total FROM inquiries WHERE answer_status = 'pending'"
         params = []
     
         if search_type and search_query:
@@ -1034,6 +963,7 @@ def admin_inquiries_pending():
         db.cursor.execute(query, tuple(params))
         posts = db.cursor.fetchall()
     
+        # 검색 조건이 있을 경우, count_query에 적용할 파라미터는 검색 조건만 사용
         count_params = (params[0],) if (search_type and search_query) else ()
         db.cursor.execute(count_query, count_params)
         total = db.cursor.fetchone()['total']
