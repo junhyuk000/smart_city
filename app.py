@@ -679,7 +679,14 @@ def admin_lamp_check():
 
 
 ##불법단속
-#자동차(도로) 단속
+#자동차(도로) 단속 보드
+@app.route("/admin/road_car_board")
+@admin_required
+def admin_road_car_board():
+    adminid =session.get('admin_id')
+    return render_template("admin/road_car_board.html", stream_url=road_url, adminid=adminid)
+
+#자동차(도로) 단속 카메라
 @app.route("/admin/load_car")
 @admin_required
 def admin_load_car():
@@ -875,10 +882,71 @@ def street_light_register():
             return redirect(url_for('street_light_register'))
 
     return render_template('admin/street_light_register.html')
+    
+    
 # 철거된 가로등 삭제
 @app.route('/admin/street_light_delete')
 def street_light_delete():
     return render_template('admin/street_light_delete.html')
+
+@app.route('/api/decommissioned-streetlights', methods=['GET'])
+def search_decommissioned_streetlights():
+    criteria = request.args.get('criteria')
+    value = request.args.get('value')
+    
+    db = DBManager()
+    db.connect()
+    
+    try:
+        query = """
+            SELECT street_light_id as id, location, 
+                   DATE_FORMAT(installation_date, '%Y-%m-%d') as installation_date,
+                   DATE_FORMAT(registered_at, '%Y-%m-%d') as decommissionDate
+            FROM street_lights
+            WHERE 
+        """
+        
+        if criteria == 'id':
+            query += "street_light_id LIKE %s"
+            search_param = f"%{value}%"
+        elif criteria == 'location':
+            query += "location LIKE %s"
+            search_param = f"%{value}%"
+        else:
+            return jsonify([])
+            
+        db.cursor.execute(query, (search_param,))
+        results = db.cursor.fetchall()
+        
+        return jsonify(results)
+    
+    except Exception as e:
+        print(f"검색 중 오류 발생: {e}")
+        return jsonify([])
+    
+    finally:
+        db.disconnect()
+
+@app.route('/api/decommissioned-streetlights/<int:id>', methods=['DELETE'])
+def delete_streetlight(id):
+    db = DBManager()
+    db.connect()
+    
+    try:
+        # 즉시 가로등 데이터 삭제 (로그 기록 없음)
+        delete_query = "DELETE FROM street_lights WHERE street_light_id = %s"
+        db.cursor.execute(delete_query, (id,))
+        
+        db.connection.commit()
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        db.connection.rollback()
+        print(f"삭제 중 오류 발생: {e}")
+        return jsonify({"success": False, "message": str(e)})
+    
+    finally:
+        db.disconnect()
 
 
 @app.route('/admin/inquries_completed')
