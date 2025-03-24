@@ -781,3 +781,88 @@ class DBManager:
             return [], 0
         finally:
             self.disconnect()
+
+    def get_all_inquiries(self, per_page, offset, search_type=None, search_query=None):
+        """
+        전체 문의 데이터 조회 (페이지네이션 + 검색 지원)
+        """
+        base_query = "FROM inquiries"
+        where_clause = ""
+        params = []
+
+        # 검색 조건 처리
+        if search_query and search_type != 'all':
+            if search_type == 'inquiries_id':
+                where_clause = "WHERE inquiries_id LIKE %s"
+                params.append(f"%{search_query}%")
+            elif search_type == 'user_id':
+                where_clause = "WHERE user_id LIKE %s"
+                params.append(f"%{search_query}%")
+            elif search_type == 'inquiry_reason':
+                where_clause = "WHERE inquiry_reason LIKE %s"
+                params.append(f"%{search_query}%")
+            elif search_type == 'answer_status':
+                where_clause = "WHERE answer_status LIKE %s"
+                params.append(f"%{search_query}%")
+
+        # 데이터 조회 쿼리
+        data_sql = f"""
+            SELECT * 
+            {base_query} 
+            {where_clause}
+            ORDER BY inquiries_id DESC
+            LIMIT %s OFFSET %s
+        """
+        data_params = params + [per_page, offset]
+
+        # 전체 개수 조회 쿼리
+        count_sql = f"""
+            SELECT COUNT(*) AS total 
+            {base_query} 
+            {where_clause}
+        """
+
+        return data_sql, count_sql, data_params
+
+    def get_paginated_inquiries(self, per_page, offset, search_type=None, search_query=None):
+        """
+        페이지네이션된 문의 데이터 반환
+        """
+        try:
+            data_sql, count_sql, params = self.get_all_inquiries(
+                per_page, offset, search_type, search_query
+            )
+
+            # 데이터 조회
+            self.connect()
+            self.cursor.execute(data_sql, params)
+            inquiries_data = self.cursor.fetchall()
+
+            # 전체 개수 조회
+            self.cursor.execute(count_sql, params[:-2])  # LIMIT, OFFSET 제외
+            total = self.cursor.fetchone()['total']
+
+            return inquiries_data, total
+
+        except Exception as e:
+            print(f"문의 데이터 조회 오류: {str(e)}")
+            return [], 0
+        finally:
+            self.disconnect()
+
+    def get_enquired_post_by_id(self, user_id, inquiry_time):
+        # 커서가 연결되어 있는지 확인
+        if self.connection is None or not self.connection.is_connected():
+            self.connect()  # 연결이 끊어졌다면 다시 연결
+        
+        # 문의 사항을 'user_id'와 'inquiry_time'을 기준으로 가져오는 쿼리 작성
+        query = """
+            SELECT inquiries.inquiries_id, inquiries.user_id, inquiries.capture_file, 
+                inquiries.inquiry_reason, inquiries.detail_reason, 
+                inquiries.inquiry_time, inquiries.answer_status, users.user_name
+            FROM inquiries
+            JOIN users ON inquiries.user_id = users.user_id
+            WHERE inquiries.user_id = %s AND inquiries.inquiry_time = %s
+        """
+        self.cursor.execute(query, (user_id, inquiry_time))  # 쿼리 실행
+        return self.cursor.fetchone()  # 단일 레코드를 가져옴

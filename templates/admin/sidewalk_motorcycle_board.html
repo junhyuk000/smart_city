@@ -52,7 +52,7 @@
                 <td>{{ street_light.location }}</td>
                 {% if street_light.cctv_ip %}
                 <td>
-                    <a href="{{ url_for('admin_load_car', street_light_id=street_light.street_light_id) }}" class="btn btn-primary">
+                    <a href="{{ url_for('admin_sidewalk_motorcycle', street_light_id=street_light.street_light_id) }}" class="btn btn-primary">
                         상세 보기
                     </a>
                     <i class="fa-solid fa-video fa-2x"></i> <!-- 일반적인 CCTV 아이콘 -->

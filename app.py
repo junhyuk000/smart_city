@@ -680,11 +680,45 @@ def admin_lamp_check():
 
 ##불법단속
 #자동차(도로) 단속 보드
-@app.route("/admin/road_car_board")
+@app.route('/admin/road_car_board', methods=['GET'])
 @admin_required
 def admin_road_car_board():
-    adminid =session.get('admin_id')
-    return render_template("admin/road_car_board.html", stream_url=road_url, adminid=adminid)
+    search_query = request.args.get("search_query", "").strip()
+    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    # search_type이 'all'이면 search_query를 빈 문자열로 설정
+    if search_type == "all":
+        search_query = ""
+
+    # SQL 쿼리 및 파라미터 가져오기
+    sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
+    count_sql, count_values = manager.get_road_cctv_count_query(search_query, search_type)
+
+    # 검색된 가로등 목록 가져오기
+    street_lights = manager.execute_query(sql, values)
+    # 전체 CCTV 개수 카운트
+    total_posts = manager.execute_count_query(count_sql, count_values)
+
+    # 페이지네이션 계산
+    total_pages = (total_posts + per_page - 1) // per_page
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        "admin/road_car_board.html",
+        street_lights=street_lights,
+        search_query=search_query,
+        search_type=search_type,
+        page=page,
+        total_posts=total_posts,
+        per_page=per_page,
+        total_pages=total_pages,
+        prev_page=prev_page,
+        next_page=next_page,
+    )
 
 #자동차(도로) 단속 카메라
 @app.route("/admin/load_car")
@@ -693,6 +727,47 @@ def admin_load_car():
     adminid =session.get('admin_id')
     return render_template("admin/road_car.html", stream_url=road_url, adminid=adminid)
 
+#오토바이(인도) 단속 보드
+@app.route('/admin/sidewalk_motorcycle_board', methods=['GET'])
+@admin_required
+def admin_sidewalk_motorcycle_board():
+    search_query = request.args.get("search_query", "").strip()
+    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+    if search_type == "all":
+        search_query = ""
+    # SQL 쿼리 및 파라미터 가져오기
+    sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
+    count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
+
+    # 검색된 가로등 목록 가져오기
+    street_lights = manager.execute_query(sql, values)
+
+    # 전체 CCTV 개수 카운트
+    total_posts = manager.execute_count_query(count_sql, count_values)
+
+    # 페이지네이션 계산
+    total_pages = (total_posts + per_page - 1) // per_page
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        "admin/sidewalk_motorcycle_board.html",
+        street_lights=street_lights,
+        search_query=search_query,
+        search_type=search_type,
+        page=page,
+        total_posts=total_posts,
+        per_page=per_page,
+        total_pages=total_pages,
+        prev_page=prev_page,
+        next_page=next_page,
+    )
+
+
+
 #오토바이(인도) 단속
 @app.route("/admin/sidewalk_motorcycle")
 @admin_required
@@ -700,16 +775,7 @@ def admin_sidewalk_motorcycle():
     adminid = session.get('admin_id')
     return render_template("admin/sidewalk_motorcycle.html", adminid=adminid)
 
-# # YOLO 분석된 영상 스트리밍
-# @app.route("/processed_video_feed")
-# def processed_video_feed():
-#     """YOLOv8로 감지된 영상 스트리밍"""
-#     def generate():
-#         while True:
-#             with license_plate.lock:
-#                 if license_plate.frame is None:
-#                     continue
-#                 img = license_plate.frame.copy()
+
 # # YOLO 분석된 영상 스트리밍
 # @app.route("/processed_video_feed")
 # def processed_video_feed():
@@ -744,11 +810,7 @@ def admin_sidewalk_motorcycle():
 #     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 #     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# # OCR 결과 API
-# @app.route("/ocr_result", methods=["GET"])
-# def get_ocr_result():
-#     """OCR 결과 반환 API"""
-#     response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
+
 # # OCR 결과 API
 # @app.route("/ocr_result", methods=["GET"])
 # def get_ocr_result():
@@ -764,11 +826,7 @@ def admin_sidewalk_motorcycle():
 #     return jsonify(response_data)
 
 
-# # ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
-# @app.route("/video_feed")
-# def video_feed():
-#     """ESP32-CAM 스트리밍"""
-#     return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
 # # ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
 # @app.route("/video_feed")
 # def video_feed():
@@ -776,11 +834,7 @@ def admin_sidewalk_motorcycle():
 #     return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
-# # ✅ 오토바이 감지 상태 API
-# @app.route("/alert_status", methods=["GET"])
-# def alert_status():
-#     """오토바이 감지 상태 반환"""
-#     return jsonify(motorcycle.get_alert_status())
+
 # # ✅ 오토바이 감지 상태 API
 # @app.route("/alert_status", methods=["GET"])
 # def alert_status():
@@ -789,20 +843,26 @@ def admin_sidewalk_motorcycle():
 
 
 ##관리자 페이지에서 문의정보 보기
-##문의된 정보 보기
-@app.route('/admin/inquiries_view')
+#문의된 정보 보기
+@app.route('/admin/inquiries_view', methods=['GET'])
 @admin_required
 def admin_inquiries_view():
-    adminid = session.get('admin_id')
-    return render_template("admin/inquiries_view.html", adminid=adminid)
+    per_page = 10  # 한 페이지당 보여줄 개수
+    page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+    offset = (page - 1) * per_page  # 오프셋 계산
+    search_type = request.args.get('search_type')
+    search_query = request.args.get('search_query')
 
-##답변완료된 문의정보 보기
-@app.route('/admin/inquiries_completed')
-@admin_required
-def admin_inquiries_completed():
-    adminid = session.get('admin_id')
-    return render_template("admin/inquiries_completed.html", adminid=adminid)
+    posts, total = manager.get_paginated_inquiries(per_page, offset, search_type, search_query)
 
+    return render_template(
+        'admin/inquiries_view.html',
+        posts=posts,
+        total=total,
+        per_page=per_page,
+        current_page=page
+    )
+        
 
 ## 답변상태 변환하기 
 @app.route('/update_status_member/<userid>', methods=['POST'])
@@ -817,14 +877,183 @@ def update_answer_status(userid):
         return redirect(url_for('admin_list_posts_nonmember'))
 
 #회원 문의사항 상세정보보기
-@app.route('/admin/admin_view_posts_member/<userid>', methods=['POST'])
+@app.route('/admin_view_posts_member/<userid>', methods=['POST'])
 @admin_required
 def admin_view_posts_member(userid):
     enquired_at_str = request.form['enquired_at']
     enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
-    post = manager.get_enquired_post_by_id(userid,enquired_at)
-    return render_template("admin_view_posts_member.html", post=post)
 
+    # 단일 post 객체를 가져옵니다.
+    post = manager.get_enquired_post_by_id(userid, enquired_at)
+
+    # 'posts'로 단일 객체를 전달
+    return render_template("admin/view_posts_member.html", posts=post)
+
+# 답변 하기
+@app.route('/admin/answer-inquiry', methods=['POST'])
+@admin_required
+def admin_answer_inquiry():
+    try:
+        # 폼에서 데이터 가져오기
+        # inquiry_id는 사용하지 않지만 폼에서 받을 수 있으므로 일단 유지
+        inquiry_id = request.form.get('inquiry_id')  # inquiries 테이블 업데이트에 필요
+        user_id = request.form.get('user_id')
+        enquired_at = request.form.get('enquired_at')
+        answer_content = request.form.get('answer_content')
+        admin_id = session.get('admin_id')
+        
+        print(f"데이터 확인: user_id={user_id}, admin_id={admin_id}, inquiry_id={inquiry_id}")
+        
+        # 현재 시간 가져오기
+        from datetime import datetime
+        
+        # enquired_at 처리 - 문자열이면 datetime으로 변환
+        if isinstance(enquired_at, str):
+            try:
+                enquired_at = datetime.strptime(enquired_at, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                print(f"잘못된 날짜 형식: {enquired_at}")
+                flash('잘못된 날짜 형식입니다.', 'error')
+                return redirect(url_for('admin_inquiries_view'))
+        
+        # 현재 시간
+        answer_time = datetime.now()
+        
+        # DB 연결
+        db = DBManager()
+        db.connect()
+        
+        # admin_id로 기존 답변이 있는지 확인
+        db.cursor.execute("SELECT admin_id FROM inquiry_answers WHERE admin_id = %s", (admin_id,))
+        existing_answer = db.cursor.fetchone()
+        
+        if existing_answer:
+            # 답변 업데이트 (admin_id가 기본 키이므로 WHERE 절에 admin_id 사용)
+            db.cursor.execute("""
+                UPDATE inquiry_answers 
+                SET user_id = %s, answer_content = %s, enquired_at = %s, answer_time = %s 
+                WHERE admin_id = %s
+            """, (user_id, answer_content, enquired_at, answer_time, admin_id))
+            print(f"기존 답변 업데이트 완료 (admin_id: {admin_id})")
+        else:
+            # 새 답변 삽입
+            db.cursor.execute("""
+                INSERT INTO inquiry_answers 
+                (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time))
+            print(f"새 답변 삽입 완료 (admin_id: {admin_id})")
+        
+        # inquiries 테이블의 answer_status 업데이트
+        # 이 부분에서는 기존 오류가 발생했으므로 테이블 구조 확인 필요
+        try:
+            db.cursor.execute("DESCRIBE inquiries")
+            columns = db.cursor.fetchall()
+            print("inquiries 테이블 구조:")
+            for column in columns:
+                print(column)
+            
+            # 먼저 inquiries_id로 시도
+            db.cursor.execute("""
+                UPDATE inquiries 
+                SET answer_status = 'completed' 
+                WHERE inquiries_id = %s
+            """, (inquiry_id,))
+            
+        except Exception as table_error:
+            print(f"inquiries 테이블 업데이트 오류: {str(table_error)}")
+            # 오류 발생 시 다른 컬럼명 시도
+            try:
+                db.cursor.execute("""
+                    UPDATE inquiries 
+                    SET answer_status = 'completed' 
+                    WHERE id = %s
+                """, (inquiry_id,))
+            except Exception as e2:
+                print(f"대체 쿼리도 실패: {str(e2)}")
+                # 여기서는 실패해도 계속 진행 (inquiry_answers에 데이터는 저장됨)
+        
+        # 변경사항 저장 및 연결 종료
+        db.connection.commit()
+        db.disconnect()
+        
+        print("답변이 성공적으로 저장되었습니다.")
+        flash('답변이 성공적으로 저장되었습니다.', 'success')
+        return redirect(url_for('admin_inquiries_view'))
+        
+    except Exception as e:
+        print(f"오류 발생: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        if 'db' in locals() and hasattr(db, 'connection') and db.connection:
+            db.disconnect()
+        
+        flash('답변 저장 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin_inquiries_view'))
+
+# 문의된 정보 보기 (미답변만)
+@app.route('/admin/inquiries_pending', methods=['GET'])
+def admin_inquiries_pending():
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+    
+    per_page = 10  # 한 페이지당 보여줄 개수
+    page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+    offset = (page - 1) * per_page  # 오프셋 계산
+    search_type = request.args.get('search_type')
+    search_query = request.args.get('search_query')
+    
+    db = DBManager()
+    db.connect()
+    
+    try:
+        # 수정된 쿼리: users 테이블과 조인하여 user_name 포함
+        query = """
+            SELECT i.inquiries_id, i.user_id, u.user_name, i.inquiry_reason, i.detail_reason, i.inquiry_time
+            FROM inquiries i
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.answer_status = 'pending'
+        """
+        count_query = """
+            SELECT COUNT(*) as total
+            FROM inquiries i
+            JOIN users u ON i.user_id = u.user_id
+            WHERE i.answer_status = 'pending'
+        """
+        params = []
+    
+        if search_type and search_query:
+            query += f" AND {search_type} LIKE %s"
+            count_query += f" AND {search_type} LIKE %s"
+            params.append(f"%{search_query}%")
+        
+        query += " ORDER BY inquiry_time DESC LIMIT %s OFFSET %s"
+        params.extend([per_page, offset])
+    
+        db.cursor.execute(query, tuple(params))
+        posts = db.cursor.fetchall()
+    
+        count_params = (params[0],) if (search_type and search_query) else ()
+        db.cursor.execute(count_query, count_params)
+        total = db.cursor.fetchone()['total']
+    
+    except Exception as e:
+        print("데이터베이스 오류:", e)
+        posts = []
+        total = 0
+    finally:
+        db.disconnect()
+    
+    return render_template(
+        'admin/inquiries_pending.html',
+        posts=posts,
+        total=total,
+        per_page=per_page,
+        current_page=page
+    )
+
+        
 #이미지파일 가져오기
 @app.route('/capture_file/<filename>')
 def capture_file(filename):
