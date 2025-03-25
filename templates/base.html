@@ -30,10 +30,28 @@
                 </div>
             </div>
             <div class="logo-container">
+                {% if session.get('admin_id') %}
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
+                        <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('staff_dashboard') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
+                        <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
+                    </a>
+                    {% endif %}
+                {% elif session.get('user_id') %}
+                <a href="{{ url_for('user_dashboard') }}">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
+                    <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
+                {% else %}
                 <a href="{{ url_for('index') }}">
                     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
                     <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
                 </a>
+                {% endif %}
             </div>
             {% if 'user_id' in session %}
             <div class="right-nav">
@@ -64,6 +82,7 @@
             {% endif %}
         </div>
         
+        {% block navigation %}
         <!-- 내비게이션 영역 -->
         <nav class="header-nav">
             <div class="nav-menu">
@@ -82,35 +101,6 @@
                         <div class="dropdown-content" id="inquiry-dropdown">
                             <a href="{{ url_for('user_dashboard_inquiries_view') }}">문의 목록</a>
                             <a href="{{ url_for('user_dashboard_inquiries') }}">1:1 문의</a>
-                        </div>
-                    </div>
-                {% elif 'admin_id' in session %}
-                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link">홈</a>
-                    <div class="menu-item">
-                        <a href="#" class="nav-link nav-link-dropdown">CCTV 보기</a>
-                        <div class="dropdown-content" id="admin-cctv-dropdown">
-                            <a href="{{ url_for('admin_road_cctv') }}">도로용 CCTV</a>
-                            <a href="{{ url_for('admin_sidewalk_cctv') }}">인도용 CCTV</a>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <a href="#" class="nav-link nav-link-dropdown">가로등</a>
-                        <div class="dropdown-content" id="admin-lamp-dropdown">
-                            <a href="{{ url_for('admin_lamp_check') }}">전체 가로등</a>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <a href="#" class="nav-link nav-link-dropdown">불법 단속</a>
-                        <div class="dropdown-content" id="admin-monitor-dropdown">
-                            <a href="{{ url_for('admin_load_car') }}">자동차(도로)</a>
-                            <a href="{{ url_for('admin_sidewalk_motorcycle') }}">오토바이(인도)</a>
-                        </div>
-                    </div>
-                    <div class="menu-item">
-                        <a href="#" class="nav-link nav-link-dropdown">문의</a>
-                        <div class="dropdown-content" id="admin-inquiry-dropdown">
-                            <a href="{{ url_for('admin_inquiries_view') }}">문의 전체</a>
-                            <a href="{{ url_for('admin_inquries_completed') }}">문의 완료</a>
                         </div>
                     </div>
                 {% else %}
@@ -133,6 +123,7 @@
                 {% endif %}
             </div>
         </nav>
+        {% endblock %}
     </header>
     
     {% with messages = get_flashed_messages(with_categories=true) %}

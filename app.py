@@ -14,7 +14,7 @@ import re
 # import motorcycle
 
 from api import handle_request  # api.py에서 handle_request 함수 불러오기
-## sy branch
+
 app = Flask(__name__)
 
 
@@ -22,6 +22,9 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이션에서는 더 안전한 방법으로 설정해야 함if __name__ == '__main__':
 road_url = "http://10.0.66.14:5000/stream"
 manager = DBManager()
+KAKAO_API_KEY = "4cf7fc8fc69613ac8f18b4d883213352"
+
+
 
 # led센서 테스트
 # @app.route('/test')
@@ -143,8 +146,6 @@ def set_command():
     command_cache[target]["cmd"] = cmd
     return jsonify({"status": "ok", "command": cmd})
 
-
-
 ### 홈페이지
 @app.route('/')
 def index():
@@ -222,9 +223,21 @@ def admin_required(f):
         
         # 관리자 정보 확인
         admin = manager.get_admin_by_id(session['admin_id'])  # 세션의 관리자 ID로 확인
-        if not admin:  # 관리자가 아니면
+        if not admin or admin['role'] != 'admin':  # 관리자가 아니면
             return "접근 권한이 없습니다", 403  # 관리자만 접근 가능
-        
+        return f(*args, **kwargs)
+    return decorated_function
+
+## 사원 권한 필수 데코레이터
+def staff_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:  # 'adminid'가 세션에 없다면
+            return redirect('/login')  # 로그인 페이지로 리디렉션
+        # 관리자 정보 확인
+        admin = manager.get_admin_by_id(session['admin_id'])  # 세션의 관리자 ID로 확인
+        if not admin or admin['role'] != 'staff':  # 사원이 아니면
+            return "접근 권한이 없습니다", 403  # 관리자만 접근 가능
         return f(*args, **kwargs)
     return decorated_function
 
@@ -236,8 +249,8 @@ def login():
         password = request.form['password']
         
         # 사용자 정보 확인
-        user = manager.get_user_by_info(id)  # DB에서 사용자 정보를 가져옴
-        admin = manager.get_admin_by_info(id) # DB에서 관리자 정보를 가져옴 
+        user = manager.get_user_info_by_id(id)  # DB에서 사용자 정보를 가져옴
+        admin = manager.get_admin_info_by_id(id) # DB에서 관리자 정보를 가져옴 
 
         if user:  # user가 None이 아닐 경우에만 진행
             if id and password:
@@ -263,8 +276,12 @@ def login():
                 if admin['password'] == password: #아이디와 비밀번호가 일치하면
                     session['admin_id'] = id #세션에 관리자 아이디 저장
                     session['admin_name'] = admin['admin_name'] #세션에 관리자이름 저장
+                    session['admin_role'] = admin['role'] #세션에 관리자 역활 저장
                     manager.update_admin_last_login(id) # 로그인 성공 후 관리자 마지막 로그인 갱신
-                    return redirect(url_for('admin_dashboard')) #관리자 페이지로 이동
+                    if admin['role'] == 'admin':
+                        return redirect(url_for('admin_dashboard')) #관리자 페이지로 이동
+                    else :
+                        return redirect(url_for('staff_dashboard')) #사원 페이지로 이동
                 else: 
                     flash('아이디 또는 비밀번호가 일치하지 않습니다.', 'error')  # 로그인 실패 시 메시지
                     return redirect(url_for('login'))  # 로그인 폼 다시 렌더링 
@@ -286,18 +303,15 @@ def need_login():
 @login_required
 def user_dashboard():
     # 현재 로그인한 사용자 정보 가져오기
-    user_id = session.get('user_id')
-    user = manager.get_user_by_info(user_id)
-    
     # user 객체를 템플릿에 전달
-    return render_template('user/dashboard.html', user=user)
+    return render_template('user/dashboard.html')
 
 ##회원 정보 수정 
 @app.route('/user/dashboard/update_profile', methods=['GET', 'POST'])
 @login_required
 def user_update_profile():
     userid = session['user_id']  # 세션에서 사용자 아이디 가져오기
-    user = manager.get_user_by_info(userid)  # 회원 정보 가져오기
+    user = manager.get_user_info_by_id(userid)  # 회원 정보 가져오기
 
     if request.method == 'POST':
         print(userid)
@@ -526,13 +540,13 @@ def search_account():
 #계정찾기 이후 새비밀번호 업데이트
 @app.route('/index/search_account/edit_password/<userid>', methods=['GET','POST'])
 def edit_password(userid):
-    user = manager.get_user_by_info(userid)
+    user = manager.get_user_info_by_id(userid)
     if request.method == 'POST': 
         password = request.form['new_password']
         success = manager.update_user_password(userid, password)
         return jsonify({"success": success})
     return render_template('public/edit_password.html', user=user)
-    return render_template('public/edit_password.html', user=user)
+    
     
 
 ## 로그아웃 라우트
@@ -546,17 +560,22 @@ def logout():
 
 
 ### 관리자 페이지
-## HOME
-@app.route('/admin_dashboard')
+## 사원 페이지
+# HOME
+@app.route('/staff/dashboard')
+@staff_required  # 관리자만 접근 가능
+def staff_dashboard():
+    return render_template('staff/dashboard.html')  # 스태프 대시보드 렌더링
+
+@app.route('/admin/admin_dashboard')
 @admin_required  # 관리자만 접근 가능
 def admin_dashboard():
     return render_template('admin/dashboard.html')  # 관리자 대시보드 렌더링
 
-
 # CCTV보기
 # 도로용 CCTV 목록 보기(관리자)
-@app.route('/admin/road_cctv', methods=['GET'])
-@admin_required
+@app.route('/staff/road_cctv', methods=['GET'])
+@staff_required
 def admin_road_cctv():
     search_query = request.args.get("search_query", "").strip()
     search_type = request.args.get("search_type", "all")  # 기본값은 'all'
@@ -583,7 +602,7 @@ def admin_road_cctv():
     next_page = page + 1 if page < total_pages else None
 
     return render_template(
-        "admin/road_cctv.html",
+        "staff/road_cctv.html",
         street_lights=street_lights,
         search_query=search_query,
         search_type=search_type,
@@ -596,8 +615,8 @@ def admin_road_cctv():
     )
     
 # 인도용 CCTV 목록 보기(관리자)
-@app.route('/admin/sidewalk_cctv', methods=['GET'])
-@admin_required
+@app.route('/staff/sidewalk_cctv', methods=['GET'])
+@staff_required
 def admin_sidewalk_cctv():
     search_query = request.args.get("search_query", "").strip()
     search_type = request.args.get("search_type", "all")  # 기본값은 'all'
@@ -622,7 +641,7 @@ def admin_sidewalk_cctv():
     next_page = page + 1 if page < total_pages else None
 
     return render_template(
-        "admin/sidewalk_cctv.html",
+        "staff/sidewalk_cctv.html",
         street_lights=street_lights,
         search_query=search_query,
         search_type=search_type,
@@ -644,16 +663,16 @@ def admin_sidewalk_cctv():
 
 ## 가로등
 # 전체 가로등 조회
-@app.route('/admin/lamp_cctv', methods=['GET'])
-@admin_required
-def admin_lamp_check():
+@app.route('/staff/all_street_lights', methods=['GET'])
+@staff_required
+def admin_all_street_lights():
     page = request.args.get("page", 1, type=int)
     search_type = request.args.get("search_type", "all")
     search_query = request.args.get("search_query", "").strip()
     per_page = 10
 
     # 매니저에서 데이터 조회
-    lamp_cctv, total_posts = manager.get_paginated_lamps(
+    lamp_cctv, total_posts = manager.get_paginated_street_lights(
         per_page=per_page,
         offset=(page-1)*per_page,
         search_type=search_type,
@@ -666,7 +685,7 @@ def admin_lamp_check():
     end_page = min(total_pages, page + 2)
 
     return render_template(
-        "admin/lamp_check.html",
+        "staff/all_street_lights.html",
         lamp_cctv=lamp_cctv,
         page=page,
         total_posts=total_posts,
@@ -677,21 +696,59 @@ def admin_lamp_check():
         search_query=search_query
     )
 
+# 가로등 위치 보기
+@app.route("/staff/view_location/<int:street_light_id>")
+@staff_required
+def street_light_view_location(street_light_id):
+    streetlight_info = manager.get_streetlight_location_by_id_api_key(street_light_id, KAKAO_API_KEY)
+
+    if not streetlight_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    return render_template("staff/street_light_view_location.html", streetlight_info=streetlight_info)
+
+# 고장난 가로등 보기
+@app.route('/staff/malfunction_street_lights')
+@staff_required
+def admin_malfunction_street_lights():
+    return render_template('staff/malfunction_street_lights.html')
+
+# 설치된 가로등 등록
+@app.route('/staff/street_light_register', methods=['GET', 'POST'])
+@staff_required
+def street_light_register():
+    if request.method == 'POST':
+        location = request.form.get('location')
+        purpose = request.form.get('purpose')
+        tilt_status = request.form.get('tilt_status', 'normal')
+        light_status = request.form.get('light_status', 'off')
+        installation_date_str = request.form.get('installation_date')
+        installation_date = datetime.strptime(installation_date_str, '%Y-%m-%d')
+        manager.register_street_light(location, purpose, installation_date, tilt_status, light_status)
+        flash('가로등이 성공적으로 등록되었습니다.', 'success')
+        return redirect(url_for('admin_all_street_lights'))
+    return render_template('staff/street_light_register.html')
+
+# 철거된 가로등 삭제
+@app.route('/staff/street_light_delete')
+@staff_required
+def street_light_delete():
+    return render_template('staff/street_light_delete.html')
 
 ##불법단속
 #자동차(도로) 단속
-@app.route("/admin/load_car")
-@admin_required
+@app.route("/staff/load_car")
+@staff_required
 def admin_load_car():
     adminid =session.get('admin_id')
-    return render_template("admin/road_car.html", stream_url=road_url, adminid=adminid)
+    return render_template("staff/road_car.html", stream_url=road_url, adminid=adminid)
 
 #오토바이(인도) 단속
-@app.route("/admin/sidewalk_motorcycle")
-@admin_required
+@app.route("/staff/sidewalk_motorcycle")
+@staff_required
 def admin_sidewalk_motorcycle():
     adminid = session.get('admin_id')
-    return render_template("admin/sidewalk_motorcycle.html", adminid=adminid)
+    return render_template("staff/sidewalk_motorcycle.html", adminid=adminid)
 
 # # YOLO 분석된 영상 스트리밍
 # @app.route("/processed_video_feed")
@@ -783,23 +840,23 @@ def admin_sidewalk_motorcycle():
 
 ##관리자 페이지에서 문의정보 보기
 ##문의된 정보 보기
-@app.route('/admin/inquiries_view')
-@admin_required
+@app.route('/staff/inquiries_view')
+@staff_required
 def admin_inquiries_view():
     adminid = session.get('admin_id')
-    return render_template("admin/inquiries_view.html", adminid=adminid)
+    return render_template("staff/inquiries_view.html", adminid=adminid)
 
 ##답변완료된 문의정보 보기
-@app.route('/admin/inquiries_completed')
-@admin_required
+@app.route('/staff/inquiries_completed')
+@staff_required
 def admin_inquiries_completed():
     adminid = session.get('admin_id')
-    return render_template("admin/inquiries_completed.html", adminid=adminid)
+    return render_template("staff/inquiries_completed.html", adminid=adminid)
 
 
 ## 답변상태 변환하기 
-@app.route('/update_status_member/<userid>', methods=['POST'])
-@admin_required
+@app.route('/staff/update_status_member/<userid>', methods=['POST'])
+@staff_required
 def update_answer_status(userid):
     enquired_at_str = request.form['enquired_at']
     enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
@@ -810,8 +867,8 @@ def update_answer_status(userid):
         return redirect(url_for('admin_list_posts_nonmember'))
 
 #회원 문의사항 상세정보보기
-@app.route('/admin/admin_view_posts_member/<userid>', methods=['POST'])
-@admin_required
+@app.route('/staff/admin_view_posts_member/<userid>', methods=['POST'])
+@staff_required
 def admin_view_posts_member(userid):
     enquired_at_str = request.form['enquired_at']
     enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
@@ -823,67 +880,11 @@ def admin_view_posts_member(userid):
 def capture_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# 고장난 가로등 보기
-@app.route('/admin/broken_light')
-def admin_broken_light():
-    return render_template('admin/broken_light.html')
 
-# 설치된 가로등 등록
-@app.route('/admin/street_light_register', methods=['GET', 'POST'])
-def street_light_register():
-    db_manager = DBManager()  # DBManager 인스턴스 생성
-    db_manager.connect()  # DB 연결
-
-    if request.method == 'POST':
-        try:
-            location = request.form.get('location')
-            purpose = request.form.get('purpose')
-            other_purpose = request.form.get('other_purpose', '').strip()
-            tilt_status = request.form.get('tilt_status', 'normal')
-            light_status = request.form.get('light_status', 'off')
-            installation_date_str = request.form.get('installation_date')
-
-            installation_date = datetime.strptime(installation_date_str, '%Y-%m-%d')
-
-            if purpose == "기타" and other_purpose:
-                purpose = f"기타: {other_purpose}"
-
-            cursor = db_manager.cursor  # DB 커서 가져오기
-
-            if cursor:  # 커서가 존재하면 DB 작업
-                try:
-                    sql = """
-                    INSERT INTO street_lights 
-                    (location, purpose, installation_date, tilt_status, light_status) 
-                    VALUES 
-                    (%s, %s, %s, %s, %s)
-                    """
-                    cursor.execute(sql, (location, purpose, installation_date, tilt_status, light_status))
-                    db_manager.connection.commit()  # 커밋
-                    flash('가로등이 성공적으로 등록되었습니다.', 'success')
-
-                except Exception as e:
-                    flash(f'가로등 등록 중 오류가 발생했습니다: {str(e)}', 'error')
-                    return redirect(url_for('street_light_register'))
-
-            db_manager.disconnect()  # DB 연결 종료
-            return redirect(url_for('admin_lamp_check'))
-
-        except Exception as e:
-            flash(f'가로등 등록 중 오류가 발생했습니다: {str(e)}', 'error')
-            db_manager.disconnect()  # DB 연결 종료
-            return redirect(url_for('street_light_register'))
-
-    return render_template('admin/street_light_register.html')
-# 철거된 가로등 삭제
-@app.route('/admin/street_light_delete')
-def street_light_delete():
-    return render_template('admin/street_light_delete.html')
-
-
-@app.route('/admin/inquries_completed')
+# 문의 완료 처리
+@app.route('/staff/inquries_completed')
 def admin_inquries_completed():
-    return render_template('public/index.html')
+    return render_template('staff/inquiries_view.html')
 
 
 if __name__ == '__main__':

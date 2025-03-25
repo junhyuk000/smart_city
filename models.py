@@ -4,6 +4,7 @@ from flask import jsonify
 import json
 import requests
 import re
+import math # 수학함수 사용
 
 class DBManager:
     def __init__(self):
@@ -86,7 +87,7 @@ class DBManager:
             self.disconnect()
 
     # 선택한 회원 모든정보 가져오기
-    def get_user_by_info(self, id):
+    def get_user_info_by_id(self, id):
         try:
             self.connect()
             sql = "SELECT * FROM users WHERE user_id = %s"
@@ -103,7 +104,7 @@ class DBManager:
     def get_admin_by_id(self, id):
         try:
             self.connect()
-            sql = "SELECT admin_id,password FROM admins WHERE admin_id = %s"
+            sql = "SELECT admin_id,password,role FROM admins WHERE admin_id = %s"
             value = (id,)
             self.cursor.execute(sql,value)
             return self.cursor.fetchone()
@@ -114,7 +115,7 @@ class DBManager:
             self.disconnect()
 
     #선택한 관리자 모든정보 가져오기
-    def get_admin_by_info(self, id):
+    def get_admin_info_by_id(self, id):
         try:
             self.connect()
             sql = "SELECT * FROM admins WHERE admin_id = %s"
@@ -385,7 +386,7 @@ class DBManager:
             SELECT s.*, c.cctv_ip 
             FROM street_lights s
             LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-            WHERE s.street_light_id LIKE %s AND s.purpose = "인도"
+            WHERE s.street_light_id = %s AND s.purpose = "인도"
             LIMIT %s OFFSET %s
             """
             values = (f"%{search_query}%", per_page, offset)
@@ -416,7 +417,7 @@ class DBManager:
         if search_type == "street_light_id":
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE street_light_id LIKE %s and purpose = "인도"
+            WHERE street_light_id = %s and purpose = "인도"
             """
             values = (f"%{search_query}%",)
         
@@ -437,7 +438,7 @@ class DBManager:
         return sql, values
     
     #선택된 가로등 정보 가져오기
-    def get_streetlight_by_info(self,street_light_id:int):
+    def get_streetlight_info_by_id(self,street_light_id:int):
         try:
             self.connect()
             sql = "SELECT * FROM street_lights WHERE street_light_id = %s"
@@ -449,6 +450,100 @@ class DBManager:
             return None
         finally:
             self.disconnect()
+
+    # 선택된 가로등 위치로 정보가져오기
+    def get_streetlight_info_by_location(self, location):
+        try:
+            self.connect()
+            sql = "SELECT * FROM street_lights WHERE location Like %s"
+            value = (location,)
+            self.cursor.execute(sql, value)
+            return self.cursor.fetchone()
+        except mysql.connector.Error as error:
+            print(f"가로등 정보 조회 중 오류 발생: {error}")
+            return False
+        finally:
+            self.disconnect()
+
+    ## 선택된 가로등 위치 정보 가져오기
+    # 가로등 목적에 따라 위치 조정
+    @staticmethod
+    def adjust_location(lat, lon, purpose):
+        """
+        목적(purpose)에 따라 위치를 조정하여 마커가 실제 도로 또는 인도에 표시되도록 함.
+        """
+        shift_distance = 15  # 이동 거리 (미터 단위)
+        shift_factor = shift_distance / 111320  # 위도 1도 ≈ 111.32km
+        
+        # 도로 방향으로 약간 이동 (북쪽)
+        if purpose == "도로":
+            lat += shift_factor  # 위도로 북쪽 이동
+        
+        # 인도 방향으로 약간 이동 (남쪽)
+        elif purpose == "인도":
+            lat -= shift_factor  # 위도로 남쪽 이동
+
+        return lat, lon
+    
+    #가로등 위치 -> 위도,경도 변환
+    @staticmethod
+    def get_lat_lon_kakao(address, api_key):
+        """ Kakao API를 사용하여 주소를 위도, 경도로 변환 """
+        url = "https://dapi.kakao.com/v2/local/search/address.json"
+        headers = {"Authorization": f"KakaoAK {api_key}"}
+        params = {"query": address}
+
+        response = requests.get(url, headers=headers, params=params)
+
+        if response.status_code == 200:
+            result = response.json()
+            if result["documents"]:
+                lat = float(result["documents"][0]["y"])
+                lon = float(result["documents"][0]["x"])
+                return lat, lon
+            else:
+                print("❌ 주소 검색 결과 없음")
+        else:
+            print(f"❌ Kakao API 오류: {response.status_code}")
+
+        return None
+
+    def get_streetlight_location_by_id_api_key(self, street_light_id: int, api_key: str):
+        try:
+            self.connect()
+            sql = "SELECT location, purpose FROM street_lights WHERE street_light_id = %s"
+            value = (street_light_id,)
+            self.cursor.execute(sql, value)
+            result = self.cursor.fetchone()
+            
+            if not result:
+                return None
+
+            location = result["location"]
+            purpose = result["purpose"]
+            
+            # 🔹 Kakao API를 사용해 주소 → 위도·경도로 변환
+            geo_location = self.get_lat_lon_kakao(location, api_key)
+            
+            if not geo_location:
+                return None  # 주소 변환 실패
+
+            lat, lon = geo_location  # 🔺 여기 수정 (geo_location은 튜플임)
+        
+            # 🔹 도로/인도 목적에 따라 위치 조정
+            adjusted_lat, adjusted_lon = self.adjust_location(lat, lon, purpose)
+
+            return {
+                "latitude": adjusted_lat,
+                "longitude": adjusted_lon,
+                "purpose": purpose
+            }
+        except Exception as e:
+            print(f"❌ 가로등 정보 조회 중 오류 발생: {e}")
+            return None
+        finally:
+            self.disconnect()
+
 
     # 카메라 정보 가져오기
     def get_camera_by_info(self,street_light_id:int):
@@ -637,7 +732,7 @@ class DBManager:
             return  
 
         street_light_id = int(received_data["ID"])
-        street_light = self.get_streetlight_by_info(street_light_id)
+        street_light = self.get_streetlight_info_by_id(street_light_id)
 
         if not street_light or 'street_light_id' not in street_light:
             print("❌ 유효하지 않은 센서 ID")
@@ -720,14 +815,15 @@ class DBManager:
         finally:
             self.disconnect()
 
-    def get_all_lamp_data(self, per_page, offset, search_type=None, search_query=None):
+    # 가로등 데이터 조회 (페이지네이션 + 검색 지원)
+    def get_all_street_lights_data(self, per_page, offset, search_type=None, search_query=None):
         """
         전체 가로등 데이터 조회 (페이지네이션 + 검색 지원)
         """
         base_query = "FROM street_lights"
         where_clause = ""
         params = []
-
+        
         # 검색 조건 처리
         if search_query and search_type != 'all':
             if search_type == 'street_light_id':
@@ -742,7 +838,7 @@ class DBManager:
             SELECT * 
             {base_query} 
             {where_clause}
-            ORDER BY street_light_id 
+            ORDER BY street_light_id DESC
             LIMIT %s OFFSET %s
         """
         data_params = params + [per_page, offset]
@@ -756,28 +852,50 @@ class DBManager:
         
         return data_sql, count_sql, data_params
 
-    def get_paginated_lamps(self, per_page, offset, search_type=None, search_query=None):
+    # 페이지네이션된 가로등 데이터 조회
+    def get_paginated_street_lights(self, per_page, offset, search_type=None, search_query=None):
         """
         페이지네이션된 가로등 데이터 반환
         """
         try:
-            data_sql, count_sql, params = self.get_all_lamp_data(
+            data_sql, count_sql, params = self.get_all_street_lights_data(
                 per_page, offset, search_type, search_query
             )
             
             # 데이터 조회
             self.connect()
             self.cursor.execute(data_sql, params)
-            lamp_data = self.cursor.fetchall()
+            street_lights_data = self.cursor.fetchall()
 
             # 전체 개수 조회
             self.cursor.execute(count_sql, params[:-2])  # LIMIT, OFFSET 제외
             total = self.cursor.fetchone()['total']
 
-            return lamp_data, total
+            return street_lights_data, total
 
         except Exception as e:
             print(f"가로등 조회 오류: {str(e)}")
             return [], 0
         finally:
             self.disconnect()
+
+
+    # 가로등 등록 
+    def register_street_light(self, location, purpose, installation_date, tilt_status, light_status):
+        try:
+            self.connect()
+            sql = """
+                INSERT INTO street_lights (location, purpose, installation_date, tilt_status, light_status)
+                VALUES (%s, %s, %s, %s, %s)
+                """
+            values = (location, purpose, installation_date, tilt_status, light_status)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return True
+        except Exception as error:
+            print(f"가로등 정보 저장 실패: {error}")
+            return False
+        finally:
+            self.disconnect()
+
+    
