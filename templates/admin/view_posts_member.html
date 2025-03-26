@@ -136,17 +136,20 @@
                             답변자: {{ posts.admin_name if posts.admin_name else '관리자' }}
                         </p>
                     </div>
+                {% else %}
+                    <p>아직 답변이 등록되지 않았습니다.</p>
                 {% endif %}
                 
                 <!-- 관리자만 볼 수 있는 답변 폼 -->
                 {% if 'admin_id' in session %}
                     <div class="answer-form">
-                        <form action="{{ url_for('admin_answer_inquiry') }}" method="POST">
+                        <form 
+                            action="{{ url_for('update_inquiry_answer') }}" 
+                            method="POST"
+                        >
                             <input type="hidden" name="inquiry_id" value="{{ posts.inquiries_id }}">
-                            <input type="hidden" name="user_id" value="{{ posts.user_id }}">
-                            <input type="hidden" name="enquired_at" value="{{ posts.inquiry_time }}">
+                            <input type="hidden" name="user_id" value="{{ posts.user_id }}">  {# 추가된 부분 #}
                             
-                            <h4>{% if posts.answer_content %}답변 수정{% else %}답변 작성{% endif %}</h4>
                             <textarea 
                                 name="answer_content" 
                                 class="answer-textarea" 

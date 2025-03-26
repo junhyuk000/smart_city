@@ -467,7 +467,7 @@ def user_dashboard_inquiries():
 def user_dashboard_inquiries_view():
     if request.method == 'GET':
         posts = manager.get_posts_info()
-        return render_template('user/inquiries_view.html', posts=posts)  
+        return render_template('user/inquiries_view.html', posts=posts)
     
     if request.method == 'POST':
         inquiries_id = request.form.get('inquiries_id')
@@ -531,7 +531,6 @@ def edit_password(userid):
         password = request.form['new_password']
         success = manager.update_user_password(userid, password)
         return jsonify({"success": success})
-    return render_template('public/edit_password.html', user=user)
     return render_template('public/edit_password.html', user=user)
     
 
@@ -676,6 +675,60 @@ def admin_lamp_check():
         search_type=search_type,
         search_query=search_query
     )
+
+# 고장난 가로등 조회
+@app.route('/admin/broken_light', methods=['GET'])
+@admin_required
+def admin_broken_light_check():
+    # 데이터베이스 연결
+    manager.connect()
+    
+    try:
+        page = request.args.get("page", 1, type=int)
+        search_type = request.args.get("search_type", "all")
+        search_query = request.args.get("search_query", "").strip()
+        per_page = 10
+        
+        # 페이지 첫 진입 시 기본값 설정
+        if not search_type and not search_query:
+            search_type = "all"
+            search_query = ""
+        
+        # 고장난 가로등 데이터 조회
+        lamp_cctv, total_posts = manager.get_malfunctioning_lamps( 
+            per_page=per_page,
+            offset=(page-1)*per_page,
+            search_type=search_type,
+            search_query=search_query,
+            status='malfunction'  # 고장난 가로등만 필터링
+        )
+        
+        # 페이지 계산
+        total_pages = max(1, (total_posts + per_page - 1) // per_page)
+        start_page = max(1, page - 2)
+        end_page = min(total_pages, page + 2)
+        
+        prev_page = page - 1 if page > 1 else None
+        next_page = page + 1 if page < total_pages else None
+        
+        return render_template(
+            "admin/broken_light.html",
+            lamp_cctv=lamp_cctv,
+            page=page,
+            total_posts=total_posts,
+            total_pages=total_pages,
+            start_page=start_page,
+            end_page=end_page,
+            prev_page=prev_page,
+            next_page=next_page,
+            search_type=search_type,
+            search_query=search_query
+        )
+
+    finally:
+        # 데이터베이스 연결 해제
+        manager.disconnect()
+                            
 
 
 ##불법단속
@@ -894,38 +947,168 @@ def admin_view_posts_member(userid):
 @admin_required
 def admin_answer_inquiry():
     try:
-        inquiry_id = request.form.get('inquiry_id')
-        user_id = request.form.get('user_id')
+        # request.form.get() 대신 request.form[]를 사용하여 필수 필드 확인
+        inquiry_id = request.form['inquiry_id']
+        user_id = request.form['user_id']  # 필수 필드로 변경
         admin_id = session.get('admin_id')
-        answer_content = request.form.get('answer_content')
-        answer_time = datetime.now()
-        enquired_at = datetime.now()  # 직접 현재 시간 사용
         
+        if not admin_id:
+            flash('관리자 세션이 만료되었습니다.', 'error')
+            return redirect(url_for('admin_login'))
+        
+        answer_content = request.form['answer_content']
+        answer_time = datetime.now()
+        enquired_at = datetime.now()
+
         db = DBManager()
         db.connect()
-        
-        # inquiry_answers 테이블에 삽입
-        db.cursor.execute("""
-            INSERT INTO inquiry_answers 
-            (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time))
-        
-        # inquiries 테이블 상태 업데이트
-        db.cursor.execute("UPDATE inquiries SET answer_status = 'completed' WHERE inquiries_id = %s", (inquiry_id,))
-        
+
+        # 기존 답변 확인 및 처리 로직
+        db.cursor.execute(
+            "SELECT * FROM inquiry_answers WHERE inquiry_id = %s", 
+            (inquiry_id,)
+        )
+        existing_answer = db.cursor.fetchone()
+
+        if existing_answer:
+            # 기존 답변 업데이트
+            db.cursor.execute("""
+                UPDATE inquiry_answers 
+                SET answer_content = %s,
+                    answer_time = %s,
+                    admin_id = %s,
+                    enquired_at = %s
+                WHERE inquiry_id = %s
+            """, (answer_content, answer_time, admin_id, enquired_at, inquiry_id))
+        else:
+            # 새로운 답변 삽입
+            db.cursor.execute("""
+                INSERT INTO inquiry_answers 
+                (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time))
+
+        # 문의 상태 업데이트
+        db.cursor.execute(
+            "UPDATE inquiries SET answer_status = 'completed' WHERE inquiries_id = %s", 
+            (inquiry_id,)
+        )
+
         db.connection.commit()
         db.disconnect()
-        
+
         flash('답변이 성공적으로 저장되었습니다.', 'success')
         return redirect(url_for('admin_inquiries_view'))
-        
+
+    except KeyError as e:
+        # 필수 필드 누락 시 처리
+        flash(f'필수 데이터가 누락되었습니다: {str(e)}', 'error')
+        return redirect(url_for('admin_inquiries_view'))
+    
+    except Exception as e:
+        print(f"오류 발생: {str(e)}")
+        if 'db' in locals():
+            db.disconnect()
+        flash(f'답변 저장 중 오류가 발생했습니다: {str(e)}', 'error')
+        return redirect(url_for('admin_inquiries_view'))
+
+# 답변 수정하기 
+@app.route('/admin/update-inquiry-answer', methods=['POST'])
+@admin_required
+def update_inquiry_answer():
+    try:
+        inquiry_id = request.form.get('inquiry_id')
+        user_id = request.form.get('user_id')  # 추가
+        answer_content = request.form.get('answer_content')
+        answer_time = datetime.now()
+        admin_id = session.get('admin_id')
+
+        db = DBManager()
+        db.connect()
+
+        # 기존 답변 확인
+        db.cursor.execute(
+            "SELECT * FROM inquiry_answers WHERE inquiry_id = %s", 
+            (inquiry_id,)
+        )
+        existing_answer = db.cursor.fetchone()
+
+        if existing_answer:
+            # 기존 답변 업데이트
+            db.cursor.execute("""
+                UPDATE inquiry_answers 
+                SET answer_content = %s,
+                    answer_time = %s,
+                    admin_id = %s
+                WHERE inquiry_id = %s
+            """, (answer_content, answer_time, admin_id, inquiry_id))
+        else:
+            # 새로운 답변 삽입
+            db.cursor.execute("""
+                INSERT INTO inquiry_answers 
+                (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (inquiry_id, user_id, admin_id, answer_content, answer_time, answer_time))
+
+        # 문의 상태 업데이트
+        db.cursor.execute(
+            "UPDATE inquiries SET answer_status = 'completed' WHERE inquiries_id = %s", 
+            (inquiry_id,)
+        )
+
+        db.connection.commit()
+        db.disconnect()
+
+        flash('답변이 성공적으로 저장되었습니다.', 'success')
+        return redirect(url_for('admin_inquiries_view'))
+
     except Exception as e:
         print(f"오류 발생: {str(e)}")
         if 'db' in locals():
             db.disconnect()
         flash('답변 저장 중 오류가 발생했습니다.', 'error')
         return redirect(url_for('admin_inquiries_view'))
+    
+    try:
+        # 테이블 구조에 맞게 컬럼명을 수정합니다.
+        query = """
+            SELECT inquiries_id, user_id, inquiry_reason, detail_reason, inquiry_time
+            FROM inquiries
+            WHERE answer_status = 'pending'
+        """
+        count_query = "SELECT COUNT(*) as total FROM inquiries WHERE answer_status = 'pending'"
+        params = []
+    
+        if search_type and search_query:
+            query += f" AND {search_type} LIKE %s"
+            count_query += f" AND {search_type} LIKE %s"
+            params.append(f"%{search_query}%")
+        
+        query += " ORDER BY inquiry_time DESC LIMIT %s OFFSET %s"
+        params.extend([per_page, offset])
+    
+        db.cursor.execute(query, tuple(params))
+        posts = db.cursor.fetchall()
+    
+        # 검색 조건이 있을 경우, count_query에 적용할 파라미터는 검색 조건만 사용
+        count_params = (params[0],) if (search_type and search_query) else ()
+        db.cursor.execute(count_query, count_params)
+        total = db.cursor.fetchone()['total']
+    
+    except Exception as e:
+        print("데이터베이스 오류:", e)
+        posts = []
+        total = 0
+    finally:
+        db.disconnect()
+    
+    return render_template(
+        'admin/inquiries_pending.html',
+        posts=posts,
+        total=total,
+        per_page=per_page,
+        current_page=page
+    )
 
 # 문의된 정보 보기 (미답변만)
 @app.route('/admin/inquiries_pending', methods=['GET'])
@@ -982,7 +1165,6 @@ def admin_inquiries_pending():
         per_page=per_page,
         current_page=page
     )
-
         
 #이미지파일 가져오기
 @app.route('/capture_file/<filename>')

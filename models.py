@@ -508,21 +508,30 @@ class DBManager:
         finally:
             self.disconnect()
     
-    #선택된 문의 정보 가져오기
+    #문의 답변 저장
     def get_inquiry_by_info(self, inquiries_id):
         try:
             self.connect()
-            sql="""
-            SELECT * FROM inquiries where inquiries_id = %s
+            sql = """
+                SELECT i.*, 
+                    u.user_name,
+                    a.answer_content as answer,
+                    a.answer_time,
+                    a.admin_id
+                FROM inquiries i
+                LEFT JOIN users u ON i.user_id = u.user_id
+                LEFT JOIN inquiry_answers a ON i.inquiries_id = a.inquiry_id
+                WHERE i.inquiries_id = %s
             """
-            value=(inquiries_id,)
-            self.cursor.execute(sql,value)
+            value = (inquiries_id,)
+            self.cursor.execute(sql, value)
             return self.cursor.fetchone()
         except Exception as error:
             print(f"회원 문의 정보를 가져오기 실패 : {error}")
             return False
         finally:
             self.disconnect()
+
     
     #회원탈퇴 후 데이터 저장
     def update_user_status(self,userid):
@@ -851,18 +860,95 @@ class DBManager:
             self.disconnect()
 
     def get_enquired_post_by_id(self, user_id, inquiry_time):
-        # 커서가 연결되어 있는지 확인
         if self.connection is None or not self.connection.is_connected():
-            self.connect()  # 연결이 끊어졌다면 다시 연결
-        
-        # 문의 사항을 'user_id'와 'inquiry_time'을 기준으로 가져오는 쿼리 작성
+            self.connect()
+
         query = """
-            SELECT inquiries.inquiries_id, inquiries.user_id, inquiries.capture_file, 
-                inquiries.inquiry_reason, inquiries.detail_reason, 
-                inquiries.inquiry_time, inquiries.answer_status, users.user_name
+            SELECT 
+                inquiries.inquiries_id, 
+                inquiries.user_id, 
+                inquiries.capture_file,
+                inquiries.inquiry_reason, 
+                inquiries.detail_reason,
+                inquiries.inquiry_time, 
+                inquiries.answer_status, 
+                users.user_name,
+                inquiry_answers.answer_content,  
+                inquiry_answers.answer_time,     
+                inquiry_answers.admin_id        
             FROM inquiries
             JOIN users ON inquiries.user_id = users.user_id
+            LEFT JOIN inquiry_answers ON inquiries.inquiries_id = inquiry_answers.inquiry_id
             WHERE inquiries.user_id = %s AND inquiries.inquiry_time = %s
         """
-        self.cursor.execute(query, (user_id, inquiry_time))  # 쿼리 실행
-        return self.cursor.fetchone()  # 단일 레코드를 가져옴
+        self.cursor.execute(query, (user_id, inquiry_time))
+        return self.cursor.fetchone()
+
+    def update_inquiry_answer(self, inquiry_id, answer_content, admin_id):
+        try:
+            self.connect()
+            
+            # 기존 답변 업데이트
+            query = """
+                UPDATE inquiry_answers 
+                SET answer_content = %s, 
+                    answer_time = NOW(), 
+                    admin_id = %s
+                WHERE inquiry_id = %s
+            """
+            self.cursor.execute(query, (answer_content, admin_id, inquiry_id))
+            
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f"답변 업데이트 오류: {str(e)}")
+            return False
+        finally:
+            self.disconnect()
+
+    # 고장난 가로등 조회
+    def get_malfunctioning_lamps(self, per_page, offset, search_type="all", search_query="", status=None):
+        try:
+            self.connect()  # DB 연결 추가
+            
+            # 기본 WHERE 절과 파라미터 초기화
+            where_clauses = ["status = %s"]
+            params = ['malfunction']
+            
+            # 검색 로직
+            if search_type == "street_light_id" and search_query:
+                where_clauses.append("street_light_id LIKE %s")
+                params.append(f"%{search_query}%")
+            elif search_type == "street_light_location" and search_query:
+                where_clauses.append("location LIKE %s")
+                params.append(f"%{search_query}%")
+            
+            # WHERE 절 구성
+            where_sql = " WHERE " + " AND ".join(where_clauses)
+            
+            # 전체 레코드 수 계산 쿼리
+            count_query = f"SELECT COUNT(*) as total FROM street_lights {where_sql}"
+            
+            # 페이지네이션 쿼리
+            pagination_sql = f"SELECT * FROM street_lights {where_sql} LIMIT %s OFFSET %s"
+            
+            # 페이지네이션용 파라미터 추가
+            count_params = params.copy()
+            full_params = params + [per_page, offset]
+            
+            # 전체 레코드 수 실행
+            self.cursor.execute(count_query, count_params)
+            total_posts = self.cursor.fetchone()['total']
+            
+            # 페이지네이션 쿼리 실행
+            self.cursor.execute(pagination_sql, full_params)
+            lamps = self.cursor.fetchall()
+            
+            return lamps, total_posts
+        
+        except mysql.connector.Error as error:
+            print(f"데이터베이스 쿼리 실행 실패: {error}")
+            return [], 0
+            
+        finally:
+            self.disconnect()  # DB 연결 해제 추가
