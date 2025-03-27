@@ -69,6 +69,31 @@
     .address-container .form-control {
         flex-grow: 1;
     }
+    
+    /* 다크 모드 스타일 */
+    .dark-mode {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+    
+    .dark-mode .form-container {
+        background-color: #1e1e1e;
+        box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    
+    .dark-mode .form-control {
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #555;
+    }
+    
+    .dark-mode .btn-primary {
+        background-color: #0056b3;
+    }
+    
+    .dark-mode .btn-secondary {
+        background-color: #555;
+    }
 </style>
 {% endblock %}
 
@@ -104,7 +129,6 @@
                     <option value="">선택하세요</option>
                     <option value="도로">도로</option>
                     <option value="인도">인도</option>
-
                 </select>
             </div>
             
@@ -163,84 +187,4 @@
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
-<script src="https://ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
-<script>
-    // 페이지 로드 시 실행
-    document.addEventListener('DOMContentLoaded', function() {
-        // 오늘 날짜를 기본값으로 설정
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
-        var yyyy = today.getFullYear();
-        today = yyyy + '-' + mm + '-' + dd;
-        document.getElementById('installation_date').value = today;
-        
-        // 목적 선택 이벤트 리스너
-        document.getElementById('purpose').addEventListener('change', function() {
-            if (this.value === '기타') {
-                document.getElementById('otherPurposeGroup').style.display = 'block';
-            } else {
-                document.getElementById('otherPurposeGroup').style.display = 'none';
-                document.getElementById('otherPurpose').value = '';
-            }
-        });
-        
-        // 폼 제출 이벤트 리스너
-        document.getElementById('streetLightForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            // 필수 필드 검증
-            if (!document.getElementById('address').value) {
-                alert('주소를 검색해주세요.');
-                return;
-            }
-            
-            if (!document.getElementById('purpose').value) {
-                alert('설치 목적을 선택해주세요.');
-                return;
-            }
-            
-            if (document.getElementById('purpose').value === '기타' && !document.getElementById('otherPurpose').value) {
-                alert('기타 목적 상세 내용을 입력해주세요.');
-                return;
-            }
-            
-            // 폼 제출 전 기타 목적 처리
-            if (document.getElementById('purpose').value === '기타') {
-                document.getElementById('purpose').value = '기타: ' + document.getElementById('otherPurpose').value;
-            }
-            
-            // 폼 제출
-            this.submit();
-        });
-    });
-    
-    // 주소 검색 팝업 띄우기
-    function openAddressSearch() {
-        new daum.Postcode({
-            oncomplete: function(data) {
-                var fullAddress = data.address;
-                var extraAddress = ''; // 추가 주소
-                
-                // 우편번호와 주소 선택 시 추가 주소 처리
-                if (data.addressType === 'R') {
-                    if (data.bname !== '') {
-                        extraAddress += data.bname;
-                    }
-                    if (data.buildingName !== '') {
-                        extraAddress += (extraAddress !== '' ? ', ' + data.buildingName : data.buildingName);
-                    }
-                    fullAddress += extraAddress !== '' ? ' (' + extraAddress + ')' : '';
-                }
-                
-                // 주소를 입력 필드에 삽입
-                document.getElementById('address').value = fullAddress;
-            }
-        }).open();
-    }
-</script>
 {% endblock %}
