@@ -158,6 +158,33 @@
                     </div>
                 </div>
             </div>
+            <div class="card inner-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 category-col">
+                            <div class="category-title">직원 등록</div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row inner-row">
+                                <div class="col-md-6 inner-card-item">
+                                    <h5 class="card-title">
+                                        직원 등록
+                                        <span class="favorite-star" data-title="직원 등록" data-url="{{ url_for('admin_staff_register') }}">★</span>
+                                    </h5>
+                                    <a href="{{ url_for('admin_staff_register') }}" class="btn btn-primary">이동</a>
+                                </div>
+                                <div class="col-md-6 inner-card-item">
+                                    <h5 class="card-title">
+                                        직원 삭제
+                                        <span class="favorite-star" data-title="직원 삭제" data-url="{{ url_for('admin_staff_delete') }}">★</span>
+                                    </h5>
+                                    <a href="{{ url_for('admin_staff_delete') }}" class="btn btn-primary">이동</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- 다섯 번째 행: 문의 -->
             <div class="card inner-card">
                 <div class="card-body">

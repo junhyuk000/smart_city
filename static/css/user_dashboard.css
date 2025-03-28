@@ -110,6 +110,7 @@ select, input[type="text"] {
     color: var(--text-color);
 }
 
+/* 기존 버튼 스타일 */
 button {
     padding: 8px 15px;
     background-color: var(--primary-color);
@@ -204,14 +205,6 @@ td:last-child a:hover {
     background-color: var(--table-row-hover-bg);
 }
 
-/* 푸터 영역 */
-footer {
-    text-align: center;
-    padding: 20px;
-    background-color: var(--secondary-color);
-    color: var(--text-color);
-    margin-top: 20px;
-}
 
 /* 링크 스타일 */
 a {
@@ -281,11 +274,6 @@ a:hover {
     background-color: #444;
 }
 
-/* 푸터 다크 모드 */
-.dark-mode footer {
-    background-color: #222;
-    color: #fff;
-}
 
 /* 검색창 스타일 */
 .dark-mode select, .dark-mode input[type="text"] {
@@ -298,3 +286,15 @@ a:hover {
     color: #bbb;
 }
 
+/* .btn-secondary 클래스 스타일 변경 */
+.btn-secondary {
+    background-color: #007bff; /* 파란색으로 변경 */
+    color: #fff; /* 텍스트 색상을 흰색으로 설정 (선택 사항) */
+    border-color: #007bff; /* 테두리 색상도 파란색으로 설정 (선택 사항) */
+}
+
+/* 다크 모드 스타일 제거 */
+.dark-mode .btn-secondary {
+    background-color: #555; /* 배경색 초기화 */
+    color: #fff; /* 텍스트 색상 초기화 */
+}

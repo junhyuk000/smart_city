@@ -8,6 +8,7 @@ from models import DBManager
 from markupsafe import Markup
 import json
 import re
+import mysql.connector
 # import threading
 # import license_plate
 # import cv2
@@ -1294,6 +1295,121 @@ def delete_streetlight(id):
 def admin_inquries_completed():
     return render_template('public/index.html')
 
+
+@app.route('/admin/staff_register', methods=['GET', 'POST'])
+def admin_staff_register():
+    if request.method == 'POST':
+        # 폼 데이터 가져오기
+        staff_id = request.form['staff_id']
+        staff_name = request.form['staff_name']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        # 비밀번호 확인
+        if password != confirm_password:
+            flash('비밀번호가 일치하지 않습니다.', 'danger')
+            return redirect(url_for('admin_staff_register'))
+        
+        # DBManager 인스턴스 생성
+        db_manager = DBManager()
+        
+        try:
+            # 데이터베이스 연결
+            db_manager.connect()
+            
+            # 이미 존재하는 staff ID 체크
+            db_manager.cursor.execute("SELECT * FROM admins WHERE admin_id = %s", (staff_id,))
+            existing_staff = db_manager.cursor.fetchone()
+            
+            if existing_staff:
+                flash('이미 존재하는 Staff ID입니다.', 'danger')
+                return redirect(url_for('admin_staff_register'))
+            
+            # staff 등록 (gender 컬럼 제거)
+            db_manager.cursor.execute("""
+                INSERT INTO admins 
+                (admin_id, admin_name, password, email, role)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                staff_id,
+                staff_name,
+                password,
+                email,
+                'staff'  # role에 기본값 추가
+            ))
+            
+            # 변경사항 커밋
+            db_manager.connection.commit()
+            
+            flash('Staff가 성공적으로 등록되었습니다.', 'success')
+            return redirect(url_for('admin_dashboard'))
+        
+        except mysql.connector.Error as e:
+            # 데이터베이스 관련 오류 처리
+            flash(f'데이터베이스 오류: {str(e)}', 'danger')
+            return redirect(url_for('admin_staff_register'))
+        
+        except Exception as e:
+            # 기타 예외 처리
+            flash(f'등록 중 오류가 발생했습니다: {str(e)}', 'danger')
+            return redirect(url_for('admin_staff_register'))
+        
+        finally:
+            # 항상 데이터베이스 연결 종료
+            if db_manager.connection and db_manager.connection.is_connected():
+                db_manager.disconnect()
+    
+    return render_template('admin/staff_register.html')
+
+
+@app.route('/admin/staff_delete', methods=['GET', 'POST'])
+def admin_staff_delete():
+    db_manager = DBManager()
+    
+    try:
+        db_manager.connect()
+        
+        # GET 요청 시 Staff 목록 조회
+        if request.method == 'GET':
+            db_manager.cursor.execute(
+                "SELECT * FROM admins WHERE role = 'staff'"
+            )
+            staff_list = db_manager.cursor.fetchall()
+            return render_template('admin/staff_delete.html', staff_list=staff_list)
+        
+        # POST 요청 시 삭제 처리
+        staff_id = request.form['staff_id']
+        admin_password = request.form['admin_password']
+        
+        # 관리자 비밀번호 검증 로직 추가
+        db_manager.cursor.execute(
+            "SELECT * FROM admins WHERE role = 'admin' AND password = %s", 
+            (admin_password,)
+        )
+        admin_verified = db_manager.cursor.fetchone()
+        
+        if not admin_verified:
+            flash('관리자 비밀번호가 incorrect합니다.', 'danger')
+            return redirect(url_for('admin_staff_delete'))
+        
+        # Staff 삭제
+        db_manager.cursor.execute(
+            "DELETE FROM admins WHERE admin_id = %s AND role = 'staff'", 
+            (staff_id,)
+        )
+        db_manager.connection.commit()
+        
+        flash('Staff가 성공적으로 삭제되었습니다.', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    except Exception as e:
+        flash(f'오류 발생: {str(e)}', 'danger')
+        return redirect(url_for('admin_staff_delete'))
+    
+    finally:
+        if db_manager.connection and db_manager.connection.is_connected():
+            db_manager.disconnect()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)

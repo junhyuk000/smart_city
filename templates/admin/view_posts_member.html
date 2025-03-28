@@ -3,7 +3,13 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard_inquiries_detail.css') }}">
 <style>
-    /* 답변 섹션 스타일 */
+    :root {
+        --btn-bg: #4a8ae2;  
+        --btn-hover: #3a7ad2;  
+        --btn-color: white;  
+    }
+
+    /* 기존 답변 섹션 스타일 */
     .answer-section {
         margin-top: 30px;
         border-top: 1px solid #ddd;
@@ -44,17 +50,18 @@
     }
     
     .submit-btn {
-        background-color: #007bff;
-        color: white;
+        background-color: var(--btn-bg);
+        color: var(--btn-color);
         border: none;
         padding: 10px 20px;
         border-radius: 4px;
         cursor: pointer;
         font-weight: bold;
+        transition: background-color 0.3s ease;
     }
     
     .submit-btn:hover {
-        background-color: #0056b3;
+        background-color: var(--btn-hover);
     }
     
     .answer-status {
@@ -73,6 +80,46 @@
     .status-completed {
         background-color: #28a745;
         color: white;
+    }
+
+    .inquiry-wrapper {
+        background-color: var(--bg-color);
+    }
+
+    .page-header {
+        background-color: var(--header-bg);
+    }
+
+    .inquiry-body {
+        border-color: var(--border-color);
+    }
+
+    .answer-section {
+        border-color: var(--border-color);
+    }
+
+    .answer-textarea {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+
+    .answer-history {
+        background-color: var(--answer-bg);
+    }
+
+    .back-button {
+        background-color: var(--btn-bg);
+        color: var(--btn-color);
+        text-decoration: none;
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .back-button:hover {
+        background-color: var(--btn-hover);
     }
 </style>
 {% endblock %}
@@ -148,7 +195,7 @@
                             method="POST"
                         >
                             <input type="hidden" name="inquiry_id" value="{{ posts.inquiries_id }}">
-                            <input type="hidden" name="user_id" value="{{ posts.user_id }}">  {# 추가된 부분 #}
+                            <input type="hidden" name="user_id" value="{{ posts.user_id }}"> 
                             
                             <textarea 
                                 name="answer_content" 

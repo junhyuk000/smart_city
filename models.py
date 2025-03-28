@@ -37,9 +37,9 @@ class DBManager:
         try: 
             self.connect()
             sql = """
-                  UPDATE users SET security_status = 1 
-                  WHERE DATEDIFF(NOW(), password_last_updated) >= 90
-                  """
+                UPDATE users SET security_status = 1 
+                WHERE DATEDIFF(NOW(), password_last_updated) >= 90
+                """
             self.cursor.execute(sql,)
             self.connection.commit()
             print(f"회원 보안상태 업데이트 완료")
