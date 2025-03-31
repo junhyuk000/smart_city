@@ -1,3 +1,5 @@
+// C:\Users\facec\Desktop\smart_city\static\js\register.js
+
 // 생년월일을 주민등록번호 앞자리로 삽입
 function updateRegNumber() {
     var birthday = document.getElementById("birthday").value;
@@ -7,14 +9,13 @@ function updateRegNumber() {
     }
 }
 
-// 입력된 주민등록번호 뒷자리 첫번쨰 숫자를 통해 성별 추출
+// 입력된 주민등록번호 뒷자리 첫번째 숫자를 통해 성별 추출
 function getGenderFromRegNumber(regNumberSuffix) {
     var genderDigit = parseInt(regNumberSuffix.charAt(0), 10);
     return genderDigit % 2 === 0 ? 'female' : 'male';
 }
 
-
-function handleSubmit(event){
+function handleSubmit(event) {
     // 주민등록번호와 성별 데이터 설정
     var regNumberPrefix = document.getElementById("regNumberInput").value;
     var regNumberSuffix = document.getElementById("regNumberInput2").value;
@@ -25,9 +26,7 @@ function handleSubmit(event){
     document.getElementById("totalRegNumberField").value = totalRegNumber;
 }
 
-
-    
-// input에 입력시 실시간으로 유효성
+// input에 입력시 실시간으로 유효성 검사
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('form');
     const passwordInput = document.getElementById('password');
@@ -53,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-     // 비밀번호, 비밀번호 확인 일치여부 실시간 검사
+    // 비밀번호, 비밀번호 확인 일치여부 실시간 검사
     confirmPasswordInput.addEventListener('input', function () {
         const password = passwordInput.value;
         const confirmPassword = this.value;
@@ -78,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-   
+    // 생년월일 유효성 검사
     birthdayInput.addEventListener('input', function () {
         const birthday = new Date(this.value); // 입력된 생년월일을 Date 객체로 변환
         const today = new Date(); // 오늘 날짜
@@ -110,48 +109,34 @@ document.addEventListener('DOMContentLoaded', function () {
             birthdayError.style.display = 'block'; // 나이가 유효하지 않으면 오류 메시지 표시
         }
 
-        //나이가 18세 이하이거나 100세 이상일경우 가입거부
+        // 나이가 18세 이하이거나 100세 이상일경우 가입거부
         if (age < 18 || age > 100) {
             dayError.style.display = 'block'; // 나이가 유효하지 않으면 오류 메시지 표시
         } else {
             dayError.style.display = 'none'; // 나이가 유효하면 오류 메시지 숨기기
         }
+        
+        // 생년월일이 유효하면 주민등록번호 업데이트
+        if (dayError.style.display === 'none' && birthdayError.style.display === 'none') {
+            updateRegNumber();
+        }
     });
     
-    const hasError = dayError.style.display === 'block' || birthdayError.style.display === 'block' || passwordError.style.display === 'block' || confirmPasswordError.style.display === 'block'
-    || regNumberError.style.display === 'block' ;
-
     // 폼 제출 이벤트 핸들러에서 오류가 있을 경우 제출을 막음
-    document.querySelector('form').addEventListener('submit', function (event) {
+    form.addEventListener('submit', function (event) {
+        const hasError = 
+            dayError.style.display === 'block' || 
+            birthdayError.style.display === 'block' || 
+            passwordError.style.display === 'block' || 
+            confirmPasswordError.style.display === 'block' || 
+            regNumberError.style.display === 'block';
+
         if (hasError) {
             event.preventDefault(); // 오류가 있으면 폼 제출 막기
             alert("입력 오류가 있습니다. 확인 후 다시 시도해주세요.");
         }
     });
 });
-
-function openAddressSearch() {
-    new daum.Postcode({
-        oncomplete: function(data) {
-            var fullAddress = data.address;
-            var extraAddress = ''; // 추가 주소
-
-            // 우편번호와 주소 선택 시 추가 주소 처리
-            if (data.addressType === 'R') {
-                if (data.bname !== '') {
-                    extraAddress += data.bname; 
-                }
-                if (data.buildingName !== '') {
-                    extraAddress += (extraAddress !== '' ? ', ' + data.buildingName : data.buildingName); 
-                }
-                fullAddress += extraAddress !== '' ? ' (' + extraAddress + ')' : '';
-            }
-
-            // 주소를 입력 필드에 삽입
-            document.getElementById('address').value = fullAddress;
-        }
-    }).open();
-}
 
 // 주소 검색 팝업 띄우기
 function openAddressSearch() {
@@ -176,4 +161,3 @@ function openAddressSearch() {
         }
     }).open();
 }
-

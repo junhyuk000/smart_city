@@ -3,87 +3,152 @@
 {% block title %}인도용 CCTV 페이지{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cctv_list.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
 {% endblock %}
 
 {% block content %}
-<!-- 가로등 조회 폼 -->
-<div class="search-container">
-    <div>
-        <i class="fa-solid fa-lightbulb" style="color: rgb(236, 119, 9);"></i>
-        <span class="total-count">검색된 가로등 : {{ total_posts }}개</span>
+<main class="content-area">
+    <div class="page-container">
+        <div class="page-header">
+            <h1><i class="fas fa-walking"></i> 인도용 CCTV 목록</h1>
+            <p class="page-description">인도에 설치된 가로등 및 CCTV 정보를 확인하실 수 있습니다.</p>
+        </div>
+
+        <!-- 가로등 조회 폼 -->
+        <div class="search-container">
+            <div class="total-count-wrapper">
+                <div class="count-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <span class="total-count">검색된 가로등: <strong>{{ total_posts }}</strong>개</span>
+            </div>
+            
+            <form method="get" action="{{ url_for('user_dashboard_sidewalk_cctv') }}" class="search-form">
+                <div class="form-group">
+                    <label for="search_type">검색 타입:</label>
+                    <select name="search_type" id="search_type" class="form-select">
+                        <option value="street_light_id" {% if search_type == 'street_light_id' %}selected{% endif %}>가로등 번호</option>
+                        <option value="street_light_location" {% if search_type == 'location' %}selected{% endif %}>위치</option>
+                        <option value="all" {% if search_type == 'all' %}selected{% endif %}>전체</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="search_query">검색어:</label>
+                    <div class="search-input-wrapper">
+                        <input type="text" name="search_query" id="search_query" placeholder="가로등 번호 또는 위치" value="{{ search_query }}" class="form-input">
+                        <button type="submit" class="search-button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 가로등 목록 테이블 -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th width="15%">가로등 번호</th>
+                        <th width="55%">위치</th>
+                        <th width="30%">실시간 CCTV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for street_light in street_lights %}
+                        <tr class="data-row">
+                            <td class="text-center">{{ street_light.street_light_id }}</td>
+                            <td>{{ street_light.location }}</td>
+                            {% if street_light.cctv_ip %}
+                            <td class="cctv-cell">
+                                <div class="cctv-info">
+                                    <a href="{{ url_for('user_dashboard_cctv', street_light_id=street_light.street_light_id) }}" class="view-button">
+                                        <i class="fas fa-video"></i> 상세 보기
+                                    </a>
+                                    <span class="cctv-status installed">
+                                        <i class="fas fa-circle"></i> 설치됨
+                                    </span>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="cctv-cell">
+                                <div class="cctv-info">
+                                    <a href="#" class="view-button disabled">
+                                        <i class="fas fa-video-slash"></i> 미설치
+                                    </a>
+                                    <span class="cctv-status not-installed">
+                                        <i class="fas fa-circle"></i> 미설치
+                                    </span>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                    {% else %}
+                        <tr class="no-data">
+                            <td colspan="3">
+                                <div class="no-data-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p>검색된 가로등 정보가 없습니다.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination-container">
+            {% if total_pages > 1 %}
+                <div class="pagination">
+                    {% if prev_page %}
+                        <a href="{{ url_for('user_dashboard_sidewalk_cctv', search_query=search_query, search_type=search_type, page=1) }}" class="pagination-link first" title="첫 페이지">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="{{ url_for('user_dashboard_sidewalk_cctv', search_query=search_query, search_type=search_type, page=prev_page) }}" class="pagination-link prev" title="이전 페이지">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    {% else %}
+                        <span class="pagination-link disabled first">
+                            <i class="fas fa-angle-double-left"></i>
+                        </span>
+                        <span class="pagination-link disabled prev">
+                            <i class="fas fa-angle-left"></i>
+                        </span>
+                    {% endif %}
+                    
+                    <div class="pagination-info">
+                        <span>{{ page }} / {{ total_pages }}</span>
+                    </div>
+                    
+                    {% if next_page %}
+                        <a href="{{ url_for('user_dashboard_sidewalk_cctv', search_query=search_query, search_type=search_type, page=next_page) }}" class="pagination-link next" title="다음 페이지">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="{{ url_for('user_dashboard_sidewalk_cctv', search_query=search_query, search_type=search_type, page=total_pages) }}" class="pagination-link last" title="마지막 페이지">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    {% else %}
+                        <span class="pagination-link disabled next">
+                            <i class="fas fa-angle-right"></i>
+                        </span>
+                        <span class="pagination-link disabled last">
+                            <i class="fas fa-angle-double-right"></i>
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
     </div>
-    <form method="get" action="{{ url_for('user_dashboard_sidewalk_cctv') }}">
-        <label for="search_type">검색 타입:</label>
-        <select name="search_type" id="search_type">
-            <option value="street_light_id" {% if search_type == 'street_light_id' %}selected{% endif %}>가로등 번호</option>
-            <option value="street_light_location" {% if search_type == 'location' %}selected{% endif %}>위치</option>
-            <option value="all" {% if search_type == 'all' %}selected{% endif %}>전체</option>
-        </select>
-        
-        <label for="search_query">가로등 번호 또는 위치:</label>
-        <input type="text" name="search_query" id="search_query" placeholder="가로등 번호 또는 위치" value="{{ search_query }}">
-        
-        <button type="submit">검색</button>
-    </form>
-</div>
+    
+    <!-- 채팅 위젯 추가 -->
+    {% include 'public/chat_widget.html' %}
+</main>
+{% endblock %}
 
-<!-- 가로등 목록 테이블 -->
-<table>
-    <thead>
-        <tr>
-            <th>가로등 번호</th>
-            <th>위치</th>
-            <th>실시간 CCTV</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for street_light in street_lights %}
-            <tr>
-                <td>{{ street_light.street_light_id }}</td>
-                <td>{{ street_light.location }}</td>
-                {% if street_light.cctv_ip %}
-                <td>
-                    <a href="{{ url_for('user_dashboard_cctv', street_light_id=street_light.street_light_id) }}" class="btn btn-primary">
-                        상세 보기
-                    </a>
-                    <i class="fa-solid fa-video fa-2x"></i> <!-- 일반적인 CCTV 아이콘 -->
-                </td>
-                {% else %}
-                <td>
-                    <a href="#" class="btn btn-secondary">미설치</a>
-                    <i class="fa-solid fa-video-slash fa-2x" style="color:gray"></i>
-                </td>
-                {% endif %}
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="3">검색된 가로등 정보가 없습니다.</td>
-            </tr>
-        {% endfor %}
-        
-        <!-- 부족한 행을 채우기 -->
-        {% set remaining_rows = 10 - street_lights|length %}
-        {% if remaining_rows > 0 %}
-            {% for _ in range(remaining_rows) %}
-                <tr class="empty-row">
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-            {% endfor %}
-        {% endif %}
-    </tbody>
-</table>
-
-<!-- 페이지네이션 -->
-<div class="pagination">
-    {% if prev_page %}
-        <a href="{{ url_for('user_dashboard_sidewalk_cctv', search_query=search_query, search_type=search_type, page=prev_page) }}">이전</a>
-    {% endif %}
-    <span>페이지 {{ page }} / {{ total_pages }}</span>
-    {% if next_page %}
-        <a href="{{ url_for('user_dashboard_sidewalk_cctv', search_query=search_query, search_type=search_type, page=next_page) }}">다음</a>
-    {% endif %}
-</div>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cctv_list.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

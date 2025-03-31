@@ -690,13 +690,13 @@ def admin_sidewalk_cctv():
         next_page=next_page,
     )
 
-# 관리자 CCTV상세보기
-# @app.route('/admin/cctv/<int:street_light_id>')
-# @admin_required
-# def admin_dashboard_cctv(street_light_id):
-#     camera = manager.get_camera_by_info(street_light_id)
-#     # sensor = sidewalk_sensor
-#     return render_template('view_cctv.html', camera=camera)
+# 직원 도로용 CCTV상세보기
+@app.route('/staff/cctv/<int:street_light_id>')
+@staff_required
+def admin_dashboard_road_cctv(street_light_id):
+    camera = manager.get_camera_by_info(street_light_id)
+    # sensor = sidewalk_sensor
+    return render_template('staff/view_cctv.html', camera=camera)
 
 ## 가로등
 # 전체 가로등 조회

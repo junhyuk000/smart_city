@@ -1,122 +1,99 @@
 {% extends "base.html" %}
-{% block title %} CCTV 페이지 {% endblock %}
+{% block title %}CCTV 상세 보기{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<style>
-    #cctv-map { 
-        height: 500px; 
-        width: 100%; 
-    }
-    .cctv-list {
-        max-height: 500px;
-        overflow-y: auto;
-    }
-    .cctv-item {
-        cursor: pointer;
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-    .cctv-item:hover {
-        background-color: #f0f0f0;
-    }
-    
-    .cctv-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    .cctv-stream {
-        width: 100%;
-        max-width: 800px;
-    }
-    .cctv-info {
-        margin-top: 20px;
-    }
-    #video-stream {
-        max-width: 100%;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/view_cctv.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>📹 {{ camera.location }} CCTV</h1>
+<main class="content-area">
     <div class="cctv-container">
-        <div class="cctv-stream">
-            <img id="video-stream" src="http://{{camera.cctv_ip}}:5000/stream" alt="CCTV Stream">
+        <div class="cctv-header">
+            <div class="cctv-title">
+                <h1>📹 {{ camera.location }} CCTV</h1>
+                <div class="location-timestamp" id="current-time">로딩 중...</div>
+            </div>
+            <div class="cctv-status">
+                <span class="status-badge live">실시간</span>
+                <span class="status-indicator"></span>
+            </div>
         </div>
-        <div class="cctv-info">
-            <h2>실시간 영상 스트리밍 중...</h2>
-            <p>해당 CCTV는 {{ camera.location }} 위치에서 {{ camera.purpose}}를 실시간 모니터링 중입니다.</p>
-            <p id="safety-status">데이터 로드 중...</p>
-            <p id="temperature-info">센서 데이터 로드 중...</p>
+        
+        <div class="cctv-main">
+            <div class="cctv-stream-container">
+                <div class="cctv-stream">
+                    <img id="video-stream" src="http://{{camera.cctv_ip}}:5000/stream" alt="CCTV Stream">
+                    <div class="stream-overlay">
+                        <div class="overlay-top">
+                            <span class="camera-id">가로등 번호: 2</span>
+                            <span class="timestamp">{{ camera.location }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stream-controls">
+                    <button class="control-btn fullscreen-btn" title="전체 화면">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="control-btn snapshot-btn" title="스크린샷">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="cctv-sidebar">
+                <div class="info-card">
+                    <h2>CCTV 정보</h2>
+                    <ul class="info-list">
+                        <li><strong>위치:</strong> {{ camera.location }}</li>
+                        <li><strong>용도:</strong> {{ camera.purpose }}</li>
+                        <li><strong>설치일:</strong> 2025-03-18</li>
+                        <li><strong>모델:</strong> ESP32-CAM</li>
+                        <li><strong>IP 주소:</strong> {{ camera.cctv_ip }}</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card sensor-data">
+                    <h2>센서 데이터</h2>
+                    <div class="sensor-status" id="safety-status">
+                        <i class="fas fa-shield-alt"></i> 현재 가로등 주변은 안전합니다.
+                    </div>
+                    <div class="sensor-readings">
+                        <div class="sensor-reading" id="temperature-reading">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span>14°C</span>
+                        </div>
+                        <div class="sensor-reading" id="humidity-reading">
+                            <i class="fas fa-tint"></i>
+                            <span>45%</span>
+                        </div>
+                        <div class="sensor-reading" id="heat-index-reading">
+                            <i class="fas fa-temperature-high"></i>
+                            <span>13°C</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h2>가로등 상태</h2>
+                    <div class="streetlight-status" id="streetlight-status">
+                        <div class="status-icon on">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <span>가로등 상태: 양호</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+    
+    <!-- 채팅 위젯 추가 -->
+    {% include 'public/chat_widget.html' %}
+</main>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function fetchSensorData() {
-    fetch('/api')  // Flask API 호출
-        .then(response => response.json())
-        .then(data => {
-            console.log("📩 받은 데이터:", data);
-
-            // camera.purpose 값 가져오기
-            let purpose = "{{ camera.purpose }}";  // '도로' 또는 '인도'
-
-            // ID 필터링
-            let isValidData = false;
-            if ((purpose === "도로" && data.ID == "1") || 
-                (purpose === "인도" && data.ID == "2")) {
-                isValidData = true;
-            }
-
-            if (!isValidData) {
-                console.warn("⚠️ 해당 목적에 맞는 데이터가 없습니다.");
-                document.getElementById("safety-status").innerHTML = "";
-                document.getElementById("temperature-info").innerHTML = "";
-                return;
-            }
-
-            // 안전 상태 업데이트
-            let safetyStatus = document.getElementById("safety-status");
-            if (data["Switch State"] == "1") {
-                safetyStatus.innerHTML = "🔹 현재 가로등 주변은 안전합니다.";
-            } else {
-                safetyStatus.innerHTML = "⚠️ 긴급 상황! SOS 버튼이 눌렸습니다!";
-            }
-
-            // 온습도 정보 업데이트 (undefined 값 체크 후 표시)
-            let temperatureInfo = document.getElementById("temperature-info");
-            let temperature = data.Temperature;
-            let humidity = data.Humidity;
-            let heatIndex = data["Heat Index"];
-
-            if (temperature !== undefined && humidity !== undefined && heatIndex !== undefined) {
-                temperatureInfo.innerHTML = `현재 {{camera.location}}의 기온은 ${temperature}, 
-                                             습도는 ${humidity}, 
-                                             체감온도는 ${heatIndex} 입니다.`;
-            } else {
-                temperatureInfo.innerHTML = "";  // 값이 없으면 아예 표시하지 않음
-            }
-        })
-        .catch(error => {
-            console.error("데이터 불러오기 실패:", error);
-            document.getElementById("safety-status").innerHTML = "센서 데이터 로드 실패";
-            document.getElementById("temperature-info").innerHTML = "";
-        });
-}
-
-// 2초마다 데이터 갱신
-setInterval(fetchSensorData, 2000);
-
-// 페이지 로드 시 데이터 가져오기
-fetchSensorData();
-
-</script>
+<script src="{{ url_for('static', filename='js/view_cctv.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

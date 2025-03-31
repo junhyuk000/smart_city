@@ -1,70 +1,92 @@
 {% extends "base.html" %}
-{% block title %}문의 상세보기 페이지{% endblock %}
+{% block title %}문의 상세보기{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard_inquiries_detail.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inquiries.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="inquiry-wrapper">
+<main class="content-area">
     <div class="inquiry-detail-container">
-        <!-- 상단 영역 -->
-        <div class="page-header">
-            <!-- 왼쪽 구석: 문의자 / 문의시간 -->
-            <div class="left-info">
-                <p class="user-name">문의자: {{ posts.user_name }}</p>
-                <p class="inquiry-time">문의시간: {{ posts.inquiry_time }}</p>
-            </div>
-            <!-- 중앙: 문의 상세보기 -->
+        <div class="inquiry-header">
             <h2>문의 상세보기</h2>
+            <div class="inquiry-meta">
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>문의자: {{ posts.user_name }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>문의시간: {{ posts.inquiry_time }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-tag"></i>
+                    <span>상태: 
+                        {% if posts.answer_status == 'pending' %}
+                            <span class="status pending">답변 대기 중</span>
+                        {% else %}
+                            <span class="status completed">답변 완료</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
         </div>
-
-        <!-- 본문 영역 -->
+        
         <div class="inquiry-body">
-            <!-- 문의 제목 -->
-            <div class="inquiry-title">
-                <h3>문의 제목</h3>
-                <p>{{ posts.inquiry_reason }}</p>
+            <div class="inquiry-section">
+                <h3>문의 유형</h3>
+                <div class="inquiry-content">
+                    <p>{{ posts.inquiry_reason }}</p>
+                </div>
             </div>
-
-            <!-- 문의 내용 -->
-            <div class="inquiry-content">
-                <h4>문의 내용</h4>
-                <p class="detail-reason">{{ posts.detail_reason }}</p>
+            
+            <div class="inquiry-section">
+                <h3>문의 내용</h3>
+                <div class="inquiry-content">
+                    <p>{{ posts.detail_reason }}</p>
+                </div>
             </div>
-
-            <!-- 첨부파일 -->
-            <div class="attachment-section">
-                <h4>첨부파일</h4>
-                {% if posts.capture_file %}
-                    <img src="{{ url_for('capture_file', filename=posts.capture_file) }}" alt="첨부 이미지" style="max-width: auto; height: auto;">
-                {% else %}
-                    <span>없음</span>
-                {% endif %}
+            
+            {% if posts.capture_file %}
+            <div class="inquiry-section">
+                <h3>첨부파일</h3>
+                <div class="inquiry-attachment">
+                    <img src="{{ url_for('capture_file', filename=posts.capture_file) }}" alt="첨부 이미지">
+                </div>
             </div>
-
-            <!-- 답변 섹션 추가 -->
-            <div class="answer-section">
-                <h4>답변 내용</h4>
-                {% if posts.answer %}
+            {% endif %}
+            
+            {% if posts.answer_status == 'completed' and posts.answer %}
+            <div class="inquiry-section answer-section">
+                <h3>답변</h3>
+                <div class="inquiry-answer">
+                    <div class="answer-meta">
+                        <span class="answer-from">관리자</span>
+                        <span class="answer-time">{{ posts.answered_at }}</span>
+                    </div>
                     <div class="answer-content">
                         <p>{{ posts.answer }}</p>
-                        <p class="answer-info">
-                            답변 시간: {{ posts.answer_time }}
-                            {% if posts.admin_id %}
-                            | 답변자: 관리자
-                            {% endif %}
-                        </p>
                     </div>
-                {% else %}
-                    <p class="no-answer">아직 답변이 등록되지 않았습니다.</p>
-                {% endif %}
+                </div>
             </div>
-        </div>
 
-        <!-- 하단: 뒤로가기 버튼 -->
+
+        </div>
+        {% endif %}
+        
         <div class="inquiry-footer">
-            <a href="{{ url_for('user_dashboard_inquiries_view') }}" class="back-button">뒤로 가기</a>
+            <a href="{{ url_for('user_dashboard_inquiries_view') }}" class="back-button">
+                <i class="fas fa-arrow-left"></i> 목록으로 돌아가기
+            </a>
         </div>
     </div>
-</div>
+    
+    <!-- 채팅 위젯 추가 -->
+    {% include 'public/chat_widget.html' %}
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
