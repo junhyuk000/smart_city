@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="logo-container">
-                <a href="{{ url_for('index') }}">
+                <a href="{% if 'user_id' in session %}{{ url_for('user_dashboard') }}{% elif 'admin_id' in session %}{{ url_for('admin_dashboard') }}{% else %}{{ url_for('index') }}{% endif %}">
                     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
                     <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
                 </a>

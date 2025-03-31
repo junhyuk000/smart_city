@@ -1,0 +1,227 @@
+/* static/css/about.css */
+
+:root {
+    --primary-green: #28a745;
+    --primary-green-hover: #218838;
+    --section-bg: #ffffff;
+    --text-color: #333333;
+    --text-light: #666666;
+    --border-color: #e0e0e0;
+    --icon-bg: #f8f9fa;
+    --highlight-color: #e9f7ef;
+}
+
+.dark-mode {
+    --section-bg: #333333;
+    --text-color: #f0f0f0;
+    --text-light: #cccccc;
+    --border-color: #444444;
+    --icon-bg: #444444;
+    --highlight-color: #2c3e50;
+}
+
+.about-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.about-header h1 {
+    font-size: 2.2rem;
+    color: var(--text-color);
+    margin-bottom: 15px;
+    transition: color 0.3s ease;
+}
+
+.about-header .subtitle {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    margin: 0;
+    transition: color 0.3s ease;
+}
+
+.about-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin-bottom: 60px;
+}
+
+.about-section {
+    display: flex;
+    background-color: var(--section-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease;
+}
+
+.about-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    background-color: var(--primary-green);
+    color: white;
+    font-size: 36px;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
+}
+
+.section-content {
+    padding: 30px;
+    flex: 1;
+}
+
+.section-content h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.section-content p {
+    color: var(--text-light);
+    margin-bottom: 20px;
+    line-height: 1.6;
+    transition: color 0.3s ease;
+}
+
+.feature-list {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.feature-list li {
+    color: var(--text-color);
+    margin-bottom: 8px;
+    transition: color 0.3s ease;
+}
+
+.feature-list li:last-child {
+    margin-bottom: 0;
+}
+
+.about-team {
+    margin-top: 60px;
+    text-align: center;
+}
+
+.about-team h2 {
+    font-size: 1.8rem;
+    color: var(--text-color);
+    margin-bottom: 40px;
+    transition: color 0.3s ease;
+}
+
+.team-members {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+
+.team-member {
+    width: 200px;
+    background-color: var(--section-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease;
+}
+
+.team-member:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.member-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--primary-green);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin: 0 auto 15px;
+}
+
+.team-member h3 {
+    margin: 0 0 5px;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.member-role {
+    color: var(--primary-green);
+    font-weight: bold;
+    margin: 0 0 10px;
+}
+
+.member-description {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+    transition: color 0.3s ease;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .about-section {
+        flex-direction: column;
+    }
+    
+    .section-icon {
+        width: 100%;
+        height: 100px;
+    }
+    
+    .team-members {
+        gap: 20px;
+    }
+    
+    .team-member {
+        width: calc(50% - 10px);
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .about-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .about-header .subtitle {
+        font-size: 1rem;
+    }
+    
+    .section-content {
+        padding: 20px;
+    }
+    
+    .section-content h2 {
+        font-size: 1.3rem;
+    }
+    
+    .team-member {
+        width: 100%;
+        max-width: 220px;
+    }
+}

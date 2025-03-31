@@ -1,38 +1,17 @@
-dash
-
+{# templates/user/dashboard.html #}
 {% extends "base.html" %}
 
 {% block title %}마이페이지 - 스마트 도시 프로젝트{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-{% endblock %}
-
-{% block header %}
-<div class="toggle-container" aria-label="테마 변경">
-    <span class="mode-text" id="mode-text">다크모드</span>
-    <div class="toggle-switch">
-        <input type="checkbox" id="dark-mode-toggle" class="toggle-input" aria-label="다크모드 전환">
-        <label for="dark-mode-toggle" class="toggle-label"></label>
-    </div>
-</div>
-
-<div class="logo-container">
-    <a href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
-        <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
-    </a>
-</div>
-
-<div class="right-nav" style="margin-right: 60px;">
-    <span class="welcome-text">{{ user.user_name }} 님 환영합니다</span>
-    <a href="{{ url_for('user_update_profile') }}" class="btn btn-primary">
-        <i class="fas fa-user-edit" aria-hidden="true"></i> 회원정보 수정
-    </a>
-    <a href="{{ url_for('logout') }}" class="btn btn-secondary">
-        <i class="fas fa-sign-out-alt" aria-hidden="true"></i> 로그아웃
-    </a>
-</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+<style>
+    .slider-intro p {
+        text-align: center;
+        line-height: 1.8;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -40,15 +19,16 @@ dash
     <div class="intro-container">
         <div class="slider-intro">
             <h1>스마트 가로등 시스템</h1>
-            <p>스마트 도시 프로젝트에 오신 것을 환영합니다. 실시간 CCTV 모니터링과 가로등 관리 시스템을 통해 더 안전한 도시 환경을 제공합니다.</p>
+            <p>실시간 모니터링과 스마트한 가로등 시스템 더 안전하고 스마트한 도시를 구현합니다.</p>
         </div>
     </div>
-
+    
+    <!-- 바로가기 위젯 영역 -->
     <div class="dashboard-widgets">
         <div class="widget-row">
             <div class="widget">
                 <div class="widget-icon">
-                    <i class="fas fa-road" aria-hidden="true"></i>
+                    <i class="fas fa-road"></i>
                 </div>
                 <div class="widget-content">
                     <h3>도로용 CCTV</h3>
@@ -56,10 +36,10 @@ dash
                     <a href="{{ url_for('user_dashboard_road_cctv') }}" class="widget-link">바로가기</a>
                 </div>
             </div>
-
+            
             <div class="widget">
                 <div class="widget-icon">
-                    <i class="fas fa-walking" aria-hidden="true"></i>
+                    <i class="fas fa-walking"></i>
                 </div>
                 <div class="widget-content">
                     <h3>인도용 CCTV</h3>
@@ -68,11 +48,11 @@ dash
                 </div>
             </div>
         </div>
-
+        
         <div class="widget-row">
             <div class="widget">
                 <div class="widget-icon">
-                    <i class="fas fa-question-circle" aria-hidden="true"></i>
+                    <i class="fas fa-question-circle"></i>
                 </div>
                 <div class="widget-content">
                     <h3>문의하기</h3>
@@ -80,10 +60,10 @@ dash
                     <a href="{{ url_for('user_dashboard_inquiries') }}" class="widget-link">바로가기</a>
                 </div>
             </div>
-
+            
             <div class="widget">
                 <div class="widget-icon">
-                    <i class="fas fa-list" aria-hidden="true"></i>
+                    <i class="fas fa-list"></i>
                 </div>
                 <div class="widget-content">
                     <h3>문의 목록</h3>
@@ -93,24 +73,40 @@ dash
             </div>
         </div>
     </div>
-
-    <div class="swiper-container">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1" loading="lazy">
+    
+    <!-- 슬라이더 영역 -->
+    <div class="slider-wrapper">
+        <!-- 왼쪽 화살표 -->
+        <div class="swiper-button-prev">&lt;</div>
+        
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image1.png') }}" alt="이미지 1">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3">
+                </div>
             </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image2.png') }}" alt="이미지 2" loading="lazy">
-            </div>
-            <div class="swiper-slide">
-                <img src="{{ url_for('static', filename='images/image3.png') }}" alt="이미지 3" loading="lazy">
-            </div>
+            <!-- 페이지네이션 -->
+            <div class="swiper-pagination"></div>
         </div>
-        <div class="swiper-button-prev" aria-label="이전 슬라이드"></div>
-        <div class="swiper-button-next" aria-label="다음 슬라이드"></div>
-        <div class="swiper-pagination"></div>
+        
+        <!-- 오른쪽 화살표 -->
+        <div class="swiper-button-next">&gt;</div>
     </div>
     
+    <!-- 플래시 메시지 컨테이너 -->
     <div id="flash-messages-container" class="flash-messages-container" aria-live="polite"></div>
+    
+    <!-- 채팅 위젯 추가 -->
+    {% include 'public/chat_widget.html' %}
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
