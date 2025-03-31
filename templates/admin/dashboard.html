@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}관리자 대시보드{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+{% endblock %}
+
+{% block navigation %}
+{% if 'admin_id' in session %}
+<nav class="header-nav">
+    <div class="nav-menu" id="favorites-nav">
+        <span class="favorites-label">즐겨찾기:</span>
+        <!-- 즐겨찾기 항목들이 여기에 자바스크립트로 추가됩니다 -->
+        <span id="no-favorites-message">등록된 즐겨찾기가 없습니다</span>
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if 'admin_id' in session %}
+<div class="container">
+    <!-- 기능 바로가기 섹션 -->
+    <div class="section-title">기능 바로가기</div>
+    <div class="card outer-card">
+        <div class="card-body">
+            
+            <!-- 첫 번째 행: 홈 -->
+            <div class="card inner-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 category-col">
+                            <div class="category-title">홈</div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row inner-row">
+                                <div class="col-md-12 inner-card-item">
+                                    <h5 class="card-title">
+                                        대시보드 홈
+                                        <span class="favorite-star" data-title="대시보드 홈" data-url="{{ url_for('admin_dashboard') }}">★</span>
+                                    </h5>
+                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">이동</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 두 번째 행: 가로등 조회 -->
+            <div class="card inner-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 category-col">
+                            <div class="category-title">직원 등록</div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row inner-row">
+                                <div class="col-md-6 inner-card-item">
+                                    <h5 class="card-title">
+                                        직원 등록
+                                        <span class="favorite-star" data-title="직원 등록" data-url="{{ url_for('admin_staff_register') }}">★</span>
+                                    </h5>
+                                    <a href="{{ url_for('admin_staff_register') }}" class="btn btn-primary">이동</a>
+                                </div>
+                                <div class="col-md-6 inner-card-item">
+                                    <h5 class="card-title">
+                                        직원 삭제
+                                        <span class="favorite-star" data-title="직원 삭제" data-url="{{ url_for('admin_staff_delete') }}">★</span>
+                                    </h5>
+                                    <a href="{{ url_for('admin_staff_delete') }}" class="btn btn-primary">이동</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="container">
+    <p>관리자만 접근 가능한 페이지입니다. <a href="{{ url_for('login') }}">로그인</a> 해주세요.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

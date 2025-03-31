@@ -54,6 +54,42 @@ def update_security_status_on_start():
         manager.user_update_security_status()
         app.has_run = True  # 실행 여부 저장
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session and 'admin_id' not in session :  # 'user_id' 또는 'admin_id'가 세션에 없다면
+            return redirect('/login')  # 로그인 페이지로 리디렉션
+        return f(*args, **kwargs)
+    return decorated_function
+
+## 관리자 권한 필수 데코레이터
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:  # 'adminid'가 세션에 없다면
+            return redirect('/login')  # 로그인 페이지로 리디렉션
+        
+        # 관리자 정보 확인
+        admin = manager.get_admin_by_id(session['admin_id'])  # 세션의 관리자 ID로 확인
+        if not admin or admin['role'] != 'admin':  # 관리자가 아니면
+            return "접근 권한이 없습니다", 403  # 관리자만 접근 가능
+        return f(*args, **kwargs)
+    return decorated_function
+
+## 사원 권한 필수 데코레이터
+def staff_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:  # 'adminid'가 세션에 없다면
+            return redirect('/login')  # 로그인 페이지로 리디렉션
+        # 관리자 정보 확인
+        admin = manager.get_admin_by_id(session['admin_id'])  # 세션의 관리자 ID로 확인
+        if not admin or admin['role'] != 'staff':  # 사원이 아니면
+            return "접근 권한이 없습니다", 403  # 관리자만 접근 가능
+        return f(*args, **kwargs)
+    return decorated_function
+
 # 전역 변수로 데이터 저장
 received_data = {"message": "No data received"}
 

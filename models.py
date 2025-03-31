@@ -731,7 +731,9 @@ class DBManager:
             print("🚨 ID 없음: 데이터 저장 안 함")
             return  
 
-        street_light_id = int(received_data["ID"])
+        street_light_id_str = received_data["ID"]
+        street_light_id = int(street_light_id_str)
+        
         street_light = self.get_streetlight_info_by_id(street_light_id)
 
         if not street_light or street_light_id != street_light['street_light_id']:
@@ -750,7 +752,7 @@ class DBManager:
         if latest_record_time and latest_record_time['record_time']:
             last_time = latest_record_time['record_time']
             time_diff = (current_time - last_time).total_seconds()
-            if time_diff < 4:
+            if time_diff < 10:
                 print(f"⏳ {time_diff}초 경과 또는 값 변화 없음 → 데이터 저장 안 함")
                 return
         else:
