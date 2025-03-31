@@ -8,6 +8,7 @@ from models import DBManager
 from markupsafe import Markup
 import json
 import re
+import mysql.connector
 # import threading
 # import license_plate
 # import cv2
@@ -491,6 +492,7 @@ def user_dashboard_cctv(street_light_id):
     return render_template('user/view_cctv.html', camera=camera)
 
 
+
 #회원용 문의하기
 @app.route('/user/inquiries', methods=['GET','POST'])
 @login_required
@@ -517,13 +519,12 @@ def user_dashboard_inquiries():
 def user_dashboard_inquiries_view():
     if request.method == 'GET':
         posts = manager.get_posts_info()
-        return render_template('user/inquiries_view.html', posts=posts)  
+        return render_template('user/inquiries_view.html', posts=posts)
     
     if request.method == 'POST':
         inquiries_id = request.form.get('inquiries_id')
         posts = manager.get_inquiry_by_info(inquiries_id)
         return render_template('user/inquiry_detail.html', posts=posts)
-
 
 #회원탈퇴
 @app.route('/user_dashboard/delete_user', methods=['GET','POST'])
@@ -743,11 +744,64 @@ def street_light_view_location(street_light_id):
 
     return render_template("staff/street_light_view_location.html", streetlight_info=streetlight_info)
 
-# 고장난 가로등 보기
-@app.route('/staff/malfunction_street_lights')
+# # 고장난 가로등 보기
+# @app.route('/staff/malfunction_street_lights')
+# @staff_required
+# def admin_malfunction_street_lights():
+#     return render_template('staff/malfunction_street_lights.html')
+
+# 고장난 가로등 조회
+@app.route('/staff/broken_light', methods=['GET'])
 @staff_required
-def admin_malfunction_street_lights():
-    return render_template('staff/malfunction_street_lights.html')
+def admin_broken_light_check():
+    # 데이터베이스 연결
+    manager.connect()
+    
+    try:
+        page = request.args.get("page", 1, type=int)
+        search_type = request.args.get("search_type", "all")
+        search_query = request.args.get("search_query", "").strip()
+        per_page = 10
+        
+        # 페이지 첫 진입 시 기본값 설정
+        if not search_type and not search_query:
+            search_type = "all"
+            search_query = ""
+        
+        # 고장난 가로등 데이터 조회
+        lamp_cctv, total_posts = manager.get_malfunctioning_lamps( 
+            per_page=per_page,
+            offset=(page-1)*per_page,
+            search_type=search_type,
+            search_query=search_query,
+            status='malfunction'  # 고장난 가로등만 필터링
+        )
+        
+        # 페이지 계산
+        total_pages = max(1, (total_posts + per_page - 1) // per_page)
+        start_page = max(1, page - 2)
+        end_page = min(total_pages, page + 2)
+        
+        prev_page = page - 1 if page > 1 else None
+        next_page = page + 1 if page < total_pages else None
+        
+        return render_template(
+            "staff/broken_light.html",
+            lamp_cctv=lamp_cctv,
+            page=page,
+            total_posts=total_posts,
+            total_pages=total_pages,
+            start_page=start_page,
+            end_page=end_page,
+            prev_page=prev_page,
+            next_page=next_page,
+            search_type=search_type,
+            search_query=search_query
+        )
+
+    finally:
+        # 데이터베이스 연결 해제
+        manager.disconnect()
 
 # 설치된 가로등 등록
 @app.route('/staff/street_light_register', methods=['GET', 'POST'])
@@ -767,17 +821,159 @@ def street_light_register():
 
 # 철거된 가로등 삭제
 @app.route('/staff/street_light_delete')
-@staff_required
 def street_light_delete():
     return render_template('staff/street_light_delete.html')
 
+@app.route('/api/decommissioned-streetlights', methods=['GET'])
+def search_decommissioned_streetlights():
+    criteria = request.args.get('criteria')
+    value = request.args.get('value')
+    
+    db = DBManager()
+    db.connect()
+    
+    try:
+        query = """
+            SELECT street_light_id as id, location, 
+                   DATE_FORMAT(installation_date, '%Y-%m-%d') as installation_date,
+                   DATE_FORMAT(registered_at, '%Y-%m-%d') as decommissionDate
+            FROM street_lights
+            WHERE 
+        """
+        
+        if criteria == 'id':
+            query += "street_light_id LIKE %s"
+            search_param = f"%{value}%"
+        elif criteria == 'location':
+            query += "location LIKE %s"
+            search_param = f"%{value}%"
+        else:
+            return jsonify([])
+            
+        db.cursor.execute(query, (search_param,))
+        results = db.cursor.fetchall()
+        
+        return jsonify(results)
+    
+    except Exception as e:
+        print(f"검색 중 오류 발생: {e}")
+        return jsonify([])
+    
+    finally:
+        db.disconnect()
+
+@app.route('/api/decommissioned-streetlights/<int:id>', methods=['DELETE'])
+def delete_streetlight(id):
+    db = DBManager()
+    db.connect()
+    
+    try:
+        # 즉시 가로등 데이터 삭제 (로그 기록 없음)
+        delete_query = "DELETE FROM street_lights WHERE street_light_id = %s"
+        db.cursor.execute(delete_query, (id,))
+        
+        db.connection.commit()
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        db.connection.rollback()
+        print(f"삭제 중 오류 발생: {e}")
+        return jsonify({"success": False, "message": str(e)})
+    
+    finally:
+        db.disconnect()
+
+
+
 ##불법단속
-#자동차(도로) 단속
+#자동차(도로) 단속 보드
+@app.route('/staff/road_car_board', methods=['GET'])
+@staff_required
+def admin_road_car_board():
+    search_query = request.args.get("search_query", "").strip()
+    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    # search_type이 'all'이면 search_query를 빈 문자열로 설정
+    if search_type == "all":
+        search_query = ""
+
+    # SQL 쿼리 및 파라미터 가져오기
+    sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
+    count_sql, count_values = manager.get_road_cctv_count_query(search_query, search_type)
+
+    # 검색된 가로등 목록 가져오기
+    street_lights = manager.execute_query(sql, values)
+    # 전체 CCTV 개수 카운트
+    total_posts = manager.execute_count_query(count_sql, count_values)
+
+    # 페이지네이션 계산
+    total_pages = (total_posts + per_page - 1) // per_page
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        "staff/road_car_board.html",
+        street_lights=street_lights,
+        search_query=search_query,
+        search_type=search_type,
+        page=page,
+        total_posts=total_posts,
+        per_page=per_page,
+        total_pages=total_pages,
+        prev_page=prev_page,
+        next_page=next_page,
+    )
+
+#자동차(도로) 단속 카메라
 @app.route("/staff/load_car")
 @staff_required
 def admin_load_car():
     adminid =session.get('admin_id')
     return render_template("staff/road_car.html", stream_url=road_url, adminid=adminid)
+
+#오토바이(인도) 단속 보드
+@app.route('/staff/sidewalk_motorcycle_board', methods=['GET'])
+@staff_required
+def admin_sidewalk_motorcycle_board():
+    search_query = request.args.get("search_query", "").strip()
+    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+    if search_type == "all":
+        search_query = ""
+    # SQL 쿼리 및 파라미터 가져오기
+    sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
+    count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
+
+    # 검색된 가로등 목록 가져오기
+    street_lights = manager.execute_query(sql, values)
+
+    # 전체 CCTV 개수 카운트
+    total_posts = manager.execute_count_query(count_sql, count_values)
+
+    # 페이지네이션 계산
+    total_pages = (total_posts + per_page - 1) // per_page
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        "staff/sidewalk_motorcycle_board.html",
+        street_lights=street_lights,
+        search_query=search_query,
+        search_type=search_type,
+        page=page,
+        total_posts=total_posts,
+        per_page=per_page,
+        total_pages=total_pages,
+        prev_page=prev_page,
+        next_page=next_page,
+    )
+
+
 
 #오토바이(인도) 단속
 @app.route("/staff/sidewalk_motorcycle")
@@ -875,52 +1071,289 @@ def admin_sidewalk_motorcycle():
 
 
 ##관리자 페이지에서 문의정보 보기
-##문의된 정보 보기
-@app.route('/staff/inquiries_view')
+#문의된 정보 보기
+@app.route('/staff/inquiries_view', methods=['GET'])
 @staff_required
 def admin_inquiries_view():
-    adminid = session.get('admin_id')
-    return render_template("staff/inquiries_view.html", adminid=adminid)
+    per_page = 10  # 한 페이지당 보여줄 개수
+    page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+    offset = (page - 1) * per_page  # 오프셋 계산
+    search_type = request.args.get('search_type')
+    search_query = request.args.get('search_query')
 
-##답변완료된 문의정보 보기
-@app.route('/staff/inquiries_completed')
-@staff_required
-def admin_inquiries_completed():
-    adminid = session.get('admin_id')
-    return render_template("staff/inquiries_completed.html", adminid=adminid)
+    # 문의 리스트 가져오기
+    inquiries, total_inquiries = manager.get_paginated_inquiries(per_page, offset, search_type, search_query)
 
+    # 전체 페이지 수 계산
+    total_pages = (total_inquiries + per_page - 1) // per_page
 
-## 답변상태 변환하기 
-@app.route('/staff/update_status_member/<userid>', methods=['POST'])
+    return render_template(
+        'staff/inquiries_view.html',
+        posts=inquiries,
+        per_page=per_page,
+        current_page=page,
+        total_pages=total_pages
+    )
+
+# 답변상태 변환하기 
+@app.route('/update_status_member/<userid>', methods=['POST'])
 @staff_required
 def update_answer_status(userid):
     enquired_at_str = request.form['enquired_at']
     enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
-    manager.update_answer_status(userid,enquired_at)
+    
+    # models.py의 메소드 사용
+    if manager.update_answer_status(userid, enquired_at):
+        flash('답변 상태가 업데이트되었습니다.', 'success')
+    else:
+        flash('답변 상태 업데이트 중 오류가 발생했습니다.', 'error')
+        
     if userid != '비회원':
         return redirect(url_for('admin_list_posts_member'))
-    else :
+    else:
         return redirect(url_for('admin_list_posts_nonmember'))
 
-#회원 문의사항 상세정보보기
-@app.route('/staff/admin_view_posts_member/<userid>', methods=['POST'])
+# 회원 문의사항 상세정보보기
+@app.route('/admin_view_posts_member/<userid>', methods=['POST'])
 @staff_required
 def admin_view_posts_member(userid):
     enquired_at_str = request.form['enquired_at']
     enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
-    post = manager.get_enquired_post_by_id(userid,enquired_at)
-    return render_template("admin_view_posts_member.html", post=post)
 
-#이미지파일 가져오기
+    # 단일 post 객체를 가져옵니다.
+    post = manager.get_enquired_post_by_id(userid, enquired_at)
+
+    # 'posts'로 단일 객체를 전달
+    return render_template("staff/view_posts_member.html", posts=post)
+
+# 답변 하기
+@app.route('/staff/answer-inquiry', methods=['POST'])
+@staff_required
+def admin_answer_inquiry():
+    try:
+        # 필수 필드 확인
+        inquiry_id = request.form['inquiry_id']
+        user_id = request.form['user_id']
+        admin_id = session.get('admin_id')
+        
+        if not admin_id:
+            flash('관리자 세션이 만료되었습니다.', 'error')
+            return redirect(url_for('admin_login'))
+        
+        answer_content = request.form['answer_content']
+        
+        # models.py의 메소드 사용
+        if manager.update_inquiry_answer(inquiry_id, user_id, answer_content, admin_id):
+            flash('답변이 성공적으로 저장되었습니다.', 'success')
+        else:
+            flash('답변 저장 중 오류가 발생했습니다.', 'error')
+            
+        return redirect(url_for('admin_inquiries_view'))
+
+    except KeyError as e:
+        # 필수 필드 누락 시 처리
+        flash(f'필수 데이터가 누락되었습니다: {str(e)}', 'error')
+        return redirect(url_for('admin_inquiries_view'))
+    
+    except Exception as e:
+        print(f"오류 발생: {str(e)}")
+        flash(f'답변 저장 중 오류가 발생했습니다: {str(e)}', 'error')
+        return redirect(url_for('admin_inquiries_view'))
+
+# 답변 수정하기 
+@app.route('/staff/update-inquiry-answer', methods=['POST'])
+@staff_required
+def update_inquiry_answer():
+    try:
+        inquiry_id = request.form.get('inquiry_id')
+        user_id = request.form.get('user_id')
+        answer_content = request.form.get('answer_content')
+        admin_id = session.get('admin_id')
+        
+        # models.py의 메소드 사용
+        if manager.update_inquiry_answer(inquiry_id, user_id, answer_content, admin_id):
+            flash('답변이 성공적으로 저장되었습니다.', 'success')
+        else:
+            flash('답변 저장 중 오류가 발생했습니다.', 'error')
+            
+        return redirect(url_for('admin_inquiries_view'))
+
+    except Exception as e:
+        print(f"오류 발생: {str(e)}")
+        flash('답변 저장 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin_inquiries_view'))
+
+# 문의된 정보 보기 (미답변만)
+@app.route('/staff/inquiries_pending', methods=['GET'])
+@staff_required
+def admin_inquiries_pending():
+    per_page = 10  # 한 페이지당 보여줄 개수
+    page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+    offset = (page - 1) * per_page  # 오프셋 계산
+    search_type = request.args.get('search_type')
+    search_query = request.args.get('search_query')
+    
+    # models.py의 메소드 사용 - answer_status를 'pending'으로 설정
+    posts, total = manager.get_paginated_inquiries(
+        per_page, offset, search_type, search_query, answer_status='pending'
+    )
+    
+    # 전체 페이지 수 계산
+    total_pages = (total + per_page - 1) // per_page
+    
+    return render_template(
+        'staff/inquiries_pending.html',
+        posts=posts,
+        total=total,
+        per_page=per_page,
+        current_page=page,
+        total_pages=total_pages
+    )
+
+# 이미지파일 가져오기
 @app.route('/capture_file/<filename>')
 def capture_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-# 문의 완료 처리
-@app.route('/staff/inquries_completed')
-def admin_inquries_completed():
-    return render_template('staff/inquiries_view.html')
+# # 문의 완료 처리
+# @app.route('/staff/inquiries/completed')
+# def admin_inquiries_completed():
+#     # 예시: 데이터 조회
+#     per_page = 10
+#     offset = 0
+#     posts, total = manager.get_paginated_inquiries(per_page, offset, search_type='', search_query='')
+
+#     total_pages = (total // per_page) + (1 if total % per_page else 0)
+
+#     return render_template(
+#         'staff/inquiries_view.html',
+#         posts=posts,
+#         total=total,
+#         per_page=per_page,
+#         total_pages=total_pages  # ✅ 이걸 꼭 전달해야 함
+#     )
+
+
+
+@app.route('/admin/staff_register', methods=['GET', 'POST'])
+@admin_required
+def admin_staff_register():
+    if request.method == 'POST':
+        # 폼 데이터 가져오기
+        staff_id = request.form['staff_id']
+        staff_name = request.form['staff_name']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        # 비밀번호 확인
+        if password != confirm_password:
+            flash('비밀번호가 일치하지 않습니다.', 'danger')
+            return redirect(url_for('admin_staff_register'))
+        
+        # DBManager 인스턴스 생성
+        db_manager = DBManager()
+        
+        try:
+            # 데이터베이스 연결
+            db_manager.connect()
+            
+            # 이미 존재하는 staff ID 체크
+            db_manager.cursor.execute("SELECT * FROM admins WHERE admin_id = %s", (staff_id,))
+            existing_staff = db_manager.cursor.fetchone()
+            
+            if existing_staff:
+                flash('이미 존재하는 Staff ID입니다.', 'danger')
+                return redirect(url_for('admin_staff_register'))
+            
+            # staff 등록 (gender 컬럼 제거)
+            db_manager.cursor.execute("""
+                INSERT INTO admins 
+                (admin_id, admin_name, password, email, role)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                staff_id,
+                staff_name,
+                password,
+                email,
+                'staff'  # role에 기본값 추가
+            ))
+            
+            # 변경사항 커밋
+            db_manager.connection.commit()
+            
+            flash('Staff가 성공적으로 등록되었습니다.', 'success')
+            return redirect(url_for('admin_dashboard'))
+        
+        except mysql.connector.Error as e:
+            # 데이터베이스 관련 오류 처리
+            flash(f'데이터베이스 오류: {str(e)}', 'danger')
+            return redirect(url_for('admin_staff_register'))
+        
+        except Exception as e:
+            # 기타 예외 처리
+            flash(f'등록 중 오류가 발생했습니다: {str(e)}', 'danger')
+            return redirect(url_for('admin_staff_register'))
+        
+        finally:
+            # 항상 데이터베이스 연결 종료
+            if db_manager.connection and db_manager.connection.is_connected():
+                db_manager.disconnect()
+    
+    return render_template('admin/staff_register.html')
+
+
+@app.route('/admin/staff_delete', methods=['GET', 'POST'])
+@admin_required
+def admin_staff_delete():
+    db_manager = DBManager()
+    
+    try:
+        db_manager.connect()
+        
+        # GET 요청 시 Staff 목록 조회
+        if request.method == 'GET':
+            db_manager.cursor.execute(
+                "SELECT * FROM admins WHERE role = 'staff'"
+            )
+            staff_list = db_manager.cursor.fetchall()
+            return render_template('admin/staff_delete.html', staff_list=staff_list)
+        
+        # POST 요청 시 삭제 처리
+        staff_id = request.form['staff_id']
+        admin_password = request.form['admin_password']
+        
+        # 관리자 비밀번호 검증 로직 추가
+        db_manager.cursor.execute(
+            "SELECT * FROM admins WHERE role = 'admin' AND password = %s", 
+            (admin_password,)
+        )
+        admin_verified = db_manager.cursor.fetchone()
+        
+        if not admin_verified:
+            flash('관리자 비밀번호가 incorrect합니다.', 'danger')
+            return redirect(url_for('admin_staff_delete'))
+        
+        # Staff 삭제
+        db_manager.cursor.execute(
+            "DELETE FROM admins WHERE admin_id = %s AND role = 'staff'", 
+            (staff_id,)
+        )
+        db_manager.connection.commit()
+        
+        flash('Staff가 성공적으로 삭제되었습니다.', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    except Exception as e:
+        flash(f'오류 발생: {str(e)}', 'danger')
+        return redirect(url_for('admin_staff_delete'))
+    
+    finally:
+        if db_manager.connection and db_manager.connection.is_connected():
+            db_manager.disconnect()
+
+
 
 
 if __name__ == '__main__':

@@ -41,6 +41,24 @@
                     <span>없음</span>
                 {% endif %}
             </div>
+
+            <!-- 답변 섹션 추가 -->
+            <div class="answer-section">
+                <h4>답변 내용</h4>
+                {% if posts.answer %}
+                    <div class="answer-content">
+                        <p>{{ posts.answer }}</p>
+                        <p class="answer-info">
+                            답변 시간: {{ posts.answer_time }}
+                            {% if posts.admin_id %}
+                            | 답변자: 관리자
+                            {% endif %}
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="no-answer">아직 답변이 등록되지 않았습니다.</p>
+                {% endif %}
+            </div>
         </div>
 
         <!-- 하단: 뒤로가기 버튼 -->

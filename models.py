@@ -607,11 +607,19 @@ class DBManager:
     def get_inquiry_by_info(self, inquiries_id):
         try:
             self.connect()
-            sql="""
-            SELECT * FROM inquiries where inquiries_id = %s
+            sql = """
+                SELECT i.*, 
+                    u.user_name,
+                    a.answer_content as answer,
+                    a.answer_time,
+                    a.admin_id
+                FROM inquiries i
+                LEFT JOIN users u ON i.user_id = u.user_id
+                LEFT JOIN inquiry_answers a ON i.inquiries_id = a.inquiry_id
+                WHERE i.inquiries_id = %s
             """
-            value=(inquiries_id,)
-            self.cursor.execute(sql,value)
+            value = (inquiries_id,)
+            self.cursor.execute(sql, value)
             return self.cursor.fetchone()
         except Exception as error:
             print(f"회원 문의 정보를 가져오기 실패 : {error}")
@@ -900,4 +908,234 @@ class DBManager:
         finally:
             self.disconnect()
 
-    
+    # 고장난 가로등 조회
+    def get_malfunctioning_lamps(self, per_page, offset, search_type="all", search_query="", status=None):
+        try:
+            self.connect()  # DB 연결 추가
+            
+            # 기본 WHERE 절과 파라미터 초기화
+            where_clauses = ["status = %s"]
+            params = ['malfunction']
+            
+            # 검색 로직
+            if search_type == "street_light_id" and search_query:
+                where_clauses.append("street_light_id LIKE %s")
+                params.append(f"%{search_query}%")
+            elif search_type == "street_light_location" and search_query:
+                where_clauses.append("location LIKE %s")
+                params.append(f"%{search_query}%")
+            
+            # WHERE 절 구성
+            where_sql = " WHERE " + " AND ".join(where_clauses)
+            
+            # 전체 레코드 수 계산 쿼리
+            count_query = f"SELECT COUNT(*) as total FROM street_lights {where_sql}"
+            
+            # 페이지네이션 쿼리
+            pagination_sql = f"SELECT * FROM street_lights {where_sql} LIMIT %s OFFSET %s"
+            
+            # 페이지네이션용 파라미터 추가
+            count_params = params.copy()
+            full_params = params + [per_page, offset]
+            
+            # 전체 레코드 수 실행
+            self.cursor.execute(count_query, count_params)
+            total_posts = self.cursor.fetchone()['total']
+            
+            # 페이지네이션 쿼리 실행
+            self.cursor.execute(pagination_sql, full_params)
+            lamps = self.cursor.fetchall()
+            
+            return lamps, total_posts
+        
+        except mysql.connector.Error as error:
+            print(f"데이터베이스 쿼리 실행 실패: {error}")
+            return [], 0
+            
+        finally:
+            self.disconnect()  # DB 연결 해제 추가
+
+    def _build_search_condition(self, search_type=None, search_query=None, answer_status=None):
+        """
+        검색 조건에 따른 WHERE 절과 파라미터 생성
+        answer_status 파라미터 추가하여 답변 상태로 필터링 가능
+        """
+        where_clauses = []
+        params = []
+
+        # 답변 상태 필터링
+        if answer_status:
+            where_clauses.append("answer_status = %s")
+            params.append(answer_status)
+
+        # 검색 조건 처리
+        if search_query and search_type != 'all':
+            if search_type == 'inquiries_id':
+                where_clauses.append("inquiries_id LIKE %s")
+            elif search_type == 'user_id':
+                where_clauses.append("user_id LIKE %s")
+            elif search_type == 'inquiry_reason':
+                where_clauses.append("inquiry_reason LIKE %s")
+            elif search_type == 'answer_status':
+                where_clauses.append("answer_status LIKE %s")
+            params.append(f"%{search_query}%")
+
+        # WHERE 절 구성
+        where_clause = ""
+        if where_clauses:
+            where_clause = "WHERE " + " AND ".join(where_clauses)
+
+        return where_clause, params
+
+    def get_total_inquiries_count(self, search_type=None, search_query=None, answer_status=None):
+        """
+        전체 문의 개수를 반환 (검색 조건 및 답변 상태 필터 적용 가능)
+        """
+        base_query = "FROM inquiries"
+        where_clause, params = self._build_search_condition(search_type, search_query, answer_status)
+
+        # 전체 개수 조회 쿼리
+        count_sql = f"SELECT COUNT(*) AS total {base_query} {where_clause}"
+
+        try:
+            self.connect()
+            self.cursor.execute(count_sql, params)
+            total_count = self.cursor.fetchone()['total']
+            return total_count
+        except Exception as e:
+            print(f"총 문의 개수 조회 오류: {str(e)}")
+            return 0
+        finally:
+            self.disconnect()
+
+    def get_paginated_inquiries(self, per_page, offset, search_type=None, search_query=None, answer_status=None):
+        """
+        페이지네이션된 문의 데이터 반환 (답변 상태 필터링 추가)
+        """
+        try:
+            base_query = "FROM inquiries"
+            where_clause, params = self._build_search_condition(search_type, search_query, answer_status)
+            
+            # 데이터 조회 쿼리
+            data_sql = f"""
+                SELECT * 
+                {base_query} 
+                {where_clause}
+                ORDER BY inquiries_id DESC
+                LIMIT %s OFFSET %s
+            """
+            data_params = params + [per_page, offset]
+            
+            # 데이터 조회
+            self.connect()
+            self.cursor.execute(data_sql, data_params)
+            inquiries_data = self.cursor.fetchall()
+
+            # 전체 개수 조회
+            total = self.get_total_inquiries_count(search_type, search_query, answer_status)
+
+            return inquiries_data, total
+
+        except Exception as e:
+            print(f"문의 데이터 조회 오류: {str(e)}")
+            return [], 0
+        finally:
+            self.disconnect()
+
+    def get_enquired_post_by_id(self, user_id, inquiry_time):
+        """
+        특정 사용자의 특정 시간에 등록한 문의 상세 정보 조회
+        """
+        try:
+            self.connect()
+            query = """
+                SELECT 
+                    inquiries.inquiries_id, 
+                    inquiries.user_id, 
+                    inquiries.capture_file,
+                    inquiries.inquiry_reason, 
+                    inquiries.detail_reason,
+                    inquiries.inquiry_time, 
+                    inquiries.answer_status, 
+                    users.user_name,
+                    inquiry_answers.answer_content,  
+                    inquiry_answers.answer_time,     
+                    inquiry_answers.admin_id        
+                FROM inquiries
+                JOIN users ON inquiries.user_id = users.user_id
+                LEFT JOIN inquiry_answers ON inquiries.inquiries_id = inquiry_answers.inquiry_id
+                WHERE inquiries.user_id = %s AND inquiries.inquiry_time = %s
+            """
+            self.cursor.execute(query, (user_id, inquiry_time))
+            return self.cursor.fetchone()
+        except Exception as e:
+            print(f"문의 상세 정보 조회 오류: {str(e)}")
+            return None
+        finally:
+            self.disconnect()
+
+    def update_inquiry_answer(self, inquiry_id, user_id, answer_content, admin_id):
+        """
+        문의 답변 업데이트 (없으면 새로 생성)
+        """
+        try:
+            self.connect()
+            
+            # 기존 답변 확인
+            self.cursor.execute("SELECT * FROM inquiry_answers WHERE inquiry_id = %s", (inquiry_id,))
+            existing_answer = self.cursor.fetchone()
+            answer_time = datetime.now()
+            
+            if existing_answer:
+                # 기존 답변 업데이트
+                query = """
+                    UPDATE inquiry_answers 
+                    SET answer_content = %s, 
+                        answer_time = %s, 
+                        admin_id = %s
+                    WHERE inquiry_id = %s
+                """
+                self.cursor.execute(query, (answer_content, answer_time, admin_id, inquiry_id))
+            else:
+                # 새로운 답변 삽입
+                query = """
+                    INSERT INTO inquiry_answers 
+                    (inquiry_id, user_id, admin_id, answer_content, enquired_at, answer_time)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                self.cursor.execute(query, (inquiry_id, user_id, admin_id, answer_content, answer_time, answer_time))
+            
+            # 문의 상태 업데이트
+            self.cursor.execute("UPDATE inquiries SET answer_status = 'completed' WHERE inquiries_id = %s", (inquiry_id,))
+            
+            self.connection.commit()
+            return True
+        except Exception as e:
+            if self.connection:
+                self.connection.rollback()
+            print(f"답변 업데이트 오류: {str(e)}")
+            return False
+        finally:
+            self.disconnect()
+
+    def update_answer_status(self, user_id, enquired_at):
+        """
+        문의 답변 상태 업데이트
+        """
+        try:
+            self.connect()
+            query = """
+                UPDATE inquiries 
+                SET answer_status = 'completed' 
+                WHERE user_id = %s AND inquiry_time = %s
+            """
+            self.cursor.execute(query, (user_id, enquired_at))
+            self.connection.commit()
+            return True
+        except Exception as e:
+            if self.connection:
+                self.connection.rollback()
+            print(f"답변 상태 업데이트 오류: {str(e)}")
+            return False
+        finally:
+            self.disconnect()
