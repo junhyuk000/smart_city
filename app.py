@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 
 app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이션에서는 더 안전한 방법으로 설정해야 함if __name__ == '__main__':
-road_url = "http://10.0.66.14:5000/stream"
+road_url = "http://10.0.66.6:5000/stream"
 manager = DBManager()
 KAKAO_API_KEY = "4cf7fc8fc69613ac8f18b4d883213352"
 
@@ -492,7 +492,6 @@ def user_dashboard_cctv(street_light_id):
     return render_template('user/view_cctv.html', camera=camera)
 
 
-
 #회원용 문의하기
 @app.route('/user/inquiries', methods=['GET','POST'])
 @login_required
@@ -525,6 +524,7 @@ def user_dashboard_inquiries_view():
         inquiries_id = request.form.get('inquiries_id')
         posts = manager.get_inquiry_by_info(inquiries_id)
         return render_template('user/inquiry_detail.html', posts=posts)
+
 
 #회원탈퇴
 @app.route('/user_dashboard/delete_user', methods=['GET','POST'])
