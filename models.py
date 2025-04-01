@@ -1153,3 +1153,17 @@ class DBManager:
             print(f"❌ SOS 저장 오류: {e}")
         finally:
             self.disconnect()
+
+    def save_motorcycle_violation(self, street_light_id, image_path):
+        try:
+            self.connect()
+            sql = """
+                INSERT INTO motorcycle_violations (street_light_id, image_path)
+                VALUES (%s, %s)
+            """
+            self.cursor.execute(sql, (street_light_id, image_path))
+            self.connection.commit()
+        except mysql.connector.Error as err:
+            print(f"❌ 오토바이 위반 저장 오류: {err}")
+        finally:
+            self.disconnect()

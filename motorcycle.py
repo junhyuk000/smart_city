@@ -6,6 +6,11 @@ import os
 import urllib.request
 from datetime import datetime
 from ultralytics import YOLO
+import models  # DBManager import
+
+db_manager = models.DBManager()  # 전역 인스턴스 선언
+street_light_id = None  # 외부에서 지정받을 ID
+
 
 # ✅ 동적으로 설정될 ESP32-CAM URL 및 위치 정보
 ESP32_CAM_URL = None
@@ -30,12 +35,13 @@ frame = None
 lock = threading.Lock()
 
 
-def set_camera_info(location, stream_url):
-    """Flask에서 설정할 수 있도록 위치 및 URL 외부에서 설정"""
-    global ESP32_CAM_URL, camera_location
+def set_camera_info(location, stream_url, light_id=None):
+    global ESP32_CAM_URL, camera_location, street_light_id
     ESP32_CAM_URL = stream_url
     camera_location = location
+    street_light_id = light_id  # 추가됨
     print(f"✅ 오토바이 감지 카메라 설정 완료: {location} ({stream_url})")
+
 
 
 def detect_motorcycle():
@@ -80,6 +86,12 @@ def detect_motorcycle():
                             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                             img_path = os.path.join(MOTORCYCLE_IMAGE_FOLDER, f"motorcycle_{timestamp}.jpg")
                             cv2.imwrite(img_path, frame)
+
+                            # ✅ DB에 저장
+                            if street_light_id:
+                                relative_path = f"/static/motorcycle_images/motorcycle_{timestamp}.jpg"
+                                db_manager.save_motorcycle_violation(street_light_id, relative_path)
+
 
                 if detected:
                     motorcycle_detected = True

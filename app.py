@@ -93,7 +93,8 @@ def staff_required(f):
 # 전역 변수로 데이터 저장
 received_data = {"message": "No data received"}
 last_switch_state = "1"
-# SOS 함수수
+
+# SOS 함수
 def send_sos_alert_to_police(location, stream_url):
     SOS_API_URL = "http://10.0.66.11:5002/sos_alert"
 
@@ -1048,7 +1049,8 @@ def admin_sidewalk_motorcycle():
     stream_url = f"http://{raw_ip}:5000/stream"
 
 
-    motorcycle.set_camera_info(location, stream_url)
+    motorcycle.set_camera_info(location, stream_url, street_light_id)
+
 
     return render_template("staff/sidewalk_motorcycle.html", adminid=adminid)
 
