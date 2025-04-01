@@ -9,10 +9,10 @@ from markupsafe import Markup
 import json
 import re
 import mysql.connector
-# import threading
-# import license_plate
-# import cv2
-# import motorcycle
+import threading
+import license_plate
+import cv2
+import motorcycle
 
 from api import handle_request  # api.py에서 handle_request 함수 불러오기
 
@@ -982,92 +982,56 @@ def admin_sidewalk_motorcycle():
     adminid = session.get('admin_id')
     return render_template("staff/sidewalk_motorcycle.html", adminid=adminid)
 
-# # YOLO 분석된 영상 스트리밍
-# @app.route("/processed_video_feed")
-# def processed_video_feed():
-#     """YOLOv8로 감지된 영상 스트리밍"""
-#     def generate():
-#         while True:
-#             with license_plate.lock:
-#                 if license_plate.frame is None:
-#                     continue
-#                 img = license_plate.frame.copy()
-# # YOLO 분석된 영상 스트리밍
-# @app.route("/processed_video_feed")
-# def processed_video_feed():
-#     """YOLOv8로 감지된 영상 스트리밍"""
-#     def generate():
-#         while True:
-#             with license_plate.lock:
-#                 if license_plate.frame is None:
-#                     continue
-#                 img = license_plate.frame.copy()
 
-#             results = license_plate.model(img)
-#             for result in results:
-#                 boxes = result.boxes.xyxy.cpu().numpy()
-#                 for box in boxes:
-#                     x1, y1, x2, y2 = map(int, box)
-#                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-#             results = license_plate.model(img)
-#             for result in results:
-#                 boxes = result.boxes.xyxy.cpu().numpy()
-#                 for box in boxes:
-#                     x1, y1, x2, y2 = map(int, box)
-#                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+# YOLO 분석된 영상 스트리밍
+@app.route("/processed_video_feed")
+def processed_video_feed():
+    """YOLOv8로 감지된 영상 스트리밍"""
+    def generate():
+        while True:
+            with license_plate.lock:
+                if license_plate.frame is None:
+                    continue
+                img = license_plate.frame.copy()
 
-#             _, jpeg = cv2.imencode('.jpg', img)
-#             yield (b'--frame\r\n'
-#                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-#             _, jpeg = cv2.imencode('.jpg', img)
-#             yield (b'--frame\r\n'
-#                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
+            results = license_plate.model(img)
+            for result in results:
+                boxes = result.boxes.xyxy.cpu().numpy()
+                for box in boxes:
+                    x1, y1, x2, y2 = map(int, box)
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-#     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
-#     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-# # OCR 결과 API
-# @app.route("/ocr_result", methods=["GET"])
-# def get_ocr_result():
-#     """OCR 결과 반환 API"""
-#     response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
-# # OCR 결과 API
-# @app.route("/ocr_result", methods=["GET"])
-# def get_ocr_result():
-#     """OCR 결과 반환 API"""
-#     response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
-
-#     if license_plate.alert_message:  # 알람 메시지가 있을 때만 초기화
-#         license_plate.alert_message = ""  # 메시지를 한 번만 표시하도록 초기화
-#     if license_plate.alert_message:  # 알람 메시지가 있을 때만 초기화
-#         license_plate.alert_message = ""  # 메시지를 한 번만 표시하도록 초기화
-    
-#     return jsonify(response_data)
-#     return jsonify(response_data)
+            _, jpeg = cv2.imencode('.jpg', img)
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
 
 
-# # ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
-# @app.route("/video_feed")
-# def video_feed():
-#     """ESP32-CAM 스트리밍"""
-#     return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
-# # ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
-# @app.route("/video_feed")
-# def video_feed():
-#     """ESP32-CAM 스트리밍"""
-#     return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-# # ✅ 오토바이 감지 상태 API
-# @app.route("/alert_status", methods=["GET"])
-# def alert_status():
-#     """오토바이 감지 상태 반환"""
-#     return jsonify(motorcycle.get_alert_status())
-# # ✅ 오토바이 감지 상태 API
-# @app.route("/alert_status", methods=["GET"])
-# def alert_status():
-#     """오토바이 감지 상태 반환"""
-#     return jsonify(motorcycle.get_alert_status())
+
+# OCR 결과 API
+@app.route("/ocr_result", methods=["GET"])
+def get_ocr_result():
+    """OCR 결과 반환 API"""
+    response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
+
+    if license_plate.alert_message:  # 알람 메시지가 있을 때만 초기화
+        license_plate.alert_message = ""  # 메시지를 한 번만 표시하도록 초기화
+    return jsonify(response_data)
+
+# ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
+@app.route("/video_feed")
+def video_feed():
+    """ESP32-CAM 스트리밍"""
+    return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+# ✅ 오토바이 감지 상태 API
+@app.route("/alert_status", methods=["GET"])
+def alert_status():
+    """오토바이 감지 상태 반환"""
+    return jsonify(motorcycle.get_alert_status())
 
 
 ##관리자 페이지에서 문의정보 보기
