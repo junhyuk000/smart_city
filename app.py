@@ -740,31 +740,12 @@ def staff_sidewalk_cctv():
 # cctv 상세 보기(관리자)
 @app.route('/staff/cctv/<int:street_light_id>', methods=['GET'])
 def staff_dashboard_cctv(street_light_id):
-    db = DBManager()
-    db.connect()
+    camera = manager.get_camera_by_info(street_light_id)
+    mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
+    sensor_data = manager.get_sensor_data(mapped_id)
+    malfunction_status = manager.get_malfunction_status(street_light_id)
+    return render_template("staff/staff_dashboard_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
     
-    sql = """
-    SELECT 
-        s.street_light_id,
-        s.location,
-        s.purpose,
-        s.installation_date,
-        c.cctv_ip
-    FROM street_lights s
-    LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-    WHERE s.street_light_id = %s
-    """
-    values = (street_light_id,)
-    db.cursor.execute(sql, values)
-    camera = db.cursor.fetchone()
-    
-    db.disconnect()
-
-    if not camera:
-        flash("해당 가로등을 찾을 수 없습니다.", "error")
-        return redirect(url_for('staff_dashboard_road_cctv'))
-
-    return render_template("staff/staff_dashboard_cctv.html", camera=camera)
 
 
 ## 가로등
@@ -996,6 +977,7 @@ def admin_road_car_board():
 
     return render_template(
         "staff/road_car_board.html",
+        
         street_lights=street_lights,
         search_query=search_query,
         search_type=search_type,
@@ -1011,8 +993,26 @@ def admin_road_car_board():
 @app.route("/staff/road_car")
 @staff_required
 def admin_road_car():
-    adminid =session.get('admin_id')
-    return render_template("staff/road_car.html", stream_url=road_url, adminid=adminid)
+    adminid = session.get('admin_id')
+    street_light_id = request.args.get("street_light_id", type=int)
+
+    camera_info = manager.get_camera_by_info(street_light_id)
+
+    if not camera_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    location = camera_info.get('location')
+    raw_ip = camera_info.get('cctv_ip')
+
+    if not raw_ip:
+        return "❌ CCTV IP가 존재하지 않습니다.", 400
+
+    stream_url = f"http://{raw_ip}:5000/stream"
+
+    license_plate.set_camera_info(location, stream_url)
+
+    return render_template("staff/road_car.html", stream_url=stream_url, adminid=adminid)
+
 
 #오토바이(인도) 단속 보드
 @app.route('/staff/sidewalk_motorcycle_board', methods=['GET'])
@@ -1074,8 +1074,6 @@ def admin_sidewalk_motorcycle():
     location = camera_info.get('location')
     raw_ip = camera_info.get('cctv_ip')  # 예: "10.0.66.6"
     stream_url = f"http://{raw_ip}:5000/stream"
-
-
     motorcycle.set_camera_info(location, stream_url, street_light_id)
 
 
