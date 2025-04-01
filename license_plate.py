@@ -9,8 +9,10 @@ from datetime import datetime
 from ultralytics import YOLO
 import re
 
-# ESP32-CAM 영상 스트림 URL
-VIDEO_STREAM_URL = "http://10.0.66.14:5000/stream"
+# ====================== 📌 전역 변수 ======================
+VIDEO_STREAM_URL = None  # ← 동적으로 세팅
+camera_location = "위치 정보 없음"
+camera_stream_url = None
 
 # YOLO 모델 로드 (번호판 검출)
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "best.pt")
@@ -20,66 +22,65 @@ model = YOLO(MODEL_PATH)
 VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate"
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# OCR 관련 변수
 ocr_result = ""
 plate_counts = {}
-ALERT_THRESHOLD = 5  # 같은 번호판 5번 감지 시 알람
-OCR_INTERVAL = 3.0  # 3초마다 OCR 실행
+ALERT_THRESHOLD = 5
+OCR_INTERVAL = 3.0
 saved_plates = set()
 alert_message = ""
 
-# 프레임 저장 변수
 frame = None
 lock = threading.Lock()
 
+# ====================== 📌 설정 함수 ======================
+def set_camera_info(location, stream_url):
+    """app.py에서 카메라 위치 및 URL을 전달받아 설정"""
+    global camera_location, camera_stream_url, VIDEO_STREAM_URL
+    camera_location = location
+    camera_stream_url = stream_url
+    VIDEO_STREAM_URL = stream_url
+    print(f"✅ 카메라 설정 완료 - 위치: {camera_location}, URL: {camera_stream_url}")
 
+# ====================== 📷 스트리밍 ======================
 def fetch_stream():
-    """ESP32-CAM에서 영상 프레임을 받아오는 함수"""
     global frame
-    cap = cv2.VideoCapture(VIDEO_STREAM_URL)
+    while VIDEO_STREAM_URL is None:
+        time.sleep(0.1)  # 설정되기 전까지 대기
 
+    cap = cv2.VideoCapture(VIDEO_STREAM_URL)
     while True:
         ret, img = cap.read()
         if not ret:
-            # print("❌ 프레임을 가져올 수 없습니다.")
             continue
-
         with lock:
             frame = img
 
-
+# ====================== 🔍 번호판 검출 ======================
 def detect_license_plate():
-    """YOLOv8을 이용해 번호판을 검출하고 OCR을 실행하는 함수"""
     global ocr_result, plate_counts, alert_message
     while True:
-        time.sleep(OCR_INTERVAL)  # 3초마다 OCR 실행
-
+        time.sleep(OCR_INTERVAL)
         with lock:
             if frame is None:
                 continue
             img = frame.copy()
 
-        results = model(img)  # YOLO 모델로 번호판 검출
+        results = model(img)
         for result in results:
             boxes = result.boxes.xyxy.cpu().numpy()
             for box in boxes:
                 x1, y1, x2, y2 = map(int, box)
                 plate_img = img[y1:y2, x1:x2]
-
                 if plate_img.size > 0:
-                    plate_text = run_ocr(plate_img)  # OCR 실행
+                    plate_text = run_ocr(plate_img)
                     if plate_text:
                         plate_counts[plate_text] = plate_counts.get(plate_text, 0) + 1
-                        # print(f"✅ {plate_text} 감지됨 (횟수: {plate_counts[plate_text]})")
-
                         if plate_counts[plate_text] >= ALERT_THRESHOLD and plate_text not in saved_plates:
                             save_detected_plate(plate_text, img)
 
-
+# ====================== 🧠 OCR ======================
 def run_ocr(plate_img):
-    """Google Cloud Vision API를 이용해 번호판 OCR 실행 (한국어 인식 강화)"""
     global ocr_result
-
     _, buffer = cv2.imencode(".jpg", plate_img)
     base64_image = base64.b64encode(buffer).decode("utf-8")
 
@@ -87,7 +88,7 @@ def run_ocr(plate_img):
         "requests": [{
             "image": {"content": base64_image},
             "features": [{"type": "TEXT_DETECTION"}],
-            "imageContext": {"languageHints": ["ko"]}  # 한국어 OCR 우선 처리
+            "imageContext": {"languageHints": ["ko"]}
         }]
     }
 
@@ -95,37 +96,27 @@ def run_ocr(plate_img):
     if response.status_code == 200:
         result = response.json()
         texts = result["responses"][0].get("textAnnotations", [])
-
         if texts:
             raw_text = texts[0]["description"].strip()
-            plate_text = clean_license_plate_text(raw_text)  # 번호판 정리
-            # print(f"✅ OCR 감지 번호판: {plate_text}")
-
+            plate_text = clean_license_plate_text(raw_text)
             ocr_result = plate_text
             return plate_text
-
     print("❌ OCR 실패")
     return ""
 
-
 def clean_license_plate_text(text):
-    """번호판 텍스트 정리 (한국 번호판 형식 필터링)"""
-    text = re.sub(r"[^가-힣0-9]", "", text)  # 한글 & 숫자만 남김
-
-    # 한국 번호판 패턴 확인
-    if len(text) == 7 and text[2].isalpha():  # 예: 12가3456
+    text = re.sub(r"[^가-힣0-9]", "", text)
+    if len(text) == 7 and text[2].isalpha():
         return text
-    elif len(text) == 8 and text[3].isalpha():  # 예: 123가4567
+    elif len(text) == 8 and text[3].isalpha():
         return text
-    elif len(text) == 9 and text[0].isalpha() and text[1].isalpha() and text[4].isalpha():  # 예: 서울12가3456
+    elif len(text) == 9 and text[0].isalpha() and text[1].isalpha() and text[4].isalpha():
         return text
     return ""
 
-
+# ====================== 💾 저장 및 전송 ======================
 def save_detected_plate(plate_text, full_image):
-    """번호판이 일정 횟수 이상 감지되면 저장하고 경찰서 서버로 전송"""
     global alert_message
-
     if plate_text in saved_plates:
         return
 
@@ -140,15 +131,14 @@ def save_detected_plate(plate_text, full_image):
 
     send_alert_to_police(plate_text, save_path)
 
-
 def send_alert_to_police(plate_text, image_path):
-    """감지된 차량 정보를 경찰서 서버로 전송"""
     POLICE_SERVER_URL = "http://10.0.66.89:5002/receive_alert"
-
     data = {
         "license_plate": plate_text,
         "image_path": f"http://10.0.66.94:5010/static/car_images/{os.path.basename(image_path)}",
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "camera_location": camera_location,
+        "stream_url": camera_stream_url
     }
 
     try:
@@ -160,7 +150,6 @@ def send_alert_to_police(plate_text, image_path):
     except Exception as e:
         print(f"❌ 경찰서 서버 전송 오류: {e}")
 
-
-# 백그라운드 실행을 위한 스레드 시작
+# ====================== ▶️ 백그라운드 스레드 실행 ======================
 threading.Thread(target=fetch_stream, daemon=True).start()
 threading.Thread(target=detect_license_plate, daemon=True).start()
