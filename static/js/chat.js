@@ -67,19 +67,30 @@ function initFloatingChat() {
         const originalContent = panelBody.innerHTML;
         
         // 패널 내용을 채팅 인터페이스로 교체
-        panelBody.innerHTML = `
-            <div id="chatMessages" class="chat-messages">
-                <div class="message system">
-                    <div class="message-content">안녕하세요! 스마트 도시 고객센터입니다. 무엇을 도와드릴까요?</div>
+        // 먼저 패널 내용을 비우고 애니메이션 컨테이너 추가
+        panelBody.innerHTML = '<div class="chat-interface-container chat-expand-animation"></div>';
+        
+        const chatContainer = panelBody.querySelector('.chat-interface-container');
+        
+        // 애니메이션이 끝난 후 실제 채팅 인터페이스 표시
+        setTimeout(() => {
+            chatContainer.innerHTML = `
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message system">
+                        <div class="message-content">안녕하세요! 스마트 도시 고객센터입니다. 무엇을 도와드릴까요?</div>
+                    </div>
                 </div>
-            </div>
-            <div class="chat-input-container">
-                <textarea id="chatInput" placeholder="메시지를 입력하세요..." rows="2"></textarea>
-                <button id="sendMessage">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        `;
+                <div class="chat-input-container">
+                    <textarea id="chatInput" placeholder="메시지를 입력하세요..." rows="2"></textarea>
+                    <button id="sendMessage">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            `;
+            
+            // 채팅 메시지 전송 기능 설정
+            setupChatMessageSending();
+        }, 400); // 애니메이션 시간과 맞추기
         
         // 뒤로가기 버튼 이벤트 설정
         mainBackButton.addEventListener('click', function(e) {
@@ -101,9 +112,6 @@ function initFloatingChat() {
                 });
             }
         });
-        
-        // 채팅 메시지 전송 기능 설정
-        setupChatMessageSending();
     }
     
     // 채팅 메시지 전송 기능 설정

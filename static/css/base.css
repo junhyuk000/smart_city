@@ -304,10 +304,9 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* 키보드 포커스 스타일 - 테두리 제거 */
 .btn:focus {
-    outline: none !important;
-    box-shadow: none !important;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .btn-primary {
@@ -318,16 +317,6 @@ body {
 
 .btn-primary:hover {
     background-color: #0069d9;
-}
-
-/* 헤더의 회원정보 수정 버튼은 항상 파란색으로 유지 */
-.header-top .right-nav .btn-primary {
-    background-color: #0078ff !important;
-    color: white !important;
-}
-
-.header-top .right-nav .btn-primary:hover {
-    background-color: #0069d9 !important;
 }
 
 .btn-secondary {
@@ -380,13 +369,10 @@ body {
     background-color: var(--nav-link-hover-bg);
 }
 
-/* 키보드 포커스 스타일 - 테두리 제거 */
+/* 키보드 포커스 스타일 */
 .nav-link:focus {
-    outline: none !important;
-}
-
-.menu-item:focus-within .nav-link {
-    outline: none !important;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 /* 드롭다운 관련 스타일 */
