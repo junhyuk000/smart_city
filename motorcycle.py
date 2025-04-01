@@ -11,7 +11,6 @@ import models  # DBManager import
 db_manager = models.DBManager()  # 전역 인스턴스 선언
 street_light_id = None  # 외부에서 지정받을 ID
 
-
 # ✅ 동적으로 설정될 ESP32-CAM URL 및 위치 정보
 ESP32_CAM_URL = None
 camera_location = "위치 정보 없음"
@@ -28,26 +27,24 @@ model = YOLO(MODEL_PATH)
 # ✅ 오토바이 감지 상태 변수
 motorcycle_detected = False
 last_motorcycle_time = 0
-ALERT_THRESHOLD = 5  # 5초 이상 같은 위치에서 감지되면 알람
+last_saved_time = 0  # 마지막 저장 시각 (초 단위)
+SAVE_INTERVAL = 1.0  # 저장 간격 (1초)
+ALERT_THRESHOLD = 5  # 감지 상태 유지 시간 (5초)
 
 # ✅ 프레임을 저장하는 변수
 frame = None
 lock = threading.Lock()
 
-
 def set_camera_info(location, stream_url, light_id=None):
     global ESP32_CAM_URL, camera_location, street_light_id
     ESP32_CAM_URL = stream_url
     camera_location = location
-    street_light_id = light_id  # 추가됨
+    street_light_id = light_id
     print(f"✅ 오토바이 감지 카메라 설정 완료: {location} ({stream_url})")
 
-
-
 def detect_motorcycle():
-    global motorcycle_detected, last_motorcycle_time, frame
+    global motorcycle_detected, last_motorcycle_time, last_saved_time, frame
 
-    # ✅ URL 설정될 때까지 대기
     while ESP32_CAM_URL is None:
         time.sleep(0.1)
 
@@ -83,15 +80,16 @@ def detect_motorcycle():
                             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                             cv2.putText(frame, "Motorcycle", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                            img_path = os.path.join(MOTORCYCLE_IMAGE_FOLDER, f"motorcycle_{timestamp}.jpg")
-                            cv2.imwrite(img_path, frame)
+                            now = time.time()
+                            if now - last_saved_time >= SAVE_INTERVAL:
+                                last_saved_time = now
+                                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                                img_path = os.path.join(MOTORCYCLE_IMAGE_FOLDER, f"motorcycle_{timestamp}.jpg")
+                                cv2.imwrite(img_path, frame)
 
-                            # ✅ DB에 저장
-                            if street_light_id:
-                                relative_path = f"/static/motorcycle_images/motorcycle_{timestamp}.jpg"
-                                db_manager.save_motorcycle_violation(street_light_id, relative_path)
-
+                                if street_light_id:
+                                    relative_path = f"/static/motorcycle_images/motorcycle_{timestamp}.jpg"
+                                    db_manager.save_motorcycle_violation(street_light_id, relative_path)
 
                 if detected:
                     motorcycle_detected = True
@@ -101,7 +99,6 @@ def detect_motorcycle():
 
     except Exception as e:
         print(f"❌ ESP32-CAM 스트리밍 오류: {e}")
-
 
 def get_video_frame():
     while True:
@@ -116,10 +113,8 @@ def get_video_frame():
         yield (b"--frame\r\n"
                b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
 
-
 def get_alert_status():
     return {"motorcycle_detected": motorcycle_detected}
-
 
 # ✅ 백그라운드 스레드 시작
 threading.Thread(target=detect_motorcycle, daemon=True).start()
