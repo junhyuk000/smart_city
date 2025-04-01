@@ -941,7 +941,7 @@ def admin_load_car():
 
     # 예: {'location': '서울 강남대로 123', 'stream_url': 'http://10.0.66.6:5000/stream'}
     location = camera_info.get('location')
-    raw_ip = camera_info.get('stream_url')  # 예: "10.0.66.6"
+    raw_ip = camera_info.get('cctv_ip')  # 예: "10.0.66.6"
     stream_url = f"http://{raw_ip}:5000/stream"
 
 
@@ -1003,7 +1003,7 @@ def admin_sidewalk_motorcycle():
         return "❌ 가로등 정보를 찾을 수 없습니다.", 404
 
     location = camera_info.get('location')
-    raw_ip = camera_info.get('stream_url')  # 예: "10.0.66.6"
+    raw_ip = camera_info.get('cctv_ip')  # 예: "10.0.66.6"
     stream_url = f"http://{raw_ip}:5000/stream"
 
 
