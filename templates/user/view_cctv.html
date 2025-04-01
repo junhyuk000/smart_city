@@ -40,6 +40,29 @@
                         <i class="fas fa-camera"></i>
                     </button>
                 </div>
+                <div class="info-card">
+                    <h2>가로등 상태</h2>
+                    <div class="streetlight-status" id="streetlight-status">
+                        <div class="status-icon on">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <span>
+                        {% if malfunction_status %}
+                            {% if malfunction_status.reason_led and malfunction_status.reason_tilt %}
+                                LED 고장, 기울어짐
+                            {% elif malfunction_status.reason_led %}
+                                LED 고장
+                            {% elif malfunction_status.reason_tilt %}
+                                기울어짐
+                            {% else %}
+                                상태 이상
+                            {% endif %}
+                        {% else %}
+                            가로등 상태: 양호
+                        {% endif %}
+                        </span>
+                    </div>
+                </div>
             </div>
             
             <div class="cctv-sidebar">
@@ -75,29 +98,7 @@
                     </div>
                 </div>
                 
-                <div class="info-card">
-                    <h2>가로등 상태</h2>
-                    <div class="streetlight-status" id="streetlight-status">
-                        <div class="status-icon on">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <span>
-                        {% if malfunction_status %}
-                            {% if malfunction_status.reason_led and malfunction_status.reason_tilt %}
-                                LED 고장, 기울어짐
-                            {% elif malfunction_status.reason_led %}
-                                LED 고장
-                            {% elif malfunction_status.reason_tilt %}
-                                기울어짐
-                            {% else %}
-                                상태 이상
-                            {% endif %}
-                        {% else %}
-                            가로등 상태: 양호
-                        {% endif %}
-                        </span>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
