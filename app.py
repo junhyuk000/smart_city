@@ -241,43 +241,6 @@ def privacy_policy():
     return render_template('public/privacy_policy.html')
 
 
-### 로그인 기능
-## 로그인 필수 데코레이터
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session and 'admin_id' not in session :  # 'user_id' 또는 'admin_id'가 세션에 없다면
-            return redirect('/login')  # 로그인 페이지로 리디렉션
-        return f(*args, **kwargs)
-    return decorated_function
-
-## 관리자 권한 필수 데코레이터
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'admin_id' not in session:  # 'adminid'가 세션에 없다면
-            return redirect('/login')  # 로그인 페이지로 리디렉션
-        
-        # 관리자 정보 확인
-        admin = manager.get_admin_by_id(session['admin_id'])  # 세션의 관리자 ID로 확인
-        if not admin or admin['role'] != 'admin':  # 관리자가 아니면
-            return "접근 권한이 없습니다", 403  # 관리자만 접근 가능
-        return f(*args, **kwargs)
-    return decorated_function
-
-## 사원 권한 필수 데코레이터
-def staff_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'admin_id' not in session:  # 'adminid'가 세션에 없다면
-            return redirect('/login')  # 로그인 페이지로 리디렉션
-        # 관리자 정보 확인
-        admin = manager.get_admin_by_id(session['admin_id'])  # 세션의 관리자 ID로 확인
-        if not admin or admin['role'] != 'staff':  # 사원이 아니면
-            return "접근 권한이 없습니다", 403  # 관리자만 접근 가능
-        return f(*args, **kwargs)
-    return decorated_function
-
 ### 로그인 정보 가져오기
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -604,7 +567,7 @@ def logout():
 def staff_dashboard():
     return render_template('staff/dashboard.html')  # 스태프 대시보드 렌더링
 
-@app.route('/admin/admin_dashboard')
+@app.route('/admin/dashboard')
 @admin_required  # 관리자만 접근 가능
 def admin_dashboard():
     return render_template('admin/dashboard.html')  # 관리자 대시보드 렌더링
@@ -1072,143 +1035,134 @@ def admin_sidewalk_motorcycle():
 
 ##관리자 페이지에서 문의정보 보기
 #문의된 정보 보기
-@app.route('/staff/inquiries_view', methods=['GET'])
+@app.route('/staff/inquiries_view', methods=['GET', 'POST'])
 @staff_required
-def admin_inquiries_view():
-    per_page = 10  # 한 페이지당 보여줄 개수
-    page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
-    offset = (page - 1) * per_page  # 오프셋 계산
-    search_type = request.args.get('search_type')
-    search_query = request.args.get('search_query')
-
-    # 문의 리스트 가져오기
-    inquiries, total_inquiries = manager.get_paginated_inquiries(per_page, offset, search_type, search_query)
-
-    # 전체 페이지 수 계산
-    total_pages = (total_inquiries + per_page - 1) // per_page
-
-    return render_template(
-        'staff/inquiries_view.html',
-        posts=inquiries,
-        per_page=per_page,
-        current_page=page,
-        total_pages=total_pages
-    )
-
-# 답변상태 변환하기 
-@app.route('/update_status_member/<userid>', methods=['POST'])
-@staff_required
-def update_answer_status(userid):
-    enquired_at_str = request.form['enquired_at']
-    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
-    
-    # models.py의 메소드 사용
-    if manager.update_answer_status(userid, enquired_at):
-        flash('답변 상태가 업데이트되었습니다.', 'success')
-    else:
-        flash('답변 상태 업데이트 중 오류가 발생했습니다.', 'error')
+def staff_inquiries_view():
+    # 문의 정보 보기
+    if request.method == 'GET':
+        per_page = 10  # 한 페이지당 보여줄 개수
+        page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+        offset = (page - 1) * per_page  # 오프셋 계산
         
-    if userid != '비회원':
-        return redirect(url_for('admin_list_posts_member'))
-    else:
-        return redirect(url_for('admin_list_posts_nonmember'))
+        # 문의 리스트 가져오기
+        inquiries, total_inquiries = manager.get_paginated_inquiries(per_page, offset)
 
-# 회원 문의사항 상세정보보기
-@app.route('/admin_view_posts_member/<userid>', methods=['POST'])
-@staff_required
-def admin_view_posts_member(userid):
-    enquired_at_str = request.form['enquired_at']
-    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+        # 전체 페이지 수 계산
+        total_pages = (total_inquiries + per_page - 1) // per_page
 
-    # 단일 post 객체를 가져옵니다.
-    post = manager.get_enquired_post_by_id(userid, enquired_at)
+        return render_template(
+            'staff/inquiries_view.html',
+            posts=inquiries,
+            per_page=per_page,
+            current_page=page,
+            total_pages=total_pages
+        )
+    # 문의 상세 정보 보기
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        inquiries_id = request.form.get('inquiries_id')
+        inquiry_time = request.form.get('inquiry_time')
+        # 문의 정보 가져오기
+        post = manager.get_inquiry_by_info(user_id, inquiries_id, inquiry_time)
+        # 답변여부로 정보 가져오기    
+        answer = manager.get_answer_by_id(user_id, inquiries_id, inquiry_time)
+        if answer :
+            return render_template('staff/view_post_detail.html', post=post, answer = answer)
+        else:
+            return render_template('staff/view_post_detail.html', post=post, answer = None)
 
-    # 'posts'로 단일 객체를 전달
-    return render_template("staff/view_posts_member.html", posts=post)
 
 # 답변 하기
-@app.route('/staff/answer-inquiry', methods=['POST'])
+@app.route('/staff/answer_inquiry', methods=['POST'])
 @staff_required
-def admin_answer_inquiry():
-    try:
-        # 필수 필드 확인
-        inquiry_id = request.form['inquiry_id']
-        user_id = request.form['user_id']
-        admin_id = session.get('admin_id')
+def staff_answer_inquiry():
+    # 필수 필드 확인
+    inquiries_id = request.form['inquiries_id']
+    inquiry_time = request.form['inquiry_time']
+    user_id = request.form['user_id']
+    admin_id = session.get('admin_id')    
+    answer_content = request.form['answer_content']
+    # models.py의 메소드 사용
+    if manager.insert_inquiry_answer(inquiries_id, user_id, admin_id, answer_content, inquiry_time):
+        manager.update_answer_status(user_id, inquiry_time, inquiries_id)
+        flash('답변이 성공적으로 저장되었습니다.', 'success')
+    else:
+        flash('답변 저장 중 오류가 발생했습니다.', 'error')
         
-        if not admin_id:
-            flash('관리자 세션이 만료되었습니다.', 'error')
-            return redirect(url_for('admin_login'))
-        
-        answer_content = request.form['answer_content']
-        
-        # models.py의 메소드 사용
-        if manager.update_inquiry_answer(inquiry_id, user_id, answer_content, admin_id):
-            flash('답변이 성공적으로 저장되었습니다.', 'success')
-        else:
-            flash('답변 저장 중 오류가 발생했습니다.', 'error')
-            
-        return redirect(url_for('admin_inquiries_view'))
-
-    except KeyError as e:
-        # 필수 필드 누락 시 처리
-        flash(f'필수 데이터가 누락되었습니다: {str(e)}', 'error')
-        return redirect(url_for('admin_inquiries_view'))
-    
-    except Exception as e:
-        print(f"오류 발생: {str(e)}")
-        flash(f'답변 저장 중 오류가 발생했습니다: {str(e)}', 'error')
-        return redirect(url_for('admin_inquiries_view'))
+    return redirect(url_for('staff_inquiries_view'))
 
 # 답변 수정하기 
-@app.route('/staff/update-inquiry-answer', methods=['POST'])
+@app.route('/staff/update_inquiry_answer', methods=['POST'])
 @staff_required
 def update_inquiry_answer():
-    try:
-        inquiry_id = request.form.get('inquiry_id')
-        user_id = request.form.get('user_id')
-        answer_content = request.form.get('answer_content')
-        admin_id = session.get('admin_id')
-        
-        # models.py의 메소드 사용
-        if manager.update_inquiry_answer(inquiry_id, user_id, answer_content, admin_id):
-            flash('답변이 성공적으로 저장되었습니다.', 'success')
-        else:
-            flash('답변 저장 중 오류가 발생했습니다.', 'error')
-            
-        return redirect(url_for('admin_inquiries_view'))
+    user_id = request.form.get('user_id')
+    answer_content = request.form.get('answer_content')
+    admin_id = session.get('admin_id')
+    inquiries_id = request.form.get('inquiries_id')
+    inquiry_time = request.form.get('inquiry_time')
+    answer_admin_id = manager.get_answer_by_id(user_id, inquiries_id, inquiry_time)['admin_id']
+    if not answer_admin_id and answer_admin_id != session['admin_id']:
+        flash('문의에 답변한 직원만 수정 가능합니다.', 'error')
+        return redirect(url_for('staff_inquiries_view'))
+    # models.py의 메소드 사용
+    if manager.update_inquiry_answer(answer_content, inquiries_id, user_id, admin_id):
+        flash('답변이 성공적으로 수정 되었습니다.', 'success')
+    else:
+        flash('답변 수정 중 오류가 발생했습니다.', 'error')
+    return redirect(url_for('staff_inquiries_view'))
 
-    except Exception as e:
-        print(f"오류 발생: {str(e)}")
-        flash('답변 저장 중 오류가 발생했습니다.', 'error')
-        return redirect(url_for('admin_inquiries_view'))
 
 # 문의된 정보 보기 (미답변만)
-@app.route('/staff/inquiries_pending', methods=['GET'])
+@app.route('/staff/inquiries_pending', methods=['GET', 'POST'])
 @staff_required
-def admin_inquiries_pending():
-    per_page = 10  # 한 페이지당 보여줄 개수
-    page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
-    offset = (page - 1) * per_page  # 오프셋 계산
-    search_type = request.args.get('search_type')
-    search_query = request.args.get('search_query')
-    
-    # models.py의 메소드 사용 - answer_status를 'pending'으로 설정
-    posts, total = manager.get_paginated_inquiries(
-        per_page, offset, search_type, search_query, answer_status='pending'
-    )
-    
-    # 전체 페이지 수 계산
-    total_pages = (total + per_page - 1) // per_page
-    
-    return render_template(
-        'staff/inquiries_pending.html',
-        posts=posts,
-        total=total,
-        per_page=per_page,
-        current_page=page,
-        total_pages=total_pages
-    )
+def staff_inquiries_pending():
+    if request.method == 'GET':
+        per_page = 10  # 한 페이지당 보여줄 개수
+        page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+        offset = (page - 1) * per_page  # 오프셋 계산
+        
+        posts, total = manager.get_paginated_inquiries_pending(per_page, offset, answer_status='pending')
+        
+        # 전체 페이지 수 계산
+        total_pages = (total + per_page - 1) // per_page
+        
+        return render_template(
+            'staff/inquiries_pending.html',
+            posts=posts,
+            total=total,
+            per_page=per_page,
+            current_page=page,
+            total_pages=total_pages
+        )
+
+    # 문의 상세 정보 보기
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        inquiries_id = request.form.get('inquiries_id')
+        inquiry_time = request.form.get('inquiry_time')
+        # 문의 정보 가져오기
+        post = manager.get_inquiry_by_info(user_id, inquiries_id, inquiry_time)
+        # 답변여부로 정보 가져오기    
+        return render_template('staff/view_post_detail_pending.html', post=post)
+
+# 답변 하기
+@app.route('/staff/answer_inquiry_pending', methods=['POST'])
+@staff_required
+def staff_answer_inquiry_pending():
+    # 필수 필드 확인
+    inquiries_id = request.form['inquiries_id']
+    inquiry_time = request.form['inquiry_time']
+    user_id = request.form['user_id']
+    admin_id = session.get('admin_id')    
+    answer_content = request.form['answer_content']
+    # models.py의 메소드 사용
+    if manager.insert_inquiry_answer(inquiries_id, user_id, admin_id, answer_content, inquiry_time):
+        manager.update_answer_status(user_id, inquiry_time, inquiries_id)
+        flash('답변이 성공적으로 저장되었습니다.', 'success')
+    else:
+        flash('답변 저장 중 오류가 발생했습니다.', 'error')
+        
+    return redirect(url_for('staff_inquiries_pending'))
 
 # 이미지파일 가져오기
 @app.route('/capture_file/<filename>')
@@ -1216,26 +1170,8 @@ def capture_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-# # 문의 완료 처리
-# @app.route('/staff/inquiries/completed')
-# def admin_inquiries_completed():
-#     # 예시: 데이터 조회
-#     per_page = 10
-#     offset = 0
-#     posts, total = manager.get_paginated_inquiries(per_page, offset, search_type='', search_query='')
-
-#     total_pages = (total // per_page) + (1 if total % per_page else 0)
-
-#     return render_template(
-#         'staff/inquiries_view.html',
-#         posts=posts,
-#         total=total,
-#         per_page=per_page,
-#         total_pages=total_pages  # ✅ 이걸 꼭 전달해야 함
-#     )
-
-
-
+## 관리자페이지
+# 직원등록
 @app.route('/admin/staff_register', methods=['GET', 'POST'])
 @admin_required
 def admin_staff_register():
@@ -1303,7 +1239,7 @@ def admin_staff_register():
     
     return render_template('admin/staff_register.html')
 
-
+#직원 삭제
 @app.route('/admin/staff_delete', methods=['GET', 'POST'])
 @admin_required
 def admin_staff_delete():

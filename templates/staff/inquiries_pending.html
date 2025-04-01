@@ -1,5 +1,3 @@
-
-
 {% extends "base.html" %}
 {% block title %}답변 미완료 문의 조회{% endblock %}  
 
@@ -45,8 +43,7 @@
 <main class="content-area">
     <div class="container">
         <h2>답변 미완료 문의 조회</h2>
-        
-        {% if posts|length > 0 %}
+        {% if posts %}
         <table class="inquiry-table">
             <thead>
                 <tr>
@@ -61,19 +58,16 @@
             <tbody>
                 {% for post in posts %}
                 <tr>
-                    <td>{{ loop.revindex }}</td>
+                    <td>{{ post.inquiries_id }}</td>
                     <td>{{ post.user_name }}</td>
                     <td>{{ post.inquiry_reason }}</td>
                     <td>
-                        {% if 'admin_id' in session %}
-                        <form action="{{ url_for('admin_view_posts_member', userid=post.user_id) }}" method="POST">
-                            <input type="hidden" name="enquired_at" value="{{ post.inquiry_time }}">
+                        <form action="{{ url_for('staff_inquiries_pending') }}" method="POST">
+                            <input type="hidden" name="inquiries_id" value="{{ post.inquiries_id }}">
+                            <input type="hidden" name="user_id" value="{{ post.user_id }}">
+                            <input type="hidden" name="inquiry_time" value="{{ post.inquiry_time }}">
                             <button type="submit" class="detail-button">내용보기</button>
                         </form>
-                        {% else %}
-                        <button disabled class="detail-button">내용보기</button>
-                        <i class="fas fa-lock"></i>
-                        {% endif %}
                     </td>
                     <td>
                         {% if post.answer_status == 'pending' %}
@@ -88,30 +82,28 @@
             </tbody>
         </table>
         {% else %}
-        
         <div class="no-inquiries">
             <i class="fas fa-inbox fa-3x"></i>
             <p>등록된 문의가 없습니다.</p>
-            <a href="{{ url_for('user_dashboard_inquiries') }}" class="btn-submit" style="max-width: 200px; margin: 20px auto;">문의하기</a>
         </div>
         {% endif %}
             <!-- 직접 구현한 페이지네이션 -->
     {% if total_pages > 1 %}
     <div class="pagination">
         {% if current_page > 1 %}
-            <a href="{{ url_for('admin_inquiries_pending', page=current_page-1) }}">&laquo; 이전</a>
+            <a href="{{ url_for('staff_inquiries_pending', page=current_page-1) }}">&laquo; 이전</a>
         {% endif %}
 
         {% for num in range(1, total_pages + 1) %}
             {% if num == current_page %}
                 <a class="active">{{ num }}</a>
             {% else %}
-                <a href="{{ url_for('admin_inquiries_pending', page=num) }}">{{ num }}</a>
+                <a href="{{ url_for('staff_inquiries_pending', page=num) }}">{{ num }}</a>
             {% endif %}
         {% endfor %}
 
         {% if current_page < total_pages %}
-            <a href="{{ url_for('admin_inquiries_pending', page=current_page+1) }}">다음 &raquo;</a>
+            <a href="{{ url_for('staff_inquiries_pending', page=current_page+1) }}">다음 &raquo;</a>
         {% endif %}
     </div>
     {% endif %}

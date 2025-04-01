@@ -31,7 +31,7 @@
             </div>
             <div class="logo-container">
                 {% if session.get('admin_id') %}
-                    {% if session.role == 'admin' %}
+                    {% if session['admin_role'] == 'admin' %}
                     <a href="{{ url_for('admin_dashboard') }}">
                         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="팀 로고" class="logo">
                         <img src="{{ url_for('static', filename='images/logo_darkmode.png') }}" alt="팀 로고 다크모드" class="logo-dark">
