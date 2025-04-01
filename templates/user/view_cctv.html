@@ -62,15 +62,15 @@
                     <div class="sensor-readings">
                         <div class="sensor-reading" id="temperature-reading">
                             <i class="fas fa-thermometer-half"></i>
-                            <span>14°C</span>
+                            <span>{{ sensor_data.temperature if sensor_data else "-" }}°C</span>
                         </div>
                         <div class="sensor-reading" id="humidity-reading">
                             <i class="fas fa-tint"></i>
-                            <span>45%</span>
+                            <span>{{ sensor_data.humidity if sensor_data else "-" }}%</span>
                         </div>
                         <div class="sensor-reading" id="heat-index-reading">
                             <i class="fas fa-temperature-high"></i>
-                            <span>13°C</span>
+                            <span>{{ sensor_data.perceived_temperature if sensor_data else "-" }}°C</span>
                         </div>
                     </div>
                 </div>
@@ -81,7 +81,21 @@
                         <div class="status-icon on">
                             <i class="fas fa-lightbulb"></i>
                         </div>
-                        <span>가로등 상태: 양호</span>
+                        <span>
+                        {% if malfunction_status %}
+                            {% if malfunction_status.reason_led and malfunction_status.reason_tilt %}
+                                LED 고장, 기울어짐
+                            {% elif malfunction_status.reason_led %}
+                                LED 고장
+                            {% elif malfunction_status.reason_tilt %}
+                                기울어짐
+                            {% else %}
+                                상태 이상
+                            {% endif %}
+                        {% else %}
+                            가로등 상태: 양호
+                        {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>

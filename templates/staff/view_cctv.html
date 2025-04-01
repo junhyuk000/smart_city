@@ -4,6 +4,34 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/view_cctv.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+<style>
+    .led-controls {
+        margin-top: 20px;
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .led-controls h3 {
+        margin-bottom: 10px;
+        font-size: 18px;
+        color: #333;
+    }
+    .led-buttons button {
+        padding: 10px 20px;
+        margin-right: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background-color: #004d99;
+        color: white;
+        transition: background-color 0.3s;
+    }
+    .led-buttons button:hover {
+        background-color: #003366;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -72,15 +100,15 @@
                     <div class="sensor-readings">
                         <div class="sensor-reading" id="temperature-reading">
                             <i class="fas fa-thermometer-half"></i>
-                            <span>14°C</span>
+                            <span>{{ sensor_data.temperature if sensor_data else "-" }}°C</span>
                         </div>
                         <div class="sensor-reading" id="humidity-reading">
                             <i class="fas fa-tint"></i>
-                            <span>45%</span>
+                            <span>{{ sensor_data.humidity if sensor_data else "-" }}%</span>
                         </div>
                         <div class="sensor-reading" id="heat-index-reading">
                             <i class="fas fa-temperature-high"></i>
-                            <span>13°C</span>
+                            <span>{{ sensor_data.perceived_temperature if sensor_data else "-" }}°C</span>
                         </div>
                     </div>
                 </div>
@@ -91,7 +119,21 @@
                         <div class="status-icon on">
                             <i class="fas fa-lightbulb"></i>
                         </div>
-                        <span>가로등 상태: 양호</span>
+                        <span>
+                        {% if malfunction_status %}
+                            {% if malfunction_status.reason_led and malfunction_status.reason_tilt %}
+                                LED 고장, 기울어짐
+                            {% elif malfunction_status.reason_led %}
+                                LED 고장
+                            {% elif malfunction_status.reason_tilt %}
+                                기울어짐
+                            {% else %}
+                                상태 이상
+                            {% endif %}
+                        {% else %}
+                            가로등 상태: 양호
+                        {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>

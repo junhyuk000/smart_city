@@ -1167,3 +1167,44 @@ class DBManager:
             print(f"❌ 오토바이 위반 저장 오류: {err}")
         finally:
             self.disconnect()
+
+    def get_latest_sensor_data(self, street_light_id):
+        try:
+            self.connect()
+            sql = """
+                SELECT temperature, humidity, perceived_temperature
+                FROM road_sensors
+                WHERE street_light_id = %s
+                ORDER BY record_time DESC
+                LIMIT 1
+            """
+            self.cursor.execute(sql, (street_light_id,))
+            result = self.cursor.fetchone()
+            if result:
+                return {
+                    "temperature": result["temperature"],
+                    "humidity": result["humidity"],
+                    "perceived_temperature": result["perceived_temperature"]
+                }
+            return None
+        except mysql.connector.Error as error:
+            print(f"❌ 센서 데이터 조회 오류: {error}")
+            return None
+        finally:
+            self.disconnect()
+
+    def get_malfunction_status(self, street_light_id):
+        try:
+            self.connect()
+            sql = """
+                SELECT reason_led, reason_tilt
+                FROM malfunction_street_lights
+                WHERE street_light_id = %s AND repair_status = 'pending'
+            """
+            self.cursor.execute(sql, (street_light_id,))
+            return self.cursor.fetchone()
+        except mysql.connector.Error as e:
+            print(f"❌ get_malfunction_status 오류: {e}")
+            return None
+        finally:
+            self.disconnect()

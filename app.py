@@ -530,7 +530,10 @@ def user_dashboard_sidewalk_cctv():
 @login_required
 def user_dashboard_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
-    return render_template('user/view_cctv.html', camera=camera)
+    mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
+    sensor_data = manager.get_latest_sensor_data(mapped_id)
+    malfunction_status = manager.get_malfunction_status(street_light_id)
+    return render_template("user/view_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
 
 
 #회원용 문의하기
@@ -731,12 +734,16 @@ def admin_sidewalk_cctv():
         next_page=next_page,
     )
 
-# 직원 도로용 CCTV상세보기
+# 직원용 CCTV상세보기
 @app.route('/staff/cctv/<int:street_light_id>')
 @staff_required
 def admin_dashboard_road_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
-    return render_template('staff/view_cctv.html', camera=camera)
+    mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
+    sensor_data = manager.get_latest_sensor_data(mapped_id)
+    malfunction_status = manager.get_malfunction_status(street_light_id)
+    return render_template("staff/view_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
+
 
 
 ## 가로등
