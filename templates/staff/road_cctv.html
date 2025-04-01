@@ -27,7 +27,7 @@
                 <span class="total-count">검색된 가로등: <strong>{{ total_posts }}</strong>개</span>
             </div>
             
-            <form method="get" action="{{ url_for('user_dashboard_road_cctv') }}" class="search-form">
+            <form method="get" action="{{ url_for('admin_dashboard_road_cctv') }}" class="search-form">
                 <div class="form-group">
                     <label for="search_type">검색 타입:</label>
                     <select name="search_type" id="search_type" class="form-select">
@@ -67,7 +67,7 @@
                             {% if street_light.cctv_ip %}
                             <td class="cctv-cell">
                                 <div class="cctv-info">
-                                    <a href="{{ url_for('user_dashboard_cctv', street_light_id=street_light.street_light_id) }}" class="view-button">
+                                    <a href="{{ url_for('admin_dashboard_road_cctv', street_light_id=street_light.street_light_id) }}" class="view-button">
                                         <i class="fas fa-video"></i> 상세 보기
                                     </a>
                                     <span class="cctv-status installed">
