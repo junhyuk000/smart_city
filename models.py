@@ -1168,7 +1168,7 @@ class DBManager:
         finally:
             self.disconnect()
 
-    def get_latest_sensor_data(self, street_light_id):
+    def get_sensor_data(self, street_light_id):
         try:
             self.connect()
             sql = """

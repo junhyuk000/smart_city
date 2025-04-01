@@ -531,7 +531,7 @@ def user_dashboard_sidewalk_cctv():
 def user_dashboard_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
     mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
-    sensor_data = manager.get_latest_sensor_data(mapped_id)
+    sensor_data = manager.get_sensor_data(mapped_id)
     malfunction_status = manager.get_malfunction_status(street_light_id)
     return render_template("user/view_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
 
@@ -740,7 +740,7 @@ def admin_sidewalk_cctv():
 def admin_dashboard_road_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
     mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
-    sensor_data = manager.get_latest_sensor_data(mapped_id)
+    sensor_data = manager.get_sensor_data(mapped_id)
     malfunction_status = manager.get_malfunction_status(street_light_id)
     return render_template("staff/view_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
 
