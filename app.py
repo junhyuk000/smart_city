@@ -736,8 +736,8 @@ def admin_sidewalk_cctv():
 @staff_required
 def admin_dashboard_road_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
-    # sensor = sidewalk_sensor
     return render_template('staff/view_cctv.html', camera=camera)
+
 
 ## 가로등
 # 전체 가로등 조회
@@ -1389,6 +1389,39 @@ def admin_staff_delete():
         if db_manager.connection and db_manager.connection.is_connected():
             db_manager.disconnect()
 
+
+# 최근 명령을 저장할 딕셔너리 (초기 상태)
+command_cache = {}
+
+@app.route('/command', methods=['GET'])
+def command():
+    target = request.args.get('target')
+    
+    if target not in command_cache:
+        return jsonify({"status": "error", "message": "Invalid target"}), 400
+
+    response = jsonify(command_cache[target])
+    command_cache[target]["cmd"] = None  # 명령 초기화
+    return response
+
+@app.route('/set_command', methods=['GET'])
+def set_command():
+    target = request.args.get('target')
+    cmd = request.args.get('cmd')
+
+    if not target or not cmd:
+        return jsonify({"status": "error", "message": "Missing target or command"}), 400
+
+    # target이 처음 들어온 경우 자동 등록
+    if target not in command_cache:
+        command_cache[target] = {"target": target, "cmd": None}
+
+    # 중복 전송 방지
+    if command_cache[target]["cmd"] == cmd:
+        return jsonify({"status": "no_change", "command": cmd})
+
+    command_cache[target]["cmd"] = f"{cmd}_WEB"
+    return jsonify({"status": "ok", "command": cmd})
 
 
 
