@@ -21,8 +21,7 @@
         <i class="fa-solid fa-lightbulb" style="color: rgb(236, 119, 9);"></i>
         <span class="total-count">검색된 가로등 : {{ total_posts }}개</span>
     </div>
-    <form method="get" action="{{ url_for('admin_dashboard_road_cctv', street_light_id=street_light.street_light_id) }}" class="search-form">
-
+    <form method="get" action="{{ url_for('admin_dashboard_road_cctv', street_light_id=camera.street_light_id) }}" class="search-form">
         <label for="search_type">검색 타입:</label>
         <select name="search_type" id="search_type">
             <option value="street_light_id" {% if search_type == 'street_light_id' %}selected{% endif %}>가로등 번호</option>
