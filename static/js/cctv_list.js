@@ -74,7 +74,7 @@ function updatePlaceholder() {
             searchInput.placeholder = '위치를 입력하세요';
             break;
         case 'all':
-            searchInput.placeholder = '전체 검색 (검색어 입력 불필요)';
+            searchInput.placeholder = '검색어를 입력하세요';
             break;
         default:
             searchInput.placeholder = '검색어를 입력하세요';

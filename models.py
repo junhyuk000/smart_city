@@ -317,15 +317,27 @@ class DBManager:
             LIMIT %s OFFSET %s
             """
             values = (f"%{search_query}%", per_page, offset)
+
         else:  # all 또는 기본값
-            sql = """
-            SELECT s.*, c.cctv_ip 
-            FROM street_lights s
-            LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-            WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) AND s.purpose = "도로"
-            LIMIT %s OFFSET %s
-            """
-            values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            if search_query:  # 검색어가 있는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) 
+                AND s.purpose = "도로"
+                LIMIT %s OFFSET %s
+                """
+                values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            else:  # 검색어가 없는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE s.purpose = "도로"
+                LIMIT %s OFFSET %s
+                """
+                values = (per_page, offset)
         
         return sql, values
 
@@ -333,24 +345,36 @@ class DBManager:
     def get_road_cctv_count_query(self, search_query, search_type):
         if search_type == "street_light_id":
             sql = """
-            SELECT COUNT(*) AS total FROM street_lights 
-            WHERE street_light_id LIKE %s and purpose = "도로"
+            SELECT COUNT(*) AS total 
+            FROM street_lights 
+            WHERE street_light_id LIKE %s AND purpose = "도로"
             """
             values = (f"%{search_query}%",)
-        
+
         elif search_type == "street_light_location":
             sql = """
-            SELECT COUNT(*) AS total FROM street_lights 
-            WHERE location LIKE %s and purpose = "도로"
+            SELECT COUNT(*) AS total 
+            FROM street_lights 
+            WHERE location LIKE %s AND purpose = "도로"
             """
             values = (f"%{search_query}%",)
-        
+
         else:  # all 또는 기본값
-            sql = """
-            SELECT COUNT(*) AS total FROM street_lights 
-            WHERE (location LIKE %s OR street_light_id LIKE %s) and purpose = "도로"
-            """
-            values = (f"%{search_query}%", f"%{search_query}%")
+            if search_query:  # 검색어가 있는 경우
+                sql = """
+                SELECT COUNT(*) AS total 
+                FROM street_lights 
+                WHERE (location LIKE %s OR street_light_id LIKE %s) 
+                AND purpose = "도로"
+                """
+                values = (f"%{search_query}%", f"%{search_query}%")
+            else:  # 검색어가 없는 경우
+                sql = """
+                SELECT COUNT(*) AS total 
+                FROM street_lights 
+                WHERE purpose = "도로"
+                """
+                values = ()
         
         return sql, values
 
@@ -378,15 +402,16 @@ class DBManager:
             return False
         finally:
             self.disconnect()
-  
-    # 인도용 CCTV 검색 및 페이지네이션
+
+
+    # 인도 CCTV 검색 및 페이지네이션
     def get_sidewalk_cctv_query(self, search_query, search_type, per_page, offset):
         if search_type == "street_light_id":
             sql = """
             SELECT s.*, c.cctv_ip 
             FROM street_lights s
             LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-            WHERE s.street_light_id = %s AND s.purpose = "인도"
+            WHERE s.street_light_id LIKE %s AND s.purpose = "인도"
             LIMIT %s OFFSET %s
             """
             values = (f"%{search_query}%", per_page, offset)
@@ -400,15 +425,27 @@ class DBManager:
             LIMIT %s OFFSET %s
             """
             values = (f"%{search_query}%", per_page, offset)
+
         else:  # all 또는 기본값
-            sql = """
-            SELECT s.*, c.cctv_ip 
-            FROM street_lights s
-            LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-            WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) AND s.purpose = "인도"
-            LIMIT %s OFFSET %s
-            """
-            values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            if search_query:  # 검색어가 있는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) 
+                AND s.purpose = "인도"
+                LIMIT %s OFFSET %s
+                """
+                values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            else:  # 검색어가 없는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE s.purpose = "인도"
+                LIMIT %s OFFSET %s
+                """
+                values = (per_page, offset)
         
         return sql, values
 
@@ -417,26 +454,37 @@ class DBManager:
         if search_type == "street_light_id":
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE street_light_id = %s and purpose = "인도"
+            WHERE street_light_id LIKE %s AND purpose = "인도"
             """
             values = (f"%{search_query}%",)
-        
+
         elif search_type == "street_light_location":
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE location LIKE %s and purpose = "인도"
+            WHERE location LIKE %s AND purpose = "인도"
             """
             values = (f"%{search_query}%",)
-        
+
         else:  # all 또는 기본값
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE (location LIKE %s OR street_light_id LIKE %s) and purpose = "인도"
+            WHERE (location LIKE %s OR street_light_id LIKE %s) AND purpose = "인도"
             """
             values = (f"%{search_query}%", f"%{search_query}%")
-        
+
         return sql, values
-    
+
+    def execute_query(self, sql, values):
+        try:
+            self.connect()
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            return result
+        except Exception as error:
+            return False
+        finally:
+            self.disconnect()
+
     #선택된 가로등 정보 가져오기
     def get_streetlight_info_by_id(self,street_light_id:int):
         try:
@@ -890,23 +938,48 @@ class DBManager:
             self.disconnect()
 
 
-    # 가로등 등록 
+    ## 가로등 등록
     def register_street_light(self, location, purpose, installation_date, tilt_status, light_status):
-        try:
+        # 연결 상태 확인 및 필요 시 연결
+        if not self.connection or not self.connection.is_connected():
             self.connect()
-            sql = """
+        
+        # 새로운 커서 생성
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("""
                 INSERT INTO street_lights (location, purpose, installation_date, tilt_status, light_status)
                 VALUES (%s, %s, %s, %s, %s)
-                """
-            values = (location, purpose, installation_date, tilt_status, light_status)
-            self.cursor.execute(sql, values)
+            """, (location, purpose, installation_date, tilt_status, light_status))
             self.connection.commit()
-            return True
-        except Exception as error:
-            print(f"가로등 정보 저장 실패: {error}")
-            return False
+            street_light_id = cursor.lastrowid  # 삽입된 가로등의 ID 반환
+            return street_light_id
+        except mysql.connector.Error as error:
+            print(f"가로등 등록 실패: {error}")
+            self.connection.rollback()
+            return None
         finally:
-            self.disconnect()
+            cursor.close()  # 커서 닫기
+
+    ## 카메라 등록
+    def register_camera(self, street_light_id, ip):
+        # 연결 상태 확인 및 필요 시 연결
+        if not self.connection or not self.connection.is_connected():
+            self.connect()
+        
+        # 새로운 커서 생성
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO cameras (street_light_id, cctv_ip)
+                VALUES (%s, %s)
+            """, (street_light_id, ip))
+            self.connection.commit()
+        except mysql.connector.Error as error:
+            print(f"카메라 등록 실패: {error}")
+            self.connection.rollback()
+        finally:
+            cursor.close()  # 커서 닫기
 
     # 고장난 가로등 조회
     def get_malfunctioning_lamps(self, per_page, offset, search_type="all", search_query="", status=None):

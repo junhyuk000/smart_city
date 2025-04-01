@@ -104,7 +104,6 @@
                     <option value="">선택하세요</option>
                     <option value="도로">도로</option>
                     <option value="인도">인도</option>
-
                 </select>
             </div>
             
@@ -114,40 +113,16 @@
                 <input type="text" id="otherPurpose" name="other_purpose" class="form-control" placeholder="기타 목적을 입력하세요">
             </div>
             
-            <!-- 가로등 상태 -->
+            <!-- IP 입력 필드 추가 -->
             <div class="form-group">
-                <label class="form-label">가로등 기울기 상태</label>
-                <div>
-                    <input type="radio" id="normal" name="tilt_status" value="normal" checked>
-                    <label for="normal">정상</label>
-                    
-                    <input type="radio" id="tilted" name="tilt_status" value="tilted" style="margin-left: 15px;">
-                    <label for="tilted">기울어짐</label>
-                </div>
-            </div>
-            
-            <!-- 가로등 조명 상태 -->
-            <div class="form-group">
-                <label class="form-label">가로등 조명 상태</label>
-                <div>
-                    <input type="radio" id="light_on" name="light_status" value="on">
-                    <label for="light_on">켜짐</label>
-                    
-                    <input type="radio" id="light_off" name="light_status" value="off" checked style="margin-left: 15px;">
-                    <label for="light_off">꺼짐</label>
-                </div>
+                <label for="ip" class="form-label">IP</label>
+                <input type="text" id="ip" name="ip" class="form-control" placeholder="가로등의 IP 주소를 입력하세요">
             </div>
             
             <!-- 설치 날짜 -->
             <div class="form-group">
                 <label for="installation_date" class="form-label">설치 날짜</label>
                 <input type="date" id="installation_date" name="installation_date" class="form-control" required>
-            </div>
-            
-            <!-- 추가 정보 -->
-            <div class="form-group">
-                <label for="additional_info" class="form-label">추가 정보 (선택사항)</label>
-                <textarea id="additional_info" name="additional_info" class="form-control" rows="3" placeholder="추가 정보를 입력하세요"></textarea>
             </div>
             
             <!-- 버튼 영역 -->

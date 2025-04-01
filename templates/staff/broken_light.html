@@ -126,4 +126,13 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+    document.querySelectorAll(".view-location-btn").forEach(button => {
+        button.addEventListener("click", function() {
+            var streetLightId = this.getAttribute("data-street-light-id");
+            window.open("/staff/view_location/" + streetLightId, "가로등위치", 
+                "width=500,height=550,resizable=yes,scrollbars=yes,status=no");
+        });
+    });
+</script>
 {% endblock %}

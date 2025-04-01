@@ -405,6 +405,7 @@ def user_dashboard_about():
 
 ##회원 페이지 CCTV보기
 #로그인 후 도로CCTV 페이지
+#로그인 후 도로CCTV 페이지
 @app.route('/user/dashboard/road', methods=['GET'])
 @login_required
 def user_dashboard_road_cctv():
@@ -414,16 +415,14 @@ def user_dashboard_road_cctv():
     per_page = 10
     offset = (page - 1) * per_page
 
-    # search_type이 'all'이면 search_query를 빈 문자열로 설정
-    if search_type == "all":
-        search_query = ""
-
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
     count_sql, count_values = manager.get_road_cctv_count_query(search_query, search_type)
 
     # 검색된 가로등 목록 가져오기
     street_lights = manager.execute_query(sql, values)
+    
+
     # 전체 CCTV 개수 카운트
     total_posts = manager.execute_count_query(count_sql, count_values)
 
@@ -442,7 +441,7 @@ def user_dashboard_road_cctv():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 #로그인 후 인도CCTV 페이지
@@ -454,8 +453,7 @@ def user_dashboard_sidewalk_cctv():
     page = request.args.get("page", 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-    if search_type == "all":
-        search_query = ""
+
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
     count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
@@ -481,7 +479,7 @@ def user_dashboard_sidewalk_cctv():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 #회원용 CCTV 상세 보기
@@ -526,21 +524,26 @@ def user_dashboard_inquiries_view():
         return render_template('user/inquiry_detail.html', posts=posts)
 
 
-#회원탈퇴
-@app.route('/user_dashboard/delete_user', methods=['GET','POST'])
+# 회원탈퇴
+@app.route('/user_dashboard/delete_user', methods=['GET', 'POST'])
 @login_required
 def user_dashboard_delete_user():
     userid = session['user_id']
+    
     if request.method == 'GET':
         user = manager.get_user_by_id(userid)
-        return render_template('user/delete_page.html', user =user)
+        return render_template('user/delete_page.html', user=user)
     
     if request.method == 'POST':
         user = manager.get_user_by_id(userid)
         reason = request.form['reason']
         detail_reason = request.form['detail_reason']
+        
         manager.update_user_status(userid)
         manager.save_deleted_user(userid, reason, detail_reason)
+        
+        session.clear()  # 로그아웃 처리
+        
         flash("회원탈퇴가 완료되었습니다.", 'success')
         return redirect(url_for('index'))
     
@@ -612,26 +615,28 @@ def admin_dashboard():
 # CCTV보기
 # 도로용 CCTV 목록 보기(관리자)
 @app.route('/staff/road_cctv', methods=['GET'])
-@staff_required
-def admin_road_cctv():
-    search_query = request.args.get("search_query", "").strip()
-    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
-    page = request.args.get("page", 1, type=int)
+@staff_required 
+def staff_dashboard_road_cctv():
+    search_query = request.args.get('search_query', '', type=str)
+    search_type = request.args.get('search_type', 'all', type=str)
+    page = request.args.get('page', 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
 
-    # search_type이 'all'이면 search_query를 빈 문자열로 설정
-    if search_type == "all":
-        search_query = ""
+    # DBManager 인스턴스 생성 및 데이터 가져오기
+    db = DBManager()
+    db.connect()
+    
+    # CCTV 검색 결과 및 전체 개수 가져오기
+    sql, values = db.get_road_cctv_query(search_query, search_type, per_page, offset)
+    db.cursor.execute(sql, values)
+    street_lights = db.cursor.fetchall()
 
-    # SQL 쿼리 및 파라미터 가져오기
-    sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
-    count_sql, count_values = manager.get_road_cctv_count_query(search_query, search_type)
-
-    # 검색된 가로등 목록 가져오기
-    street_lights = manager.execute_query(sql, values)
-    # 전체 CCTV 개수 카운트
-    total_posts = manager.execute_count_query(count_sql, count_values)
+    sql_count, values_count = db.get_road_cctv_count_query(search_query, search_type)
+    db.cursor.execute(sql_count, values_count)
+    total_posts = db.cursor.fetchone()["total"]
+    
+    db.disconnect()
 
     # 페이지네이션 계산
     total_pages = (total_posts + per_page - 1) // per_page
@@ -641,36 +646,35 @@ def admin_road_cctv():
     return render_template(
         "staff/road_cctv.html",
         street_lights=street_lights,
-        search_query=search_query,
-        search_type=search_type,
-        page=page,
         total_posts=total_posts,
-        per_page=per_page,
+        page=page,
         total_pages=total_pages,
         prev_page=prev_page,
         next_page=next_page,
+        search_query=search_query,
+        search_type=search_type
     )
-    
+
 # 인도용 CCTV 목록 보기(관리자)
 @app.route('/staff/sidewalk_cctv', methods=['GET'])
 @staff_required
-def admin_sidewalk_cctv():
-    search_query = request.args.get("search_query", "").strip()
-    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
-    page = request.args.get("page", 1, type=int)
+def staff_sidewalk_cctv():
+    search_query = request.args.get('search_query', '', type=str)
+    search_type = request.args.get('search_type', 'all', type=str)
+    page = request.args.get('page', 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-    if search_type == "all":
-        search_query = ""
-    # SQL 쿼리 및 파라미터 가져오기
-    sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
-    count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
 
-    # 검색된 가로등 목록 가져오기
-    street_lights = manager.execute_query(sql, values)
+    # DBManager 인스턴스 생성
+    db = DBManager()
+    
+    # SQL 쿼리 생성
+    sql, values = db.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
+    street_lights = db.execute_query(sql, values)  # 데이터 가져오기
 
-    # 전체 CCTV 개수 카운트
-    total_posts = manager.execute_count_query(count_sql, count_values)
+    # 전체 개수를 위한 카운트 쿼리
+    sql_count, values_count = db.get_sidewalk_cctv_count_query(search_query, search_type)
+    total_posts = db.execute_count_query(sql_count, values_count)
 
     # 페이지네이션 계산
     total_pages = (total_posts + per_page - 1) // per_page
@@ -678,25 +682,46 @@ def admin_sidewalk_cctv():
     next_page = page + 1 if page < total_pages else None
 
     return render_template(
-        "staff/sidewalk_cctv.html",
+        'staff/sidewalk_cctv.html',
         street_lights=street_lights,
-        search_query=search_query,
-        search_type=search_type,
-        page=page,
         total_posts=total_posts,
-        per_page=per_page,
+        page=page,
         total_pages=total_pages,
         prev_page=prev_page,
         next_page=next_page,
+        search_query=search_query,
+        search_type=search_type
     )
 
-# 직원 도로용 CCTV상세보기
-@app.route('/staff/cctv/<int:street_light_id>')
-@staff_required
-def admin_dashboard_road_cctv(street_light_id):
-    camera = manager.get_camera_by_info(street_light_id)
-    # sensor = sidewalk_sensor
-    return render_template('staff/view_cctv.html', camera=camera)
+# cctv 상세 보기(관리자)
+@app.route('/staff/cctv/<int:street_light_id>', methods=['GET'])
+def staff_dashboard_cctv(street_light_id):
+    db = DBManager()
+    db.connect()
+    
+    sql = """
+    SELECT 
+        s.street_light_id,
+        s.location,
+        s.purpose,
+        s.installation_date,
+        c.cctv_ip
+    FROM street_lights s
+    LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+    WHERE s.street_light_id = %s
+    """
+    values = (street_light_id,)
+    db.cursor.execute(sql, values)
+    camera = db.cursor.fetchone()
+    
+    db.disconnect()
+
+    if not camera:
+        flash("해당 가로등을 찾을 수 없습니다.", "error")
+        return redirect(url_for('staff_dashboard_road_cctv'))
+
+    return render_template("staff/staff_dashboard_cctv.html", camera=camera)
+
 
 ## 가로등
 # 전체 가로등 조회
@@ -805,16 +830,24 @@ def admin_broken_light_check():
 
 # 설치된 가로등 등록
 @app.route('/staff/street_light_register', methods=['GET', 'POST'])
-@staff_required
 def street_light_register():
     if request.method == 'POST':
+        # 폼 데이터 가져오기
         location = request.form.get('location')
         purpose = request.form.get('purpose')
+        ip = request.form.get('ip')  # IP 필드
         tilt_status = request.form.get('tilt_status', 'normal')
         light_status = request.form.get('light_status', 'off')
         installation_date_str = request.form.get('installation_date')
         installation_date = datetime.strptime(installation_date_str, '%Y-%m-%d')
-        manager.register_street_light(location, purpose, installation_date, tilt_status, light_status)
+
+        # 가로등 등록
+        street_light_id = manager.register_street_light(location, purpose, installation_date, tilt_status, light_status)
+
+        # IP가 입력된 경우 cameras 테이블에 추가
+        if ip:
+            manager.register_camera(street_light_id, ip)
+
         flash('가로등이 성공적으로 등록되었습니다.', 'success')
         return redirect(url_for('admin_all_street_lights'))
     return render_template('staff/street_light_register.html')
@@ -891,14 +924,10 @@ def delete_streetlight(id):
 @staff_required
 def admin_road_car_board():
     search_query = request.args.get("search_query", "").strip()
-    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
+    search_type = request.args.get("search_type", "all")
     page = request.args.get("page", 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-
-    # search_type이 'all'이면 search_query를 빈 문자열로 설정
-    if search_type == "all":
-        search_query = ""
 
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
@@ -906,6 +935,13 @@ def admin_road_car_board():
 
     # 검색된 가로등 목록 가져오기
     street_lights = manager.execute_query(sql, values)
+    
+    # 디버깅을 위한 로그
+    print(f"검색 조건: {search_type}, 검색어: {search_query}")
+    print(f"실행된 SQL: {sql}")
+    print(f"바인딩된 값들: {values}")
+    print(f"검색 결과 수: {len(street_lights) if street_lights else 0}")
+
     # 전체 CCTV 개수 카운트
     total_posts = manager.execute_count_query(count_sql, count_values)
 
@@ -924,13 +960,13 @@ def admin_road_car_board():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 #자동차(도로) 단속 카메라
-@app.route("/staff/load_car")
+@app.route("/staff/road_car")
 @staff_required
-def admin_load_car():
+def admin_road_car():
     adminid =session.get('admin_id')
     return render_template("staff/road_car.html", stream_url=road_url, adminid=adminid)
 
@@ -943,14 +979,19 @@ def admin_sidewalk_motorcycle_board():
     page = request.args.get("page", 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-    if search_type == "all":
-        search_query = ""
+
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
     count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
 
     # 검색된 가로등 목록 가져오기
     street_lights = manager.execute_query(sql, values)
+    
+    # 디버깅을 위한 로그
+    print(f"검색 조건: {search_type}, 검색어: {search_query}")
+    print(f"실행된 SQL: {sql}")
+    print(f"바인딩된 값들: {values}")
+    print(f"검색 결과 수: {len(street_lights) if street_lights else 0}")
 
     # 전체 CCTV 개수 카운트
     total_posts = manager.execute_count_query(count_sql, count_values)
@@ -970,7 +1011,7 @@ def admin_sidewalk_motorcycle_board():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 
