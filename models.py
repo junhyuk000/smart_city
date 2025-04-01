@@ -1139,3 +1139,17 @@ class DBManager:
             return False
         finally:
             self.disconnect()
+
+    def save_sos_alert(self, street_light_id, location, stream_url):
+        try:
+            self.connect()
+            sql = """
+                INSERT INTO sos (street_light_id, location, stream_url, timestamp)
+                VALUES (%s, %s, %s, NOW())
+            """
+            self.cursor.execute(sql, (street_light_id, location, stream_url))
+            self.connection.commit()
+        except mysql.connector.Error as e:
+            print(f"❌ SOS 저장 오류: {e}")
+        finally:
+            self.disconnect()

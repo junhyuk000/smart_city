@@ -93,15 +93,32 @@ def staff_required(f):
 # 전역 변수로 데이터 저장
 received_data = {"message": "No data received"}
 
+# SOS 함수수
+def send_sos_alert_to_police(location, stream_url):
+    SOS_API_URL = "http://10.0.66.89:5002/sos_alert"
+
+    data = {
+        "type": "SOS",
+        "location": location,
+        "stream_url": stream_url,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    try:
+        response = requests.post(SOS_API_URL, json=data)
+        if response.status_code == 200:
+            print(f"✅ SOS 전송 완료: {response.text}")
+        else:
+            print(f"❌ SOS 전송 실패: {response.status_code}, {response.text}")
+    except Exception as e:
+        print(f"❌ 경찰서 서버 전송 오류: {e}")
+
+
 @app.route('/api', methods=['GET', 'POST'])
 def handle_request():
-    global received_data
+    global received_data, last_switch_state
 
     if request.method == "POST":
-        if request.is_json:
-            received_data = request.get_json()
-            return jsonify({"status": "success", "message": "JSON data received", "data": received_data})
-
         if not request.form:
             return jsonify({"status": "error", "message": "No data received"}), 400
 
@@ -120,13 +137,37 @@ def handle_request():
                 data_dict[key] = value
 
         received_data = data_dict
-        print(f"📩 변환된 데이터: {received_data}")  # 터미널에서 확인
+        print(f"📩 변환된 데이터: {received_data}")
         manager.save_sensor_data(received_data)
 
+        # ✅ SOS 감지
+        switch_state = received_data.get("Switch State")
+        if last_switch_state == "1" and switch_state == "0":
+            print("🚨 SOS 버튼 눌림!")
+
+            try:
+                street_light_id = int(received_data.get("ID", 0))  # ← 여기서 ID 사용!
+                camera_info = manager.get_camera_by_info(street_light_id)
+                if camera_info:
+                    location = camera_info.get('location')
+                    cctv_ip = camera_info.get('cctv_ip')
+                    stream_url = f"http://{cctv_ip}:5000/stream"
+
+                    # ✅ 경찰서 서버에 SOS 전송
+                    send_sos_alert_to_police(location, stream_url)
+
+                    # ✅ DB에 SOS 기록
+                    manager.save_sos_alert(street_light_id, location, stream_url)
+                else:
+                    print(f"❌ 카메라 정보 없음 (ID={street_light_id})")
+            except Exception as e:
+                print(f"❌ SOS 전송 중 오류: {e}")
+
+        last_switch_state = switch_state
         return jsonify(received_data)
 
-    # GET 요청 시 현재 데이터를 반환
     return jsonify(received_data)
+
 
 # 아두이노 LED on/off 제어
 command_cache = {
