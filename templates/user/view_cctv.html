@@ -58,17 +58,20 @@
                 <div class="info-card sensor-data">
                     <h2>센서 데이터</h2>
                     <div class="sensor-status" id="safety-status">
-                        <i class="fas fa-shield-alt"></i> 현재 가로등 상태:                       
+                        <i class="fas fa-shield-alt"></i> <span id="status-text">                      
                         {% if malfunction_status %}
                             {% if malfunction_status.reason_led and malfunction_status.reason_tilt %}
-                                LED 고장, 기울어짐
+                                현재 가로등 상태 : LED 고장, 기울어짐
                             {% elif malfunction_status.reason_led %}
-                                LED 고장
+                                현재 가로등 상태 : LED 고장
                             {% elif malfunction_status.reason_tilt %}
-                                기울어짐
+                                현재 가로등 상태 : 기울어짐
                             {% else %}
-                                양호
-                        {% endif %}
+                                현재 가로등 상태 : 상태 이상
+                            {% endif %}
+                        {% else %}
+                            현재 가로등 상태 : 양호
+                        {% endif %}</span>
                     </div>
                     <div class="sensor-readings">
                         <div class="sensor-reading" id="temperature-reading">
