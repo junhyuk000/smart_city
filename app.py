@@ -931,8 +931,23 @@ def admin_road_car_board():
 @app.route("/staff/load_car")
 @staff_required
 def admin_load_car():
-    adminid =session.get('admin_id')
-    return render_template("staff/road_car.html", stream_url=road_url, adminid=adminid)
+    adminid = session.get('admin_id')
+    street_light_id = request.args.get("street_light_id", type=int)
+
+    # ✅ DB에서 해당 가로등 정보 가져오기
+    camera_info = manager.get_camera_by_info(street_light_id)
+
+    if not camera_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    # 예: {'location': '서울 강남대로 123', 'stream_url': 'http://10.0.66.6:5000/stream'}
+    location = camera_info.get('location')
+    stream_url = camera_info.get('stream_url')
+
+    license_plate.set_camera_info(location, stream_url)
+
+    # 템플릿에 adminid, stream_url 전달
+    return render_template("staff/road_car.html", stream_url=stream_url, adminid=adminid)
 
 #오토바이(인도) 단속 보드
 @app.route('/staff/sidewalk_motorcycle_board', methods=['GET'])
@@ -980,7 +995,19 @@ def admin_sidewalk_motorcycle_board():
 @staff_required
 def admin_sidewalk_motorcycle():
     adminid = session.get('admin_id')
+    street_light_id = request.args.get("street_light_id", type=int)
+
+    camera_info = manager.get_camera_by_info(street_light_id)
+    if not camera_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    location = camera_info.get('location')
+    stream_url = camera_info.get('stream_url')
+
+    motorcycle.set_camera_info(location, stream_url)
+
     return render_template("staff/sidewalk_motorcycle.html", adminid=adminid)
+
 
 
 # YOLO 분석된 영상 스트리밍
