@@ -69,15 +69,6 @@
                     </button>
                 </div>
 
-                <!-- ✅ LED 제어 버튼 추가 -->
-                <div class="led-controls">
-                    <h3>💡 가로등 제어</h3>
-                    <div class="led-buttons">
-                        <button onclick="sendCommand('arduino{{ camera.street_light_id }}', 'LED_ON')">LED ON</button>
-                        <button onclick="sendCommand('arduino{{ camera.street_light_id }}', 'LED_OFF')">LED OFF</button>
-                        <button onclick="sendCommand('arduino{{ camera.street_light_id }}', 'AUTO_MODE')">AUTO MODE</button>
-                    </div>
-                </div>
             </div>
 
             <div class="cctv-sidebar">
@@ -90,6 +81,15 @@
                         <li><strong>모델:</strong> ESP32-CAM</li>
                         <li><strong>IP 주소:</strong> {{ camera.cctv_ip }}</li>
                     </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h2>💡 가로등 제어</h2>
+                    <div class="led-buttons">
+                        <button onclick="sendCommand('arduino{{ camera.street_light_id }}', 'LED_ON')">LED ON</button>
+                        <button onclick="sendCommand('arduino{{ camera.street_light_id }}', 'LED_OFF')">LED OFF</button>
+                        <button onclick="sendCommand('arduino{{ camera.street_light_id }}', 'AUTO_MODE')">AUTO MODE</button>
+                    </div>
                 </div>
 
                 <div class="info-card sensor-data">
