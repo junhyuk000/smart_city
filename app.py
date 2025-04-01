@@ -1003,8 +1003,7 @@ def processed_video_feed():
 
             _, jpeg = cv2.imencode('.jpg', img)
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-
+                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
 
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 

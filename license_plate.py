@@ -10,7 +10,7 @@ from ultralytics import YOLO
 import re
 
 # ESP32-CAM 영상 스트림 URL
-VIDEO_STREAM_URL = "http://10.0.66.14:5000/stream"
+VIDEO_STREAM_URL = "http://10.0.66.6:5000/stream"
 
 # YOLO 모델 로드 (번호판 검출)
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "best.pt")
