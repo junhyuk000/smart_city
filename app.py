@@ -21,7 +21,6 @@ app = Flask(__name__)
 
 
 app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이션에서는 더 안전한 방법으로 설정해야 함if __name__ == '__main__':
-road_url = "http://10.0.66.6:5000/stream"
 manager = DBManager()
 KAKAO_API_KEY = "4cf7fc8fc69613ac8f18b4d883213352"
 
@@ -942,7 +941,9 @@ def admin_load_car():
 
     # 예: {'location': '서울 강남대로 123', 'stream_url': 'http://10.0.66.6:5000/stream'}
     location = camera_info.get('location')
-    stream_url = camera_info.get('stream_url')
+    raw_ip = camera_info.get('stream_url')  # 예: "10.0.66.6"
+    stream_url = f"http://{raw_ip}:5000/stream"
+
 
     license_plate.set_camera_info(location, stream_url)
 
@@ -1002,7 +1003,9 @@ def admin_sidewalk_motorcycle():
         return "❌ 가로등 정보를 찾을 수 없습니다.", 404
 
     location = camera_info.get('location')
-    stream_url = camera_info.get('stream_url')
+    raw_ip = camera_info.get('stream_url')  # 예: "10.0.66.6"
+    stream_url = f"http://{raw_ip}:5000/stream"
+
 
     motorcycle.set_camera_info(location, stream_url)
 
