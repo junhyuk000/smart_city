@@ -1,9 +1,10 @@
 import mysql.connector 
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import jsonify
 import json
 import requests
 import re
+import math # 수학함수 사용
 
 class DBManager:
     def __init__(self):
@@ -86,7 +87,7 @@ class DBManager:
             self.disconnect()
 
     # 선택한 회원 모든정보 가져오기
-    def get_user_by_info(self, id):
+    def get_user_info_by_id(self, id):
         try:
             self.connect()
             sql = "SELECT * FROM users WHERE user_id = %s"
@@ -99,11 +100,11 @@ class DBManager:
         finally:
             self.disconnect()
     
-    # 선택한 관리자 정보 가져오기
+    # 선택한 관리자 아이디/비밀번호 조회
     def get_admin_by_id(self, id):
         try:
             self.connect()
-            sql = "SELECT admin_id,password FROM admins WHERE admin_id = %s"
+            sql = "SELECT admin_id,password,role FROM admins WHERE admin_id = %s"
             value = (id,)
             self.cursor.execute(sql,value)
             return self.cursor.fetchone()
@@ -113,7 +114,8 @@ class DBManager:
         finally:
             self.disconnect()
 
-    def get_admin_by_info(self, id):
+    #선택한 관리자 모든정보 가져오기
+    def get_admin_info_by_id(self, id):
         try:
             self.connect()
             sql = "SELECT * FROM admins WHERE admin_id = %s"
@@ -125,6 +127,23 @@ class DBManager:
             return None 
         finally:
             self.disconnect()
+    
+    #선택한 관리자 권한 가져오기
+    def get_admin_role(self, id):
+        try:
+            self.connect()
+            sql = "SELECT role FROM admins WHERE admin_id = %s"
+            value = (id,)
+            self.cursor.execute(sql,value)
+            return self.cursor.fetchone()
+        except mysql.connector.Error as error :
+            print(f"관리자 권한 가져오기 연결 실패: {error}")
+            return None 
+        finally:
+            self.disconnect()
+
+
+
 
     # 회원 마지막 로그인 시간 업데이트
     def update_last_login(self, id):
@@ -298,15 +317,27 @@ class DBManager:
             LIMIT %s OFFSET %s
             """
             values = (f"%{search_query}%", per_page, offset)
+
         else:  # all 또는 기본값
-            sql = """
-            SELECT s.*, c.cctv_ip 
-            FROM street_lights s
-            LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-            WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) AND s.purpose = "도로"
-            LIMIT %s OFFSET %s
-            """
-            values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            if search_query:  # 검색어가 있는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) 
+                AND s.purpose = "도로"
+                LIMIT %s OFFSET %s
+                """
+                values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            else:  # 검색어가 없는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE s.purpose = "도로"
+                LIMIT %s OFFSET %s
+                """
+                values = (per_page, offset)
         
         return sql, values
 
@@ -314,24 +345,36 @@ class DBManager:
     def get_road_cctv_count_query(self, search_query, search_type):
         if search_type == "street_light_id":
             sql = """
-            SELECT COUNT(*) AS total FROM street_lights 
-            WHERE street_light_id LIKE %s and purpose = "도로"
+            SELECT COUNT(*) AS total 
+            FROM street_lights 
+            WHERE street_light_id LIKE %s AND purpose = "도로"
             """
             values = (f"%{search_query}%",)
-        
+
         elif search_type == "street_light_location":
             sql = """
-            SELECT COUNT(*) AS total FROM street_lights 
-            WHERE location LIKE %s and purpose = "도로"
+            SELECT COUNT(*) AS total 
+            FROM street_lights 
+            WHERE location LIKE %s AND purpose = "도로"
             """
             values = (f"%{search_query}%",)
-        
+
         else:  # all 또는 기본값
-            sql = """
-            SELECT COUNT(*) AS total FROM street_lights 
-            WHERE (location LIKE %s OR street_light_id LIKE %s) and purpose = "도로"
-            """
-            values = (f"%{search_query}%", f"%{search_query}%")
+            if search_query:  # 검색어가 있는 경우
+                sql = """
+                SELECT COUNT(*) AS total 
+                FROM street_lights 
+                WHERE (location LIKE %s OR street_light_id LIKE %s) 
+                AND purpose = "도로"
+                """
+                values = (f"%{search_query}%", f"%{search_query}%")
+            else:  # 검색어가 없는 경우
+                sql = """
+                SELECT COUNT(*) AS total 
+                FROM street_lights 
+                WHERE purpose = "도로"
+                """
+                values = ()
         
         return sql, values
 
@@ -359,8 +402,9 @@ class DBManager:
             return False
         finally:
             self.disconnect()
-  
-    # 인도용 CCTV 검색 및 페이지네이션
+
+
+    # 인도 CCTV 검색 및 페이지네이션
     def get_sidewalk_cctv_query(self, search_query, search_type, per_page, offset):
         if search_type == "street_light_id":
             sql = """
@@ -381,15 +425,27 @@ class DBManager:
             LIMIT %s OFFSET %s
             """
             values = (f"%{search_query}%", per_page, offset)
+
         else:  # all 또는 기본값
-            sql = """
-            SELECT s.*, c.cctv_ip 
-            FROM street_lights s
-            LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
-            WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) AND s.purpose = "인도"
-            LIMIT %s OFFSET %s
-            """
-            values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            if search_query:  # 검색어가 있는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE (s.location LIKE %s OR s.street_light_id LIKE %s) 
+                AND s.purpose = "인도"
+                LIMIT %s OFFSET %s
+                """
+                values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            else:  # 검색어가 없는 경우
+                sql = """
+                SELECT s.*, c.cctv_ip 
+                FROM street_lights s
+                LEFT JOIN cameras c ON s.street_light_id = c.street_light_id
+                WHERE s.purpose = "인도"
+                LIMIT %s OFFSET %s
+                """
+                values = (per_page, offset)
         
         return sql, values
 
@@ -398,28 +454,39 @@ class DBManager:
         if search_type == "street_light_id":
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE street_light_id LIKE %s and purpose = "인도"
+            WHERE street_light_id LIKE %s AND purpose = "인도"
             """
             values = (f"%{search_query}%",)
-        
+
         elif search_type == "street_light_location":
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE location LIKE %s and purpose = "인도"
+            WHERE location LIKE %s AND purpose = "인도"
             """
             values = (f"%{search_query}%",)
-        
+
         else:  # all 또는 기본값
             sql = """
             SELECT COUNT(*) AS total FROM street_lights 
-            WHERE (location LIKE %s OR street_light_id LIKE %s) and purpose = "인도"
+            WHERE (location LIKE %s OR street_light_id LIKE %s) AND purpose = "인도"
             """
             values = (f"%{search_query}%", f"%{search_query}%")
-        
+
         return sql, values
-    
+
+    def execute_query(self, sql, values):
+        try:
+            self.connect()
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            return result
+        except Exception as error:
+            return False
+        finally:
+            self.disconnect()
+
     #선택된 가로등 정보 가져오기
-    def get_streetlight_by_info(self,street_light_id:int):
+    def get_streetlight_info_by_id(self,street_light_id:int):
         try:
             self.connect()
             sql = "SELECT * FROM street_lights WHERE street_light_id = %s"
@@ -432,12 +499,106 @@ class DBManager:
         finally:
             self.disconnect()
 
+    # 선택된 가로등 위치로 정보가져오기
+    def get_streetlight_info_by_location(self, location):
+        try:
+            self.connect()
+            sql = "SELECT * FROM street_lights WHERE location Like %s"
+            value = (location,)
+            self.cursor.execute(sql, value)
+            return self.cursor.fetchone()
+        except mysql.connector.Error as error:
+            print(f"가로등 정보 조회 중 오류 발생: {error}")
+            return False
+        finally:
+            self.disconnect()
+
+    ## 선택된 가로등 위치 정보 가져오기
+    # 가로등 목적에 따라 위치 조정
+    @staticmethod
+    def adjust_location(lat, lon, purpose):
+        """
+        목적(purpose)에 따라 위치를 조정하여 마커가 실제 도로 또는 인도에 표시되도록 함.
+        """
+        shift_distance = 15  # 이동 거리 (미터 단위)
+        shift_factor = shift_distance / 111320  # 위도 1도 ≈ 111.32km
+        
+        # 도로 방향으로 약간 이동 (북쪽)
+        if purpose == "도로":
+            lat += shift_factor  # 위도로 북쪽 이동
+        
+        # 인도 방향으로 약간 이동 (남쪽)
+        elif purpose == "인도":
+            lat -= shift_factor  # 위도로 남쪽 이동
+
+        return lat, lon
+    
+    #가로등 위치 -> 위도,경도 변환
+    @staticmethod
+    def get_lat_lon_kakao(address, api_key):
+        """ Kakao API를 사용하여 주소를 위도, 경도로 변환 """
+        url = "https://dapi.kakao.com/v2/local/search/address.json"
+        headers = {"Authorization": f"KakaoAK {api_key}"}
+        params = {"query": address}
+
+        response = requests.get(url, headers=headers, params=params)
+
+        if response.status_code == 200:
+            result = response.json()
+            if result["documents"]:
+                lat = float(result["documents"][0]["y"])
+                lon = float(result["documents"][0]["x"])
+                return lat, lon
+            else:
+                print("❌ 주소 검색 결과 없음")
+        else:
+            print(f"❌ Kakao API 오류: {response.status_code}")
+
+        return None
+
+    def get_streetlight_location_by_id_api_key(self, street_light_id: int, api_key: str):
+        try:
+            self.connect()
+            sql = "SELECT location, purpose FROM street_lights WHERE street_light_id = %s"
+            value = (street_light_id,)
+            self.cursor.execute(sql, value)
+            result = self.cursor.fetchone()
+            
+            if not result:
+                return None
+
+            location = result["location"]
+            purpose = result["purpose"]
+            
+            # 🔹 Kakao API를 사용해 주소 → 위도·경도로 변환
+            geo_location = self.get_lat_lon_kakao(location, api_key)
+            
+            if not geo_location:
+                return None  # 주소 변환 실패
+
+            lat, lon = geo_location  # 🔺 여기 수정 (geo_location은 튜플임)
+        
+            # 🔹 도로/인도 목적에 따라 위치 조정
+            adjusted_lat, adjusted_lon = self.adjust_location(lat, lon, purpose)
+
+            return {
+                "latitude": adjusted_lat,
+                "longitude": adjusted_lon,
+                "purpose": purpose
+            }
+        except Exception as e:
+            print(f"❌ 가로등 정보 조회 중 오류 발생: {e}")
+            return None
+        finally:
+            self.disconnect()
+
+
     # 카메라 정보 가져오기
     def get_camera_by_info(self,street_light_id:int):
         try:
             self.connect()
             sql = """
-                SELECT *, s.location, s.purpose
+                SELECT c.*, s.location, s.purpose
                 FROM cameras c
                 JOIN street_lights s ON c.street_light_id = s.street_light_id
                 WHERE c.street_light_id = %s
@@ -477,7 +638,7 @@ class DBManager:
         try:
             self.connect()
             sql="""
-                SELECT *, u.user_id, u.user_name 
+                SELECT i.*, u.user_id, u.user_name 
                 FROM inquiries i
                 JOIN users u ON i.user_id = u.user_id
                 order by i.inquiries_id desc;
@@ -491,14 +652,19 @@ class DBManager:
             self.disconnect()
     
     #선택된 문의 정보 가져오기
-    def get_inquiry_by_info(self, inquiries_id):
+    def get_inquiry_by_info(self, user_id, inquiries_id, inquiry_time):
         try:
             self.connect()
-            sql="""
-            SELECT * FROM inquiries where inquiries_id = %s
+            sql = """
+                SELECT i.*, 
+                    u.user_id,
+                    u.user_name
+                FROM inquiries i
+                LEFT JOIN users u ON i.user_id = u.user_id
+                where i.user_id = %s and inquiries_id = %s and inquiry_time = %s
             """
-            value=(inquiries_id,)
-            self.cursor.execute(sql,value)
+            value = (user_id, inquiries_id, inquiry_time)
+            self.cursor.execute(sql, value)
             return self.cursor.fetchone()
         except Exception as error:
             print(f"회원 문의 정보를 가져오기 실패 : {error}")
@@ -540,22 +706,6 @@ class DBManager:
         finally:
             self.disconnect()
     
-    # 문의 상태 업데이트 (같은아이디로 반복해서 문의가 올수 있으므로 아이디,작성시간으로 구분해서 처리)
-    def update_answer_status(self, userid, enquired_at):
-        try: 
-            self.connect()
-            sql = "UPDATE enquiries SET answer_status = 'completion' WHERE userid = %s and enquired_at = %s"
-            value = (userid,enquired_at)
-            self.cursor.execute(sql,value)
-            self.connection.commit()
-            print("답변상태를 업데이트 했습니다.")
-            return True
-        except Exception as error:
-            print(f"답변상태를 업데이트하는데 실패했습니다. : {error}")
-            return False
-        finally:
-            self.disconnect()
-    
     # 문의한 회원 정보 가져오기
     def get_enquired_post_by_id(self, userid, enquired_at):
         try:
@@ -590,5 +740,525 @@ class DBManager:
         finally:
             self.disconnect()
     
+    ## 가로등 센서 데이터 DB저장
+    #센서 테이블에 저장된 최근 가져오기 
+    def get_latest_sensor_data(self, table_name, street_light_id):
+        try:
+            self.connect() 
+            # ✅ 허용된 테이블 이름만 사용
+            allowed_tables = ["road_sensors", "sidewalk_sensors"]
+            if table_name not in allowed_tables:
+                raise ValueError("❌ 허용되지 않은 테이블 이름입니다!")
+            
+            sql = """SELECT record_time FROM {} 
+                    WHERE street_light_id = %s ORDER BY record_time DESC LIMIT 1
+                  """.format(table_name)
+            value = (street_light_id,)
+            self.cursor.execute(sql,value)
+            return self.cursor.fetchone()
+        except Exception as error:
+            print(f"센서 테이블 최근 데이터 가져오기 실패 : {error}")
+            return False
+        finally:
+            self.disconnect()
+            
+    # 센서 데이터 DB 저장
+    def save_sensor_data(self, received_data):
+        if "ID" not in received_data or not str(received_data["ID"]).isdigit():
+            print("🚨 ID 없음: 데이터 저장 안 함")
+            return  
+
+        street_light_id_str = received_data["ID"]
+        street_light_id = int(street_light_id_str)
+        
+        street_light = self.get_streetlight_info_by_id(street_light_id)
+
+        if not street_light or street_light_id != street_light['street_light_id']:
+            print("❌ 유효하지 않은 센서 ID")
+            return
+
+        print(f"✅ 유효한 센서 ID: {street_light_id}")
+
+        # 목적에 따라 테이블 선택
+        table_name = "road_sensors" if street_light['purpose'] == '도로' else "sidewalk_sensors"
+
+        # 최신 저장된 시간 가져오기
+        latest_record_time = self.get_latest_sensor_data(table_name, street_light_id)
+        current_time = datetime.now()
+
+        if latest_record_time and latest_record_time['record_time']:
+            last_time = latest_record_time['record_time']
+            time_diff = (current_time - last_time).total_seconds()
+            if time_diff < 10:
+                print(f"⏳ {time_diff}초 경과 또는 값 변화 없음 → 데이터 저장 안 함")
+                return
+        else:
+            print("✅ 기존 데이터 없음. 새 데이터 저장")
+
+        # 데이터 저장
+        try:
+            self.connect()
+            if not self.connection or not self.cursor:
+                print("❌ 데이터베이스 연결 실패")
+                return False
+
+            def safe_int(value, default=0):
+                try:
+                    return int(value)
+                except (ValueError, TypeError):
+                    return default
+
+            if table_name == "road_sensors":
+                sql = f"""
+                INSERT INTO {table_name} 
+                (street_light_id, main_light_level, sub1_light_level_, sub2_light_level_, tilt_angle, temperature, humidity, perceived_temperature, switch_state, inspection)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    street_light_id,
+                    safe_int(received_data.get("MAIN LDR Value")),
+                    safe_int(received_data.get("SUB1 LDR Value")),
+                    safe_int(received_data.get("SUB2 LDR Value")),
+                    safe_int(received_data.get("TILT Value")),
+                    received_data.get("Temperature", "0"),
+                    received_data.get("Humidity", "0"),
+                    received_data.get("Heat Index", "0"),
+                    safe_int(received_data.get("Switch State")),
+                    safe_int(received_data.get("Check")),
+                )
+            else:  # sidewalk_sensors
+                sql = f"""
+                INSERT INTO {table_name} 
+                (street_light_id, main_light_level, sub1_light_level_, sub2_light_level_, tilt_angle, switch_state, inspection)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    street_light_id,
+                    safe_int(received_data.get("MAIN LDR Value")),
+                    safe_int(received_data.get("SUB1 LDR Value")),
+                    safe_int(received_data.get("SUB2 LDR Value")),
+                    safe_int(received_data.get("TILT Value")),
+                    safe_int(received_data.get("Switch State")),
+                    safe_int(received_data.get("Check")),
+                )
+
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            print(f"✅ 데이터 저장 완료 → {table_name} (ID: {street_light_id})")
+            return True
+
+        except Exception as error:
+            print(f"❌ 센서 테이블 데이터 저장 실패: {error}")
+            return False
+
+        finally:
+            self.disconnect()
+
+    # 가로등 데이터 조회 (페이지네이션 + 검색 지원)
+    def get_all_street_lights_data(self, per_page, offset, search_type=None, search_query=None):
+        """
+        전체 가로등 데이터 조회 (페이지네이션 + 검색 지원)
+        """
+        base_query = "FROM street_lights"
+        where_clause = ""
+        params = []
+        
+        # 검색 조건 처리
+        if search_query and search_type != 'all':
+            if search_type == 'street_light_id':
+                where_clause = "WHERE street_light_id LIKE %s"
+                params.append(f"%{search_query}%")
+            elif search_type == 'street_light_location':
+                where_clause = "WHERE location LIKE %s"
+                params.append(f"%{search_query}%")
+
+        # 데이터 조회 쿼리
+        data_sql = f"""
+            SELECT * 
+            {base_query} 
+            {where_clause}
+            ORDER BY street_light_id DESC
+            LIMIT %s OFFSET %s
+        """
+        data_params = params + [per_page, offset]
+
+        # 전체 개수 조회 쿼리
+        count_sql = f"""
+            SELECT COUNT(*) AS total 
+            {base_query} 
+            {where_clause}
+        """
+        
+        return data_sql, count_sql, data_params
+
+    # 페이지네이션된 가로등 데이터 조회
+    def get_paginated_street_lights(self, per_page, offset, search_type=None, search_query=None):
+        """
+        페이지네이션된 가로등 데이터 반환
+        """
+        try:
+            data_sql, count_sql, params = self.get_all_street_lights_data(
+                per_page, offset, search_type, search_query
+            )
+            
+            # 데이터 조회
+            self.connect()
+            self.cursor.execute(data_sql, params)
+            street_lights_data = self.cursor.fetchall()
+
+            # 전체 개수 조회
+            self.cursor.execute(count_sql, params[:-2])  # LIMIT, OFFSET 제외
+            total = self.cursor.fetchone()['total']
+
+            return street_lights_data, total
+
+        except Exception as error:
+            print(f"가로등 조회 오류: {error}")
+            return [], 0
+        finally:
+            self.disconnect()
+
+
+    ## 가로등 등록
+    def register_street_light(self, location, purpose, installation_date, tilt_status, light_status):
+        # 연결 상태 확인 및 필요 시 연결
+        if not self.connection or not self.connection.is_connected():
+            self.connect()
+        
+        # 새로운 커서 생성
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO street_lights (location, purpose, installation_date, tilt_status, light_status)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (location, purpose, installation_date, tilt_status, light_status))
+            self.connection.commit()
+            street_light_id = cursor.lastrowid  # 삽입된 가로등의 ID 반환
+            return street_light_id
+        except mysql.connector.Error as error:
+            print(f"가로등 등록 실패: {error}")
+            self.connection.rollback()
+            return None
+        finally:
+            cursor.close()  # 커서 닫기
+
+    ## 카메라 등록
+    def register_camera(self, street_light_id, ip):
+        # 연결 상태 확인 및 필요 시 연결
+        if not self.connection or not self.connection.is_connected():
+            self.connect()
+        
+        # 새로운 커서 생성
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO cameras (street_light_id, cctv_ip)
+                VALUES (%s, %s)
+            """, (street_light_id, ip))
+            self.connection.commit()
+        except mysql.connector.Error as error:
+            print(f"카메라 등록 실패: {error}")
+            self.connection.rollback()
+        finally:
+            cursor.close()  # 커서 닫기
+
+    # 고장난 가로등 조회
+    def get_malfunctioning_lamps(self, per_page, offset, search_type="all", search_query="", status=None):
+        try:
+            self.connect()  # DB 연결 추가
+            
+            # 기본 WHERE 절과 파라미터 초기화
+            where_clauses = ["status = %s"]
+            params = ['malfunction']
+            
+            # 검색 로직
+            if search_type == "street_light_id" and search_query:
+                where_clauses.append("street_light_id LIKE %s")
+                params.append(f"%{search_query}%")
+            elif search_type == "street_light_location" and search_query:
+                where_clauses.append("location LIKE %s")
+                params.append(f"%{search_query}%")
+            
+            # WHERE 절 구성
+            where_sql = " WHERE " + " AND ".join(where_clauses)
+            
+            # 전체 레코드 수 계산 쿼리
+            count_query = f"SELECT COUNT(*) as total FROM street_lights {where_sql}"
+            
+            # 페이지네이션 쿼리
+            pagination_sql = f"SELECT * FROM street_lights {where_sql} LIMIT %s OFFSET %s"
+            
+            # 페이지네이션용 파라미터 추가
+            count_params = params.copy()
+            full_params = params + [per_page, offset]
+            
+            # 전체 레코드 수 실행
+            self.cursor.execute(count_query, count_params)
+            total_posts = self.cursor.fetchone()['total']
+            
+            # 페이지네이션 쿼리 실행
+            self.cursor.execute(pagination_sql, full_params)
+            lamps = self.cursor.fetchall()
+            
+            return lamps, total_posts
+        
+        except Exception as error:
+            print(f"데이터베이스 쿼리 실행 실패: {error}")
+            return [], 0
+            
+        finally:
+            self.disconnect()  # DB 연결 해제 추가
+
     
+    # 문의 데이터 조회 (페이지네이션)
+    def get_paginated_inquiries(self, per_page, offset):
+        """
+        페이지네이션된 문의 데이터 반환 (답변 상태 필터링 추가)
+        """
+        try:
+            
+            # 데이터 조회 쿼리
+            sql = f"""
+                SELECT inquiries.* , users.user_name
+                FROM inquiries
+                join users on inquiries.user_id = users.user_id
+                ORDER BY inquiries_id DESC
+                LIMIT %s OFFSET %s
+                """
+            values = (per_page, offset)
+            
+            # 데이터 조회
+            self.connect()
+            self.cursor.execute(sql, values)
+            inquiries_data = self.cursor.fetchall()
+
+            # 전체 개수 조회
+            count_sql = "SELECT COUNT(*) AS total FROM inquiries"
+            self.cursor.execute(count_sql)
+            total = self.cursor.fetchone()['total']
+            return inquiries_data, total
+
+        except Exception as error:
+            print(f"문의 데이터 조회 오류: {error}")
+            return [], 0
+        finally:
+            self.disconnect()
+
+    # 특정 사용자의 특정 시간에 등록한 문의 상세 정보 조회
+    def get_inquired_post_by_id(self, admin_id, user_id, inquiry_time):
+        """
+        특정 사용자의 특정 시간에 등록한 문의 상세 정보 조회
+        """
+        try:
+            self.connect()
+            query = """
+                SELECT 
+                    inquiries.*, 
+                    users.user_name,
+                    inquiry_answers.answer_content,  
+                    inquiry_answers.answer_time, 
+                    admins.admin_name    
+                FROM inquiries 
+                JOIN users ON inquiries.user_id = users.user_id
+                LEFT JOIN inquiry_answers ON inquiries.inquiries_id = inquiry_answers.inquiry_id
+                LEFT JOIN admins ON %s = admins.admin_id
+                WHERE inquiries.user_id = %s AND inquiries.inquiry_time = %s
+            """
+            self.cursor.execute(query, (admin_id, user_id, inquiry_time))
+            return self.cursor.fetchone()
+        except Exception as error:
+            print(f"문의 상세 정보 조회 오류: {error}")
+            return None
+        finally:
+            self.disconnect()
     
+    #문의 답변 없을 시 답변 테이블에 데이터 저장
+    def insert_inquiry_answer(self, inquiries_id, user_id, admin_id, answer_content, inquiry_time):
+        try:
+            self.connect()
+            sql = """
+                    INSERT INTO inquiry_answers 
+                    (inquiries_id, user_id, admin_id, answer_content, inquiry_time)
+                    VALUES (%s, %s, %s, %s, %s)
+                """
+            values = ( inquiries_id, user_id, admin_id, answer_content, inquiry_time)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return True
+        except Exception as error:
+            print(f'문의 답변 데이터 저장 오류: {error}')
+        finally:
+            self.disconnect()
+
+    #문의 있을 시 답변 테이블에 데이터 업데이트
+    def update_inquiry_answer(self, answer_content, inquiries_id, user_id, admin_id):
+        """
+        문의 답변 업데이트 (없으면 새로 생성)
+        """
+        try:
+            self.connect()
+            sql = """
+                  UPDATE inquiry_answers 
+                    SET answer_content = %s, 
+                        answer_time = current_timestamp() 
+                    WHERE inquiries_id = %s and user_id = %s and admin_id = %s
+                """
+            values=(answer_content, inquiries_id, user_id, admin_id)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return True
+        except Exception as error:
+            print(f"답변 업데이트 오류: {error}")
+            return False
+        finally:
+            self.disconnect()
+    
+    # 문의한 아이디와 문의시간으로 답변정보 가져오기
+    def get_answer_by_id(self, user_id, inquiries_id, inquiry_time):
+        try:
+            self.connect()
+            sql = """
+                SELECT inquiry_answers.*, admins.admin_id, admins.admin_name
+                FROM inquiry_answers 
+                LEFT JOIN inquiries ON inquiry_answers.inquiries_id = inquiries.inquiries_id 
+                LEFT JOIN admins ON inquiry_answers.admin_id = admins.admin_id
+                WHERE inquiry_answers.user_id = %s AND inquiry_answers.inquiry_time = %s AND inquiry_answers.inquiries_id = %s
+            """
+            values = (user_id, inquiry_time, inquiries_id)
+            self.cursor.execute(sql, values)
+            return self.cursor.fetchone()
+        except Exception as error:
+            print(f"답변한 직원 아이디 조회 오류: {error}")
+            return None
+        finally:
+            self.disconnect()
+
+
+    #문의 답변 상태 업데이트
+    def update_answer_status(self, user_id, inquiry_time, inquiries_id):
+        """
+        문의 답변 상태 업데이트
+        """
+        try:
+            self.connect()
+            query = """
+                UPDATE inquiries 
+                SET answer_status = 'completed' 
+                WHERE user_id = %s AND inquiry_time = %s AND inquiries_id = %s
+            """
+            values = (user_id, inquiry_time, inquiries_id)
+            self.cursor.execute(query, values)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            if self.connection:
+                self.connection.rollback()
+            print(f"답변 상태 업데이트 오류: {str(e)}")
+            return False
+        finally:
+            self.disconnect()
+
+    def get_paginated_inquiries_pending(self, per_page, offset, answer_status): 
+        try:
+            self.connect()
+
+            # ✅ 전체 개수 조회 (LIMIT, OFFSET 없음)
+            count_sql = """
+                SELECT COUNT(*) AS total
+                FROM inquiries
+                JOIN users ON inquiries.user_id = users.user_id
+                WHERE inquiries.answer_status = %s
+            """
+            self.cursor.execute(count_sql, (answer_status,))
+            total = self.cursor.fetchone()['total']  # 전체 개수 가져오기
+
+            # ✅ 페이지 데이터 조회 (LIMIT, OFFSET 적용)
+            data_sql = """
+                SELECT inquiries.*, users.user_name
+                FROM inquiries
+                JOIN users ON inquiries.user_id = users.user_id
+                WHERE inquiries.answer_status = %s
+                ORDER BY inquiries_id DESC
+                LIMIT %s OFFSET %s
+            """
+            values = (answer_status, per_page, offset)
+            self.cursor.execute(data_sql, values)
+            inquiries_data = self.cursor.fetchall()  # 조회 데이터 가져오기
+
+            return inquiries_data, total  # ✅ 전체 개수와 페이지 데이터 반환
+
+        except Exception as error:
+            print(f"문의 데이터 조회 오류: {error}")
+            return [], 0
+        finally:
+            self.disconnect()
+
+
+    def save_sos_alert(self, street_light_id, location, stream_url):
+        try:
+            self.connect()
+            sql = """
+                INSERT INTO sos (street_light_id, location, stream_url, timestamp)
+                VALUES (%s, %s, %s, NOW())
+            """
+            self.cursor.execute(sql, (street_light_id, location, stream_url))
+            self.connection.commit()
+        except mysql.connector.Error as e:
+            print(f"❌ SOS 저장 오류: {e}")
+        finally:
+            self.disconnect()
+
+    def save_motorcycle_violation(self, street_light_id, image_path):
+        try:
+            self.connect()
+            sql = """
+                INSERT INTO motorcycle_violations (street_light_id, image_path)
+                VALUES (%s, %s)
+            """
+            self.cursor.execute(sql, (street_light_id, image_path))
+            self.connection.commit()
+        except mysql.connector.Error as err:
+            print(f"❌ 오토바이 위반 저장 오류: {err}")
+        finally:
+            self.disconnect()
+
+    def get_sensor_data(self, street_light_id):
+        try:
+            self.connect()
+            sql = """
+                SELECT temperature, humidity, perceived_temperature
+                FROM road_sensors
+                WHERE street_light_id = %s
+                ORDER BY record_time DESC
+                LIMIT 1
+            """
+            self.cursor.execute(sql, (street_light_id,))
+            result = self.cursor.fetchone()
+            if result:
+                return {
+                    "temperature": result["temperature"],
+                    "humidity": result["humidity"],
+                    "perceived_temperature": result["perceived_temperature"]
+                }
+            return None
+        except mysql.connector.Error as error:
+            print(f"❌ 센서 데이터 조회 오류: {error}")
+            return None
+        finally:
+            self.disconnect()
+
+    def get_malfunction_status(self, street_light_id):
+        try:
+            self.connect()
+            sql = """
+                SELECT reason_led, reason_tilt
+                FROM malfunction_street_lights
+                WHERE street_light_id = %s AND repair_status = 'pending'
+            """
+            self.cursor.execute(sql, (street_light_id,))
+            return self.cursor.fetchone()
+        except mysql.connector.Error as e:
+            print(f"❌ get_malfunction_status 오류: {e}")
+            return None
+        finally:
+            self.disconnect()
