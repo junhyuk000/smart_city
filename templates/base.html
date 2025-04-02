@@ -16,6 +16,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% block extra_css %}
     {% endblock %}
+    <style>
+        .btn-login-register {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: normal;
+        }
+    </style>
 </head>
 
 <body>
@@ -37,28 +45,25 @@
             </div>
             {% if 'user_id' in session %}
             <div class="right-nav">
-                <span class="welcome-text">{{ session.user_name }} 님 환영합니다</span>
-                <a href="{{ url_for('user_update_profile') }}" class="btn btn-primary">
-                    <i class="fas fa-user-edit"></i> 회원정보 수정
+                <a href="{{ url_for('user_update_profile') }}" class="btn-profile">
+                    <i class="fas fa-user-edit"></i>
                 </a>
-                <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+                <span class="welcome-text">{{ session.user_name }} 님 환영합니다</span>
+                <a href="{{ url_for('logout') }}" class="btn-logout">
                     <i class="fas fa-sign-out-alt"></i> 로그아웃
                 </a>
             </div>
             {% elif 'admin_id' in session %}
             <div class="right-nav">
                 <span class="welcome-text">{{ session.admin_name }} 님 환영합니다</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+                <a href="{{ url_for('logout') }}" class="btn-logout">
                     <i class="fas fa-sign-out-alt"></i> 로그아웃
                 </a>
             </div>
             {% else %}
             <div class="right-nav">
-                <a href="{{ url_for('login') }}" class="btn btn-primary me-2">
-                    <i class="fas fa-sign-in-alt"></i> 로그인
-                </a>
-                <a href="{{ url_for('register') }}" class="btn btn-warning">
-                    <i class="fas fa-user-plus"></i> 회원가입
+                <a href="{{ url_for('login') }}" class="btn-login-register">
+                    로그인/회원가입
                 </a>
             </div>
             {% endif %}

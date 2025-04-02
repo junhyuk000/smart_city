@@ -10,16 +10,26 @@
     
     // 다크모드 설정이 있거나 시스템이 다크모드인 경우 미리 클래스 적용
     if (darkMode === 'enabled' || (darkMode === null && prefersDarkMode)) {
+        // HTML에 클래스 추가
         document.documentElement.classList.add('dark-mode-preload');
         
+        // 페이지가 로드되기 전에 색상 스타일 적용
+        var style = document.createElement('style');
+        style.textContent = `
+            html, body {
+                background-color: #242424 !important;
+                color: #f0f0f0 !important;
+            }
+            .header, .header-top, .header-nav {
+                background-color: #2a2a2a !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
         // body가 준비되면 다크모드 클래스 추가
-        if (document.body) {
+        document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.add('dark-mode');
-        } else {
-            document.addEventListener('DOMContentLoaded', function() {
-                document.body.classList.add('dark-mode');
-            });
-        }
+        });
     }
     
     // 페이지 로드 완료 후 preload 클래스 제거
@@ -43,50 +53,56 @@ document.addEventListener('DOMContentLoaded', function() {
             (savedMode === null && window.matchMedia && 
              window.matchMedia('(prefers-color-scheme: dark)').matches);
         
-        // body에 클래스 설정 - 페이지 로드시 한 번만 실행
-        if (isDarkMode) {
-            document.body.classList.add('dark-mode');
-            darkModeToggle.checked = true;
-            if (modeText) modeText.textContent = "라이트모드";
-        } else {
-            document.body.classList.remove('dark-mode');
-            darkModeToggle.checked = false;
-            if (modeText) modeText.textContent = "다크모드";
-        }
+        // 초기 다크모드 설정 적용 (페이지 로드시 한 번만 실행)
+        const applyDarkModeState = (enabled) => {
+            if (enabled) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.classList.add('dark-mode'); // html 요소에도 클래스 추가
+                darkModeToggle.checked = true;
+                if (modeText) modeText.textContent = "라이트모드";
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.documentElement.classList.remove('dark-mode'); // html 요소에서도 클래스 제거
+                darkModeToggle.checked = false;
+                if (modeText) modeText.textContent = "다크모드";
+            }
+            
+            // 모든 CSS 변수가 적용되도록 강제 리페인트 실행
+            document.body.offsetHeight;
+            
+            // 슬라이더 업데이트
+            if (window.swiperInstance) {
+                window.swiperInstance.update();
+            }
+        };
+        
+        // 초기 상태 적용
+        applyDarkModeState(isDarkMode);
         
         // 토글 버튼 클릭 이벤트
         darkModeToggle.addEventListener("change", function() {
             const willBeDarkMode = this.checked;
             
-            if (willBeDarkMode) {
-                document.body.classList.add("dark-mode");
-                localStorage.setItem("darkMode", "enabled");
-                if (modeText) modeText.textContent = "라이트모드";
-            } else {
-                document.body.classList.remove("dark-mode");
-                localStorage.setItem("darkMode", "disabled");
-                if (modeText) modeText.textContent = "다크모드";
-            }
+            // 모드 전환 애니메이션 적용
+            document.body.style.transition = "background-color 0.5s ease, color 0.5s ease";
             
-            // 슬라이더 재초기화
-            if (swiperInstance) {
-                swiperInstance.update();
-            }
+            // 다크모드 상태 적용
+            applyDarkModeState(willBeDarkMode);
+            
+            // 로컬 스토리지에 설정 저장
+            localStorage.setItem("darkMode", willBeDarkMode ? "enabled" : "disabled");
+            
+            // 페이지 내 모든 요소의 전환을 위해 이벤트 발생
+            document.dispatchEvent(new CustomEvent('darkModeChanged', { 
+                detail: { darkMode: willBeDarkMode } 
+            }));
         });
         
         // 시스템 테마 변경 감지 - 사용자 설정이 없을 때만 적용
         const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
         prefersDarkScheme.addEventListener('change', e => {
             if (!localStorage.getItem("darkMode")) {
-                if (e.matches) {
-                    document.body.classList.add("dark-mode");
-                    darkModeToggle.checked = true;
-                    if (modeText) modeText.textContent = "라이트모드";
-                } else {
-                    document.body.classList.remove("dark-mode");
-                    darkModeToggle.checked = false;
-                    if (modeText) modeText.textContent = "다크모드";
-                }
+                applyDarkModeState(e.matches);
             }
         });
     };
@@ -168,6 +184,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // 전역 변수로 스와이퍼 인스턴스 저장
+        window.swiperInstance = swiper;
+        
         return swiper;
     };
     
@@ -177,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 이미지를 로드한 후 슬라이더 업데이트
     const updateSwiperAfterImagesLoaded = () => {
         const swiperContainer = document.querySelector('.swiper-container');
-        if (!swiperContainer || !swiperInstance) return;
+        if (!swiperContainer || !window.swiperInstance) return;
         
         const slides = document.querySelectorAll('.swiper-slide img');
         if (slides.length === 0) return;
@@ -188,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const imageLoaded = () => {
             loadedImages++;
             if (loadedImages === slides.length) {
-                swiperInstance.update();
+                window.swiperInstance.update();
             }
         };
         
@@ -208,8 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 윈도우 리사이즈 시 슬라이더 업데이트
         window.addEventListener('resize', () => {
-            if (swiperInstance) {
-                swiperInstance.update();
+            if (window.swiperInstance) {
+                window.swiperInstance.update();
             }
         });
     }
@@ -521,6 +540,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update on resize
         window.addEventListener('resize', updateSliderHeight);
     };
+    
+    // 다크모드 변경 시 CSS 동기화를 위한 이벤트 리스너
+    document.addEventListener('darkModeChanged', function(event) {
+        // 특정 요소들의 스타일을 강제로 업데이트하기 위한 코드
+        const elementsToUpdate = document.querySelectorAll([
+            '.widget', '.widget-icon', '.widget-content h3', 
+            '.widget-content p', '.nav-link', '.dropdown-content',
+            '.header', '.header-top', '.header-nav', '.welcome-text',
+            '.footer-left', '.table-row-hover', '.search-button',
+            '.total-count strong', '.cctv-status.installed'
+        ].join(', '));
+        
+        elementsToUpdate.forEach(el => {
+            // 요소 강제 리페인트
+            el.style.transition = 'none';
+            el.offsetHeight; // 리플로우 강제 실행
+            el.style.transition = ''; // 원래 트랜지션 복원
+        });
+        
+        // body 강제 리페인트
+        document.body.style.transition = 'none';
+        document.body.offsetHeight;
+        document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+    });
     
     // 초기화 함수 실행
     initDarkMode();

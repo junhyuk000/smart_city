@@ -1,31 +1,56 @@
-/* static\css\base.css */
+/* base.css 상단에 다크모드 깜빡임 방지 코드 수정 */
 
 /* 다크모드 깜빡임 방지 */
 html.dark-mode-preload,
 html.dark-mode-preload body {
-    background-color: #262626;
-    color: #f0f0f0;
+    background-color: #242424 !important; /* 더 밝은 배경색으로 수정 */
+    color: #f0f0f0 !important;
 }
 
 html.dark-mode-preload .header {
-    background-color: #262626;
+    background-color: #2a2a2a !important;
 }
 
 html.dark-mode-preload .header-top, 
 html.dark-mode-preload .header-nav {
-    background-color: #262626;
+    background-color: #2a2a2a !important;
 }
 
 html.dark-mode-preload .nav-link {
-    color: #e1e1e1;
+    color: #e1e1e1 !important;
 }
 
 html.dark-mode-preload .dropdown-content {
-    background-color: #383838;
+    background-color: #383838 !important;
 }
 
 html.dark-mode-preload .welcome-text {
-    color: #f0f0f0;
+    color: #f0f0f0 !important;
+}
+
+/* 다크모드 테이블, 버튼 등 프리로드 설정 추가 */
+html.dark-mode-preload .view-button {
+    background-color: #28a745 !important;
+}
+
+html.dark-mode-preload .view-button.disabled {
+    background-color: #6c757d !important;
+}
+
+html.dark-mode-preload .cctv-status.installed {
+    color: #28a745 !important;
+}
+
+html.dark-mode-preload .total-count strong {
+    color: #28a745 !important;
+}
+
+html.dark-mode-preload .table-row-hover {
+    background-color: #3c3c3c !important;
+}
+
+html.dark-mode-preload .search-button {
+    background-color: #28a745 !important;
 }
 
 /* 기본 스타일 초기화 */
@@ -76,7 +101,7 @@ body.dark-mode {
     --nav-link-hover-bg: #333333;
     --dropdown-bg: #383838;
     --dropdown-shadow: rgba(0, 0, 0, 0.3);
-    --dropdown-text: #aaaaaa; /* 드롭다운 메뉴 텍스트를 연한 회색으로 변경 */
+    --dropdown-text: #ffffff; /* 드롭다운 메뉴 텍스트를 흰색으로 변경 */
     --dropdown-hover-bg: #333333;
     --modal-bg: #333333;
     --modal-text: #f0f0f0;
@@ -86,6 +111,12 @@ body.dark-mode {
 @font-face {
     font-family: "CustomFont";
     src: url("../fonts/JalnanGothicTTF.ttf") format("truetype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "NotoSansKR";
+    src: url("../fonts/NOTOSANSKR-VF.TTF") format("truetype");
     font-display: swap;
 }
 
@@ -248,41 +279,92 @@ body {
     outline: none;
 }
 
+/* 로그인/회원가입 통합 버튼 및 로그아웃 버튼 */
+.btn-login-register, .btn-logout {
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 1.05rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #333333;
+    height: 40px;
+    font-family: "NotoSansKR", sans-serif;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.btn-login-register:hover, .btn-logout:hover {
+    background-color: #555555;
+    color: #ffffff;
+}
+
+.dark-mode .btn-login-register, .dark-mode .btn-logout {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ffffff;
+}
+
+.dark-mode .btn-login-register:hover, .dark-mode .btn-logout:hover {
+    background-color: #f8f8f8;
+    color: #000000;
+}
+
+/* 로그아웃 버튼 아이콘 */
+.btn-logout i {
+    margin-right: 8px;
+}
+
+/* 프로필 버튼 (동그란 아이콘) */
+.btn-profile {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333333;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-profile:hover {
+    background-color: #444444; /* 배경 살짝 밝아짐 */
+    color: #eeeeee; /* 아이콘 살짝 어두워짐 */
+}
+
+.dark-mode .btn-profile {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.dark-mode .btn-profile:hover {
+    background-color: #eeeeee; /* 배경 살짝 어두워짐 */
+    color: #333333; /* 아이콘 살짝 어두워짐 */
+}
+
 .right-nav {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-left: auto;
     margin-right: 2rem;
-    flex-wrap: wrap;
-}
-
-.right-nav button,
-.right-nav a {
-    padding: 0.6rem 1.1rem;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    font-size: 0.95rem;
-    flex: 0 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-}
-
-.right-nav .btn i {
-    margin-right: 6px;
+    flex-wrap: nowrap;
 }
 
 .welcome-text {
     font-size: 1.1rem;
     color: var(--text-color);
-    margin-right: 10px;
-    min-width: 150px;
     white-space: nowrap;
-    flex: 0 1 auto;
     transition: color 0.5s ease;
+    order: -1; /* 환영 텍스트가 앞으로 오도록 조정 */
 }
 
 /* 내비게이션 영역 - 홈, 소개, CCTV, 문의 링크 */
@@ -310,13 +392,22 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
+    background-color: #0078ff !important;
+    color: white !important;
+    border: none !important;
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
+    background-color: #1a88ff !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.btn-primary:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
 .btn-secondary {
@@ -546,7 +637,7 @@ footer {
     }
 }
 
-.login-alert-content {
+.alert-content {
     background-color: var(--modal-bg);
     padding: 30px;
     border-radius: 10px;
@@ -559,15 +650,20 @@ footer {
     animation: fadeInDown 0.4s ease-out;
 }
 
-.login-alert-content p {
+.alert-content h3 {
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.alert-content p {
     margin-bottom: 20px;
     font-size: 18px;
     color: var(--modal-text);
     transition: color 0.5s ease;
-    line-height: 1.4; /* 줄간격 조정 */
+    line-height: 1.4;
 }
 
-.login-alert-buttons {
+.alert-buttons {
     display: flex;
     justify-content: center;
     gap: 15px;
@@ -849,6 +945,7 @@ footer {
         text-align: center;
         width: 100%;
         margin: 0 0 0.5rem 0;
+        order: 0;
     }
 
     .right-nav a {
