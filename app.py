@@ -9,11 +9,10 @@ from markupsafe import Markup
 import json
 import re
 import mysql.connector
-# import threading
-# import license_plate
-# import cv2
-# import motorcycle
-
+import threading
+import license_plate
+import cv2
+import motorcycle
 from api import handle_request  # api.py에서 handle_request 함수 불러오기
 
 app = Flask(__name__)
@@ -21,26 +20,8 @@ app = Flask(__name__)
 
 
 app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이션에서는 더 안전한 방법으로 설정해야 함if __name__ == '__main__':
-road_url = "http://10.0.66.6:5000/stream"
 manager = DBManager()
 KAKAO_API_KEY = "4cf7fc8fc69613ac8f18b4d883213352"
-
-
-
-# led센서 테스트
-# @app.route('/test')
-# def test():
-#     return render_template('ledtest.html')
-
-# led센서 테스트2
-# @app.route('/led_control', methods=['GET'])
-# def control_led():
-#     command = request.args.get('command')
-#     if command:
-#         # 여기에서 MIT 인벤터에 명령을 전달하는 코드 필요
-#         print(f"Received command: {command}")
-#         return "Command Received"
-#     return "No Command", 400
 
 
 # 파일 업로드 경로 설정
@@ -93,16 +74,34 @@ def staff_required(f):
 
 # 전역 변수로 데이터 저장
 received_data = {"message": "No data received"}
+last_switch_state = "1"
+
+# SOS 함수
+def send_sos_alert_to_police(location, stream_url):
+    SOS_API_URL = "http://10.0.66.11:5002/sos_alert"
+
+    data = {
+        "type": "SOS",
+        "location": location,
+        "stream_url": stream_url,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    try:
+        response = requests.post(SOS_API_URL, json=data)
+        if response.status_code == 200:
+            print(f"✅ SOS 전송 완료: {response.text}")
+        else:
+            print(f"❌ SOS 전송 실패: {response.status_code}, {response.text}")
+    except Exception as e:
+        print(f"❌ 경찰서 서버 전송 오류: {e}")
+
 
 @app.route('/api', methods=['GET', 'POST'])
 def handle_request():
-    global received_data
+    global received_data, last_switch_state
 
     if request.method == "POST":
-        if request.is_json:
-            received_data = request.get_json()
-            return jsonify({"status": "success", "message": "JSON data received", "data": received_data})
-
         if not request.form:
             return jsonify({"status": "error", "message": "No data received"}), 400
 
@@ -121,67 +120,37 @@ def handle_request():
                 data_dict[key] = value
 
         received_data = data_dict
-        print(f"📩 변환된 데이터: {received_data}")  # 터미널에서 확인
+        print(f"📩 변환된 데이터: {received_data}")
         manager.save_sensor_data(received_data)
 
+        # ✅ SOS 감지
+        switch_state = received_data.get("Switch State")
+        if last_switch_state == "1" and switch_state == "0":
+            print("🚨 SOS 버튼 눌림!")
+
+            try:
+                street_light_id = int(received_data.get("ID", 0))  # ← 여기서 ID 사용!
+                camera_info = manager.get_camera_by_info(street_light_id)
+                if camera_info:
+                    location = camera_info.get('location')
+                    cctv_ip = camera_info.get('cctv_ip')
+                    stream_url = f"http://{cctv_ip}:5000/stream"
+
+                    # ✅ 경찰서 서버에 SOS 전송
+                    send_sos_alert_to_police(location, stream_url)
+
+                    # ✅ DB에 SOS 기록
+                    manager.save_sos_alert(street_light_id, location, stream_url)
+                else:
+                    print(f"❌ 카메라 정보 없음 (ID={street_light_id})")
+            except Exception as e:
+                print(f"❌ SOS 전송 중 오류: {e}")
+
+        last_switch_state = switch_state
         return jsonify(received_data)
 
-    # GET 요청 시 현재 데이터를 반환
     return jsonify(received_data)
 
-# 아두이노 LED on/off 제어
-command_cache = {
-    "arduino1": {"target": "arduino1", "cmd": None},
-    "arduino2": {"target": "arduino2", "cmd": None}
-}
-
-@app.route('/LedControl')
-def LedControl():
-    """웹 페이지에서 현재 명령을 확인하는 HTML 페이지 렌더링"""
-    return render_template("api/LedControl.html", command_cache=command_cache)
-
-@app.route('/command', methods=['GET'])
-def command():
-    """
-    아두이노 또는 앱 인벤터에서 현재 명령을 가져가는 엔드포인트.
-    아두이노가 한 번 요청하면 이후 값이 None으로 초기화됨.
-    예: http://<server-ip>:5010/command?target=arduino1
-    """
-    target = request.args.get('target')
-    
-    if target not in command_cache:
-        return jsonify({"status": "error", "message": "Invalid target"}), 400
-
-    response = jsonify(command_cache[target])
-
-    # **아두이노가 가져간 후 명령 초기화 (중복 방지)**
-    command_cache[target]["cmd"] = None
-
-    return response
-
-@app.route('/set_command', methods=['GET'])
-def set_command():
-    """
-    웹에서 명령을 설정하는 엔드포인트.
-    예: http://<server-ip>:5010/set_command?target=arduino1&cmd=LED_ON
-    """
-    target = request.args.get('target')
-    cmd = request.args.get('cmd')
-
-    if target not in command_cache:
-        return jsonify({"status": "error", "message": "Invalid target"}), 400
-
-    # 웹 명령을 `_WEB` 접미어 추가하여 처리
-    if cmd in ["LED_ON", "LED_OFF", "AUTO_MODE"]:
-        cmd = f"{cmd}_WEB"
-
-    # 기존 명령과 동일하면 다시 보내지 않음 (중복 방지)
-    if command_cache[target]["cmd"] == cmd:
-        return jsonify({"status": "no_change", "command": cmd})
-
-    # 새로운 명령 저장
-    command_cache[target]["cmd"] = cmd
-    return jsonify({"status": "ok", "command": cmd})
 
 ### 홈페이지
 @app.route('/')
@@ -377,16 +346,14 @@ def user_dashboard_road_cctv():
     per_page = 10
     offset = (page - 1) * per_page
 
-    # search_type이 'all'이면 search_query를 빈 문자열로 설정
-    if search_type == "all":
-        search_query = ""
-
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
     count_sql, count_values = manager.get_road_cctv_count_query(search_query, search_type)
 
     # 검색된 가로등 목록 가져오기
     street_lights = manager.execute_query(sql, values)
+    
+
     # 전체 CCTV 개수 카운트
     total_posts = manager.execute_count_query(count_sql, count_values)
 
@@ -405,7 +372,7 @@ def user_dashboard_road_cctv():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 #로그인 후 인도CCTV 페이지
@@ -417,8 +384,7 @@ def user_dashboard_sidewalk_cctv():
     page = request.args.get("page", 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-    if search_type == "all":
-        search_query = ""
+
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
     count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
@@ -444,7 +410,7 @@ def user_dashboard_sidewalk_cctv():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 #회원용 CCTV 상세 보기
@@ -452,7 +418,10 @@ def user_dashboard_sidewalk_cctv():
 @login_required
 def user_dashboard_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
-    return render_template('user/view_cctv.html', camera=camera)
+    mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
+    sensor_data = manager.get_sensor_data(mapped_id)
+    malfunction_status = manager.get_malfunction_status(street_light_id)
+    return render_template("user/view_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
 
 
 #회원용 문의하기
@@ -482,28 +451,35 @@ def user_dashboard_inquiries_view():
     if request.method == 'GET':
         posts = manager.get_posts_info()
         return render_template('user/inquiries_view.html', posts=posts)
-    
+
     if request.method == 'POST':
+        user_id =  request.form.get('user_id')
+        inquiry_time = request.form.get('inquiry_time')
         inquiries_id = request.form.get('inquiries_id')
-        posts = manager.get_inquiry_by_info(inquiries_id)
+        print(user_id, inquiry_time, inquiries_id)
+        posts = manager.get_inquiry_by_info(user_id,inquiries_id,inquiry_time)
         return render_template('user/inquiry_detail.html', posts=posts)
 
-
-#회원탈퇴
-@app.route('/user_dashboard/delete_user', methods=['GET','POST'])
+# 회원탈퇴
+@app.route('/user_dashboard/delete_user', methods=['GET', 'POST'])
 @login_required
 def user_dashboard_delete_user():
     userid = session['user_id']
+    
     if request.method == 'GET':
         user = manager.get_user_by_id(userid)
-        return render_template('user/delete_page.html', user =user)
+        return render_template('user/delete_page.html', user=user)
     
     if request.method == 'POST':
         user = manager.get_user_by_id(userid)
         reason = request.form['reason']
         detail_reason = request.form['detail_reason']
+        
         manager.update_user_status(userid)
         manager.save_deleted_user(userid, reason, detail_reason)
+        
+        session.clear()  # 로그아웃 처리
+        
         flash("회원탈퇴가 완료되었습니다.", 'success')
         return redirect(url_for('index'))
     
@@ -575,26 +551,28 @@ def admin_dashboard():
 # CCTV보기
 # 도로용 CCTV 목록 보기(관리자)
 @app.route('/staff/road_cctv', methods=['GET'])
-@staff_required
-def admin_road_cctv():
-    search_query = request.args.get("search_query", "").strip()
-    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
-    page = request.args.get("page", 1, type=int)
+@staff_required 
+def staff_dashboard_road_cctv():
+    search_query = request.args.get('search_query', '', type=str)
+    search_type = request.args.get('search_type', 'all', type=str)
+    page = request.args.get('page', 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
 
-    # search_type이 'all'이면 search_query를 빈 문자열로 설정
-    if search_type == "all":
-        search_query = ""
+    # DBManager 인스턴스 생성 및 데이터 가져오기
+    db = DBManager()
+    db.connect()
+    
+    # CCTV 검색 결과 및 전체 개수 가져오기
+    sql, values = db.get_road_cctv_query(search_query, search_type, per_page, offset)
+    db.cursor.execute(sql, values)
+    street_lights = db.cursor.fetchall()
 
-    # SQL 쿼리 및 파라미터 가져오기
-    sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
-    count_sql, count_values = manager.get_road_cctv_count_query(search_query, search_type)
-
-    # 검색된 가로등 목록 가져오기
-    street_lights = manager.execute_query(sql, values)
-    # 전체 CCTV 개수 카운트
-    total_posts = manager.execute_count_query(count_sql, count_values)
+    sql_count, values_count = db.get_road_cctv_count_query(search_query, search_type)
+    db.cursor.execute(sql_count, values_count)
+    total_posts = db.cursor.fetchone()["total"]
+    
+    db.disconnect()
 
     # 페이지네이션 계산
     total_pages = (total_posts + per_page - 1) // per_page
@@ -604,36 +582,35 @@ def admin_road_cctv():
     return render_template(
         "staff/road_cctv.html",
         street_lights=street_lights,
-        search_query=search_query,
-        search_type=search_type,
-        page=page,
         total_posts=total_posts,
-        per_page=per_page,
+        page=page,
         total_pages=total_pages,
         prev_page=prev_page,
         next_page=next_page,
+        search_query=search_query,
+        search_type=search_type
     )
-    
+
 # 인도용 CCTV 목록 보기(관리자)
 @app.route('/staff/sidewalk_cctv', methods=['GET'])
 @staff_required
-def admin_sidewalk_cctv():
-    search_query = request.args.get("search_query", "").strip()
-    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
-    page = request.args.get("page", 1, type=int)
+def staff_sidewalk_cctv():
+    search_query = request.args.get('search_query', '', type=str)
+    search_type = request.args.get('search_type', 'all', type=str)
+    page = request.args.get('page', 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-    if search_type == "all":
-        search_query = ""
-    # SQL 쿼리 및 파라미터 가져오기
-    sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
-    count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
 
-    # 검색된 가로등 목록 가져오기
-    street_lights = manager.execute_query(sql, values)
+    # DBManager 인스턴스 생성
+    db = DBManager()
+    
+    # SQL 쿼리 생성
+    sql, values = db.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
+    street_lights = db.execute_query(sql, values)  # 데이터 가져오기
 
-    # 전체 CCTV 개수 카운트
-    total_posts = manager.execute_count_query(count_sql, count_values)
+    # 전체 개수를 위한 카운트 쿼리
+    sql_count, values_count = db.get_sidewalk_cctv_count_query(search_query, search_type)
+    total_posts = db.execute_count_query(sql_count, values_count)
 
     # 페이지네이션 계산
     total_pages = (total_posts + per_page - 1) // per_page
@@ -641,25 +618,27 @@ def admin_sidewalk_cctv():
     next_page = page + 1 if page < total_pages else None
 
     return render_template(
-        "staff/sidewalk_cctv.html",
+        'staff/sidewalk_cctv.html',
         street_lights=street_lights,
-        search_query=search_query,
-        search_type=search_type,
-        page=page,
         total_posts=total_posts,
-        per_page=per_page,
+        page=page,
         total_pages=total_pages,
         prev_page=prev_page,
         next_page=next_page,
+        search_query=search_query,
+        search_type=search_type
     )
 
-# 직원 도로용 CCTV상세보기
-@app.route('/staff/cctv/<int:street_light_id>')
-@staff_required
-def admin_dashboard_road_cctv(street_light_id):
+# cctv 상세 보기(관리자)
+@app.route('/staff/cctv/<int:street_light_id>', methods=['GET'])
+def staff_dashboard_cctv(street_light_id):
     camera = manager.get_camera_by_info(street_light_id)
-    # sensor = sidewalk_sensor
-    return render_template('staff/view_cctv.html', camera=camera)
+    mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
+    sensor_data = manager.get_sensor_data(mapped_id)
+    malfunction_status = manager.get_malfunction_status(street_light_id)
+    return render_template("staff/staff_dashboard_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
+    
+
 
 ## 가로등
 # 전체 가로등 조회
@@ -707,11 +686,6 @@ def street_light_view_location(street_light_id):
 
     return render_template("staff/street_light_view_location.html", streetlight_info=streetlight_info)
 
-# # 고장난 가로등 보기
-# @app.route('/staff/malfunction_street_lights')
-# @staff_required
-# def admin_malfunction_street_lights():
-#     return render_template('staff/malfunction_street_lights.html')
 
 # 고장난 가로등 조회
 @app.route('/staff/broken_light', methods=['GET'])
@@ -768,16 +742,24 @@ def admin_broken_light_check():
 
 # 설치된 가로등 등록
 @app.route('/staff/street_light_register', methods=['GET', 'POST'])
-@staff_required
 def street_light_register():
     if request.method == 'POST':
+        # 폼 데이터 가져오기
         location = request.form.get('location')
         purpose = request.form.get('purpose')
+        ip = request.form.get('ip')  # IP 필드
         tilt_status = request.form.get('tilt_status', 'normal')
         light_status = request.form.get('light_status', 'off')
         installation_date_str = request.form.get('installation_date')
         installation_date = datetime.strptime(installation_date_str, '%Y-%m-%d')
-        manager.register_street_light(location, purpose, installation_date, tilt_status, light_status)
+
+        # 가로등 등록
+        street_light_id = manager.register_street_light(location, purpose, installation_date, tilt_status, light_status)
+
+        # IP가 입력된 경우 cameras 테이블에 추가
+        if ip:
+            manager.register_camera(street_light_id, ip)
+
         flash('가로등이 성공적으로 등록되었습니다.', 'success')
         return redirect(url_for('admin_all_street_lights'))
     return render_template('staff/street_light_register.html')
@@ -854,14 +836,10 @@ def delete_streetlight(id):
 @staff_required
 def admin_road_car_board():
     search_query = request.args.get("search_query", "").strip()
-    search_type = request.args.get("search_type", "all")  # 기본값은 'all'
+    search_type = request.args.get("search_type", "all")
     page = request.args.get("page", 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-
-    # search_type이 'all'이면 search_query를 빈 문자열로 설정
-    if search_type == "all":
-        search_query = ""
 
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_road_cctv_query(search_query, search_type, per_page, offset)
@@ -869,6 +847,13 @@ def admin_road_car_board():
 
     # 검색된 가로등 목록 가져오기
     street_lights = manager.execute_query(sql, values)
+    
+    # 디버깅을 위한 로그
+    print(f"검색 조건: {search_type}, 검색어: {search_query}")
+    print(f"실행된 SQL: {sql}")
+    print(f"바인딩된 값들: {values}")
+    print(f"검색 결과 수: {len(street_lights) if street_lights else 0}")
+
     # 전체 CCTV 개수 카운트
     total_posts = manager.execute_count_query(count_sql, count_values)
 
@@ -879,6 +864,7 @@ def admin_road_car_board():
 
     return render_template(
         "staff/road_car_board.html",
+        
         street_lights=street_lights,
         search_query=search_query,
         search_type=search_type,
@@ -887,15 +873,33 @@ def admin_road_car_board():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 #자동차(도로) 단속 카메라
-@app.route("/staff/load_car")
+@app.route("/staff/road_car")
 @staff_required
-def admin_load_car():
-    adminid =session.get('admin_id')
-    return render_template("staff/road_car.html", stream_url=road_url, adminid=adminid)
+def admin_road_car():
+    adminid = session.get('admin_id')
+    street_light_id = request.args.get("street_light_id", type=int)
+
+    camera_info = manager.get_camera_by_info(street_light_id)
+
+    if not camera_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    location = camera_info.get('location')
+    raw_ip = camera_info.get('cctv_ip')
+
+    if not raw_ip:
+        return "❌ CCTV IP가 존재하지 않습니다.", 400
+
+    stream_url = f"http://{raw_ip}:5000/stream"
+
+    license_plate.set_camera_info(location, stream_url)
+
+    return render_template("staff/road_car.html", stream_url=stream_url, adminid=adminid)
+
 
 #오토바이(인도) 단속 보드
 @app.route('/staff/sidewalk_motorcycle_board', methods=['GET'])
@@ -906,14 +910,19 @@ def admin_sidewalk_motorcycle_board():
     page = request.args.get("page", 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-    if search_type == "all":
-        search_query = ""
+
     # SQL 쿼리 및 파라미터 가져오기
     sql, values = manager.get_sidewalk_cctv_query(search_query, search_type, per_page, offset)
     count_sql, count_values = manager.get_sidewalk_cctv_count_query(search_query, search_type)
 
     # 검색된 가로등 목록 가져오기
     street_lights = manager.execute_query(sql, values)
+    
+    # 디버깅을 위한 로그
+    print(f"검색 조건: {search_type}, 검색어: {search_query}")
+    print(f"실행된 SQL: {sql}")
+    print(f"바인딩된 값들: {values}")
+    print(f"검색 결과 수: {len(street_lights) if street_lights else 0}")
 
     # 전체 CCTV 개수 카운트
     total_posts = manager.execute_count_query(count_sql, count_values)
@@ -933,7 +942,7 @@ def admin_sidewalk_motorcycle_board():
         per_page=per_page,
         total_pages=total_pages,
         prev_page=prev_page,
-        next_page=next_page,
+        next_page=next_page
     )
 
 
@@ -943,94 +952,70 @@ def admin_sidewalk_motorcycle_board():
 @staff_required
 def admin_sidewalk_motorcycle():
     adminid = session.get('admin_id')
+    street_light_id = request.args.get("street_light_id", type=int)
+
+    camera_info = manager.get_camera_by_info(street_light_id)
+    if not camera_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    location = camera_info.get('location')
+    raw_ip = camera_info.get('cctv_ip')  # 예: "10.0.66.6"
+    stream_url = f"http://{raw_ip}:5000/stream"
+    motorcycle.set_camera_info(location, stream_url, street_light_id)
+
+
     return render_template("staff/sidewalk_motorcycle.html", adminid=adminid)
 
-# # YOLO 분석된 영상 스트리밍
-# @app.route("/processed_video_feed")
-# def processed_video_feed():
-#     """YOLOv8로 감지된 영상 스트리밍"""
-#     def generate():
-#         while True:
-#             with license_plate.lock:
-#                 if license_plate.frame is None:
-#                     continue
-#                 img = license_plate.frame.copy()
-# # YOLO 분석된 영상 스트리밍
-# @app.route("/processed_video_feed")
-# def processed_video_feed():
-#     """YOLOv8로 감지된 영상 스트리밍"""
-#     def generate():
-#         while True:
-#             with license_plate.lock:
-#                 if license_plate.frame is None:
-#                     continue
-#                 img = license_plate.frame.copy()
-
-#             results = license_plate.model(img)
-#             for result in results:
-#                 boxes = result.boxes.xyxy.cpu().numpy()
-#                 for box in boxes:
-#                     x1, y1, x2, y2 = map(int, box)
-#                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-#             results = license_plate.model(img)
-#             for result in results:
-#                 boxes = result.boxes.xyxy.cpu().numpy()
-#                 for box in boxes:
-#                     x1, y1, x2, y2 = map(int, box)
-#                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-#             _, jpeg = cv2.imencode('.jpg', img)
-#             yield (b'--frame\r\n'
-#                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-#             _, jpeg = cv2.imencode('.jpg', img)
-#             yield (b'--frame\r\n'
-#                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-
-#     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
-#     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-# # OCR 결과 API
-# @app.route("/ocr_result", methods=["GET"])
-# def get_ocr_result():
-#     """OCR 결과 반환 API"""
-#     response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
-# # OCR 결과 API
-# @app.route("/ocr_result", methods=["GET"])
-# def get_ocr_result():
-#     """OCR 결과 반환 API"""
-#     response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
-
-#     if license_plate.alert_message:  # 알람 메시지가 있을 때만 초기화
-#         license_plate.alert_message = ""  # 메시지를 한 번만 표시하도록 초기화
-#     if license_plate.alert_message:  # 알람 메시지가 있을 때만 초기화
-#         license_plate.alert_message = ""  # 메시지를 한 번만 표시하도록 초기화
-    
-#     return jsonify(response_data)
-#     return jsonify(response_data)
 
 
-# # ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
-# @app.route("/video_feed")
-# def video_feed():
-#     """ESP32-CAM 스트리밍"""
-#     return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
-# # ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
-# @app.route("/video_feed")
-# def video_feed():
-#     """ESP32-CAM 스트리밍"""
-#     return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
+# YOLO 분석된 영상 스트리밍
+@app.route("/processed_video_feed")
+def processed_video_feed():
+    """YOLOv8로 감지된 영상 스트리밍"""
+    def generate():
+        while True:
+            with license_plate.lock:
+                if license_plate.frame is None:
+                    continue
+                img = license_plate.frame.copy()
+
+            results = license_plate.model(img)
+            for result in results:
+                boxes = result.boxes.xyxy.cpu().numpy()
+                for box in boxes:
+                    x1, y1, x2, y2 = map(int, box)
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+            _, jpeg = cv2.imencode('.jpg', img)
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
+
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-# # ✅ 오토바이 감지 상태 API
-# @app.route("/alert_status", methods=["GET"])
-# def alert_status():
-#     """오토바이 감지 상태 반환"""
-#     return jsonify(motorcycle.get_alert_status())
-# # ✅ 오토바이 감지 상태 API
-# @app.route("/alert_status", methods=["GET"])
-# def alert_status():
-#     """오토바이 감지 상태 반환"""
-#     return jsonify(motorcycle.get_alert_status())
+
+# OCR 결과 API
+@app.route("/ocr_result", methods=["GET"])
+def get_ocr_result():
+    """OCR 결과 반환 API"""
+    response_data = {"license_plate": license_plate.ocr_result, "alert_message": license_plate.alert_message}
+
+    if license_plate.alert_message:  # 알람 메시지가 있을 때만 초기화
+        license_plate.alert_message = ""  # 메시지를 한 번만 표시하도록 초기화
+    return jsonify(response_data)
+
+# ✅ ESP32-CAM에서 감지된 오토바이 영상 제공
+@app.route("/video_feed")
+def video_feed():
+    """ESP32-CAM 스트리밍"""
+    return Response(motorcycle.get_video_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+# ✅ 오토바이 감지 상태 API
+@app.route("/alert_status", methods=["GET"])
+def alert_status():
+    """오토바이 감지 상태 반환"""
+    return jsonify(motorcycle.get_alert_status())
 
 
 ##관리자 페이지에서 문의정보 보기
@@ -1289,6 +1274,39 @@ def admin_staff_delete():
         if db_manager.connection and db_manager.connection.is_connected():
             db_manager.disconnect()
 
+
+# 최근 명령을 저장할 딕셔너리 (초기 상태)
+command_cache = {}
+
+@app.route('/command', methods=['GET'])
+def command():
+    target = request.args.get('target')
+    
+    if target not in command_cache:
+        return jsonify({"status": "error", "message": "Invalid target"}), 400
+
+    response = jsonify(command_cache[target])
+    command_cache[target]["cmd"] = None  # 명령 초기화
+    return response
+
+@app.route('/set_command', methods=['GET'])
+def set_command():
+    target = request.args.get('target')
+    cmd = request.args.get('cmd')
+
+    if not target or not cmd:
+        return jsonify({"status": "error", "message": "Missing target or command"}), 400
+
+    # target이 처음 들어온 경우 자동 등록
+    if target not in command_cache:
+        command_cache[target] = {"target": target, "cmd": None}
+
+    # 중복 전송 방지
+    if command_cache[target]["cmd"] == cmd:
+        return jsonify({"status": "no_change", "command": cmd})
+
+    command_cache[target]["cmd"] = f"{cmd}_WEB"
+    return jsonify({"status": "ok", "command": cmd})
 
 
 

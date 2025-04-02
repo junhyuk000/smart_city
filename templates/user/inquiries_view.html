@@ -32,6 +32,8 @@
                     <td>
                         {% if session['user_id'] == post.user_id %}
                         <form action="{{ url_for('user_dashboard_inquiries_view') }}" method="POST">
+                            <input type="hidden" name="user_id" value="{{ post.user_id }}">
+                            <input type="hidden" name="inquiry_time" value="{{ post.inquiry_time}}">
                             <input type="hidden" name="inquiries_id" value="{{ post.inquiries_id }}">
                             <button type="submit" class="detail-button">내용보기</button>
                             <i class="fas fa-lock-open"></i>

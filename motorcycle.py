@@ -6,9 +6,14 @@ import os
 import urllib.request
 from datetime import datetime
 from ultralytics import YOLO
+import models  # DBManager import
 
-# ✅ ESP32-CAM 스트리밍 URL
-ESP32_CAM_URL = "http://10.0.66.32:5000/stream"
+db_manager = models.DBManager()  # 전역 인스턴스 선언
+street_light_id = None  # 외부에서 지정받을 ID
+
+# ✅ 동적으로 설정될 ESP32-CAM URL 및 위치 정보
+ESP32_CAM_URL = None
+camera_location = "위치 정보 없음"
 
 # ✅ 저장 폴더 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,21 +27,32 @@ model = YOLO(MODEL_PATH)
 # ✅ 오토바이 감지 상태 변수
 motorcycle_detected = False
 last_motorcycle_time = 0
-ALERT_THRESHOLD = 5  # 5초 이상 같은 위치에서 감지되면 알람
+last_saved_time = 0  # 마지막 저장 시각 (초 단위)
+SAVE_INTERVAL = 1.0  # 저장 간격 (1초)
+ALERT_THRESHOLD = 5  # 감지 상태 유지 시간 (5초)
 
 # ✅ 프레임을 저장하는 변수
 frame = None
 lock = threading.Lock()
 
+def set_camera_info(location, stream_url, light_id=None):
+    global ESP32_CAM_URL, camera_location, street_light_id
+    ESP32_CAM_URL = stream_url
+    camera_location = location
+    street_light_id = light_id
+    print(f"✅ 오토바이 감지 카메라 설정 완료: {location} ({stream_url})")
 
 def detect_motorcycle():
-    """ESP32-CAM에서 프레임을 가져와 오토바이를 감지하는 함수"""
-    global motorcycle_detected, last_motorcycle_time, frame
-    stream = urllib.request.urlopen(ESP32_CAM_URL)
-    bytes_stream = b""
+    global motorcycle_detected, last_motorcycle_time, last_saved_time, frame
 
-    while True:
-        try:
+    while ESP32_CAM_URL is None:
+        time.sleep(0.1)
+
+    try:
+        stream = urllib.request.urlopen(ESP32_CAM_URL)
+        bytes_stream = b""
+
+        while True:
             bytes_stream += stream.read(1024)
             a = bytes_stream.find(b"\xff\xd8")
             b = bytes_stream.find(b"\xff\xd9")
@@ -51,9 +67,8 @@ def detect_motorcycle():
                 if frame is None:
                     continue
 
-                # ✅ YOLOv8으로 오토바이 감지
                 results = model(frame, conf=0.5)
-                detected = False  # 오토바이 감지 여부
+                detected = False
 
                 for result in results:
                     for box in result.boxes:
@@ -65,44 +80,41 @@ def detect_motorcycle():
                             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                             cv2.putText(frame, "Motorcycle", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-                            # ✅ 감지된 오토바이 이미지 저장
-                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                            img_path = os.path.join(MOTORCYCLE_IMAGE_FOLDER, f"motorcycle_{timestamp}.jpg")
-                            cv2.imwrite(img_path, frame)
-                            # print(f"📸 오토바이 감지! 이미지 저장: {img_path}")
+                            now = time.time()
+                            if now - last_saved_time >= SAVE_INTERVAL:
+                                last_saved_time = now
+                                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                                img_path = os.path.join(MOTORCYCLE_IMAGE_FOLDER, f"motorcycle_{timestamp}.jpg")
+                                cv2.imwrite(img_path, frame)
 
-                # ✅ 오토바이 감지 상태 업데이트
+                                if street_light_id:
+                                    relative_path = f"/static/motorcycle_images/motorcycle_{timestamp}.jpg"
+                                    db_manager.save_motorcycle_violation(street_light_id, relative_path)
+
                 if detected:
                     motorcycle_detected = True
                     last_motorcycle_time = time.time()
                 elif time.time() - last_motorcycle_time > ALERT_THRESHOLD:
-                    motorcycle_detected = False  # 일정 시간이 지나면 감지 상태 해제
+                    motorcycle_detected = False
 
-        except Exception as e:
-            # print(f"❌ ESP32-CAM 스트리밍 오류: {e}")
-            break
-
+    except Exception as e:
+        print(f"❌ ESP32-CAM 스트리밍 오류: {e}")
 
 def get_video_frame():
-    """실시간 영상 프레임을 웹 페이지에 전송하는 함수"""
     while True:
         with lock:
             if frame is None:
                 continue
             img = frame.copy()
 
-        # ✅ 프레임을 JPEG 형식으로 변환하여 스트리밍
         _, buffer = cv2.imencode(".jpg", img)
         frame_bytes = buffer.tobytes()
 
         yield (b"--frame\r\n"
                b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
 
-
 def get_alert_status():
-    """오토바이 감지 상태 반환"""
     return {"motorcycle_detected": motorcycle_detected}
 
-
-# ✅ 오토바이 감지를 위한 백그라운드 스레드 실행
+# ✅ 백그라운드 스레드 시작
 threading.Thread(target=detect_motorcycle, daemon=True).start()
