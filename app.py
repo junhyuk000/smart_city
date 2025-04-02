@@ -20,6 +20,7 @@ app = Flask(__name__)
 
 
 app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이션에서는 더 안전한 방법으로 설정해야 함if __name__ == '__main__':
+app.permanent_session_lifetime = timedelta(minutes=30)  # minutes = 만료시간
 manager = DBManager()
 KAKAO_API_KEY = "4cf7fc8fc69613ac8f18b4d883213352"
 
