@@ -34,7 +34,7 @@
             <form method="get" action="{{ url_for('staff_broken_light_check') }}">
                 <label for="search_type">검색 타입:</label>
                 <select name="search_type" id="search_type">
-                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>전체</option>
+                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>-</option>
                     <option value="street_light_id" {% if search_type == 'street_light_id' %}selected{% endif %}>가로등 번호</option>
                     <option value="street_light_location" {% if search_type == 'street_light_location' %}selected{% endif %}>위치</option>
                 </select>
