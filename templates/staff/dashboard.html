@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}관리자 대시보드{% endblock %}
+{% block title %}직원 대시보드{% endblock %}
 
 {% block head %}
 <meta name="admin_id" content="{{ session.get('admin_id') }}">
@@ -112,7 +112,7 @@
 {% endblock %}
 
 {% block navigation %}
-{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
+{% if 'admin_id' in session %}
 <nav class="header-nav">
     <div class="nav-menu" id="favorites-nav">
         <span class="favorites-label">즐겨찾기:</span>
@@ -124,7 +124,7 @@
 {% endblock %}
 
 {% block content %}
-{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
+{% if 'admin_id' in session %}
 <div class="container">
     <!-- 기능 바로가기 섹션 -->
     <div class="section-title">
@@ -248,14 +248,14 @@
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        불법 주정차 감지 가로등
+                                        불법 단속 자동차
                                         <span class="favorite-star" data-title="불법 단속 자동차" data-url="{{ url_for('staff_road_car_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_road_car_board') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        인도 주행 오토바이 감지 가로등
+                                        불법 단속 오토바이
                                         <span class="favorite-star" data-title="불법 단속 오토바이" data-url="{{ url_for('staff_sidewalk_motorcycle_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_sidewalk_motorcycle_board') }}" class="btn btn-primary">이동</a>
@@ -305,5 +305,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
