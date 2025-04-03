@@ -919,8 +919,8 @@ class DBManager:
             self.disconnect()
 
 
-    ## 가로등 등록
-    def register_street_light(self, location, purpose, installation_date, tilt_status, light_status):
+   ## 가로등 등록
+    def register_street_light(self, location, purpose, installation_date):
         # 연결 상태 확인 및 필요 시 연결
         if not self.connection or not self.connection.is_connected():
             self.connect()
@@ -929,9 +929,9 @@ class DBManager:
         cursor = self.connection.cursor()
         try:
             cursor.execute("""
-                INSERT INTO street_lights (location, purpose, installation_date, tilt_status, light_status)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (location, purpose, installation_date, tilt_status, light_status))
+                INSERT INTO street_lights (location, purpose, installation_date)
+                VALUES (%s, %s, %s)
+            """, (location, purpose, installation_date ))
             self.connection.commit()
             street_light_id = cursor.lastrowid  # 삽입된 가로등의 ID 반환
             return street_light_id
@@ -940,7 +940,7 @@ class DBManager:
             self.connection.rollback()
             return None
         finally:
-            cursor.close()  # 커서 닫기
+            cursor.close()  # 커서 닫기 models
 
     ## 카메라 등록
     def register_camera(self, street_light_id, ip):

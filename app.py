@@ -761,13 +761,11 @@ def street_light_register():
         location = request.form.get('location')
         purpose = request.form.get('purpose')
         ip = request.form.get('ip')  # IP 필드
-        tilt_status = request.form.get('tilt_status', 'normal')
-        light_status = request.form.get('light_status', 'off')
         installation_date_str = request.form.get('installation_date')
         installation_date = datetime.strptime(installation_date_str, '%Y-%m-%d')
 
         # 가로등 등록
-        street_light_id = manager.register_street_light(location, purpose, installation_date, tilt_status, light_status)
+        street_light_id = manager.register_street_light(location, purpose, installation_date)
 
         # IP가 입력된 경우 cameras 테이블에 추가
         if ip:
