@@ -35,8 +35,8 @@
     --light-color: #222222;
     --dark-color: #343a40;
     --card-bg: #2a2a2a;
-    --table-header-bg: #333333;
-    --table-row-hover: #3c3c3c !important;
+    --table-header-bg: #2e2e2e;
+    --table-row-hover: #353535 !important;
     --border-color: #444444;
     --text-color: #f0f0f0;
     --text-muted: #aaaaaa;
@@ -46,6 +46,51 @@
     --background-color: #242424; /* 배경색 더 밝게 조정 */
     --button-text-hover: #ffffff;
     --pagination-hover-bg: #444444;
+}
+
+.dark-mode .form-control:disabled {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .strength-meter {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .password-requirements {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* 검색 컨테이너 스타일 */
+.dark-mode .search-container {
+    background-color: #3a3a3a; /* 밝은 회색 배경 */
+    color: #ffffff; /* 하얀색 폰트 */
+}
+
+.dark-mode .total-count-wrapper,
+.dark-mode .total-count,
+.dark-mode .total-count strong {
+    color: #ffffff; /* 하얀색 폰트 */
+}
+
+.dark-mode .search-form .form-group label,
+.dark-mode .search-form .form-select,
+.dark-mode .search-form .form-input {
+    color: #ffffff; /* 하얀색 폰트 */
+}
+
+/* 리스트의 배경색 스타일링 */
+.dark-mode .data-table tbody tr {
+    background-color: var(--table-row-hover);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .data-table tbody tr:nth-child(even) {
+    background-color: #3a3a3a;
+}
+
+.dark-mode .data-table thead {
+    background-color: var(--table-header-bg);
+    color: var(--text-light);
 }
 
 body {

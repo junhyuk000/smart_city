@@ -1,113 +1,8 @@
 // static/js/slider.js
 
-// 다크모드 프리로드 (즉시 실행 - 페이지 로드 전에 실행됨)
-(function() {
-    // 로컬 스토리지에서 다크모드 설정 확인
-    var darkMode = localStorage.getItem('darkMode');
-    
-    // 시스템 다크모드 설정 확인
-    var prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // 다크모드 설정이 있거나 시스템이 다크모드인 경우 미리 클래스 적용
-    if (darkMode === 'enabled' || (darkMode === null && prefersDarkMode)) {
-        // HTML에 클래스 추가
-        document.documentElement.classList.add('dark-mode-preload');
-        
-        // 페이지가 로드되기 전에 색상 스타일 적용
-        var style = document.createElement('style');
-        style.textContent = `
-            html, body {
-                background-color: #242424 !important;
-                color: #f0f0f0 !important;
-            }
-            .header, .header-top, .header-nav {
-                background-color: #2a2a2a !important;
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // body가 준비되면 다크모드 클래스 추가
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.classList.add('dark-mode');
-        });
-    }
-    
-    // 페이지 로드 완료 후 preload 클래스 제거
-    window.addEventListener('load', function() {
-        document.documentElement.classList.remove('dark-mode-preload');
-    });
-})();
-
-// 페이지 로드 후 실행될 메인 코드
+// Swiper 슬라이더 초기화 및 관련 기능
 document.addEventListener('DOMContentLoaded', function() {
-    // 다크 모드 토글 기능
-    const initDarkMode = () => {
-        const darkModeToggle = document.getElementById("dark-mode-toggle");
-        const modeText = document.getElementById("mode-text");
-        
-        if (!darkModeToggle) return;
-        
-        // 현재 다크모드 상태 확인 - localStorage가 우선
-        const savedMode = localStorage.getItem('darkMode');
-        const isDarkMode = savedMode === 'enabled' || 
-            (savedMode === null && window.matchMedia && 
-             window.matchMedia('(prefers-color-scheme: dark)').matches);
-        
-        // 초기 다크모드 설정 적용 (페이지 로드시 한 번만 실행)
-        const applyDarkModeState = (enabled) => {
-            if (enabled) {
-                document.body.classList.add('dark-mode');
-                document.documentElement.classList.add('dark-mode'); // html 요소에도 클래스 추가
-                darkModeToggle.checked = true;
-                if (modeText) modeText.textContent = "라이트모드";
-            } else {
-                document.body.classList.remove('dark-mode');
-                document.documentElement.classList.remove('dark-mode'); // html 요소에서도 클래스 제거
-                darkModeToggle.checked = false;
-                if (modeText) modeText.textContent = "다크모드";
-            }
-            
-            // 모든 CSS 변수가 적용되도록 강제 리페인트 실행
-            document.body.offsetHeight;
-            
-            // 슬라이더 업데이트
-            if (window.swiperInstance) {
-                window.swiperInstance.update();
-            }
-        };
-        
-        // 초기 상태 적용
-        applyDarkModeState(isDarkMode);
-        
-        // 토글 버튼 클릭 이벤트
-        darkModeToggle.addEventListener("change", function() {
-            const willBeDarkMode = this.checked;
-            
-            // 모드 전환 애니메이션 적용
-            document.body.style.transition = "background-color 0.5s ease, color 0.5s ease";
-            
-            // 다크모드 상태 적용
-            applyDarkModeState(willBeDarkMode);
-            
-            // 로컬 스토리지에 설정 저장
-            localStorage.setItem("darkMode", willBeDarkMode ? "enabled" : "disabled");
-            
-            // 페이지 내 모든 요소의 전환을 위해 이벤트 발생
-            document.dispatchEvent(new CustomEvent('darkModeChanged', { 
-                detail: { darkMode: willBeDarkMode } 
-            }));
-        });
-        
-        // 시스템 테마 변경 감지 - 사용자 설정이 없을 때만 적용
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-        prefersDarkScheme.addEventListener('change', e => {
-            if (!localStorage.getItem("darkMode")) {
-                applyDarkModeState(e.matches);
-            }
-        });
-    };
-
-    // Swiper 슬라이더 초기화 (수정됨)
+    // Swiper 슬라이더 초기화
     const initSwiper = () => {
         const swiperContainer = document.querySelector('.swiper-container');
         if (!swiperContainer) return null;
@@ -117,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
             slidesPerView: 1,
             spaceBetween: 0,
             loop: true,
-            speed: 800, // 슬라이드 전환 속도
+            speed: 800,
             
             // 슬라이드 효과 사용
             effect: 'slide',
@@ -190,9 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return swiper;
     };
     
-    // 스와이퍼 인스턴스 초기화
-    let swiperInstance = initSwiper();
-    
     // 이미지를 로드한 후 슬라이더 업데이트
     const updateSwiperAfterImagesLoaded = () => {
         const swiperContainer = document.querySelector('.swiper-container');
@@ -221,306 +113,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     };
-    
-    if (swiperInstance) {
-        updateSwiperAfterImagesLoaded();
-        
-        // 윈도우 리사이즈 시 슬라이더 업데이트
-        window.addEventListener('resize', () => {
-            if (window.swiperInstance) {
-                window.swiperInstance.update();
-            }
-        });
-    }
-    
-    // 로그인 필요 알림 기능 - 페이드인 효과 추가
-    const initLoginAlert = () => {
-        const loginRequiredLinks = document.querySelectorAll('.login-required');
-        const loginAlert = document.getElementById('login-alert');
-        
-        if (loginRequiredLinks.length > 0 && loginAlert) {
-            const goToLogin = document.getElementById('go-to-login');
-            const closeAlertBtn = document.getElementById('close-alert-btn');
-            
-            // 로그인 필요 링크 클릭 이벤트
-            loginRequiredLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // 페이드인 효과를 위한 표시 방식 변경
-                    loginAlert.style.display = 'flex';
-                    
-                    // display 속성이 적용된 후에 애니메이션 시작을 위한 지연
-                    setTimeout(() => {
-                        loginAlert.classList.add('show');
-                    }, 10);
-                    
-                    // 접근성 - 모달이 열렸을 때 포커스 이동
-                    const focusableElements = loginAlert.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
-                    if (focusableElements.length) {
-                        setTimeout(() => {
-                            focusableElements[0].focus();
-                        }, 300);
-                    }
-                });
-            });
-            
-            // 알림 닫기 이벤트 - 페이드아웃 효과 추가
-            const closeLoginAlert = () => {
-                loginAlert.classList.remove('show');
-                
-                // 페이드아웃 애니메이션이 끝난 후 display 속성 변경
-                setTimeout(() => {
-                    loginAlert.style.display = 'none';
-                }, 400); // 트랜지션 시간과 동일하게 설정
-            };
-            
-            if (closeAlertBtn) {
-                closeAlertBtn.addEventListener('click', closeLoginAlert);
-            }
-            
-            // 로그인 페이지로 이동 이벤트
-            if (goToLogin) {
-                goToLogin.addEventListener('click', function() {
-                    window.location.href = "/login";
-                });
-            }
-            
-            // ESC 키로 알림 닫기
-            window.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && loginAlert.style.display === 'flex') {
-                    closeLoginAlert();
-                }
-            });
-            
-            // 모달 내에서 탭 키 트래핑
-            loginAlert.addEventListener('keydown', function(e) {
-                if (e.key === 'Tab' && loginAlert.style.display === 'flex') {
-                    const focusableElements = loginAlert.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
-                    const firstElement = focusableElements[0];
-                    const lastElement = focusableElements[focusableElements.length - 1];
-                    
-                    // shift + tab
-                    if (e.shiftKey) {
-                        if (document.activeElement === firstElement) {
-                            lastElement.focus();
-                            e.preventDefault();
-                        }
-                    } 
-                    // tab
-                    else {
-                        if (document.activeElement === lastElement) {
-                            firstElement.focus();
-                            e.preventDefault();
-                        }
-                    }
-                }
-            });
-        }
-    };
-    
-    // 플래시 메시지 처리 함수
-    const handleFlashMessages = () => {
-        const flashMessages = document.querySelectorAll('.flash-message');
-        const container = document.getElementById('flash-messages-container');
-        
-        if (flashMessages.length > 0) {
-            flashMessages.forEach(function(message) {
-                message.classList.add('show');
-                
-                // 접근성 - 스크린 리더에게 알림
-                message.setAttribute('role', 'alert');
-                message.setAttribute('aria-live', 'assertive');
-                
-                // 닫기 버튼 추가
-                if (!message.querySelector('.close-flash')) {
-                    const closeBtn = document.createElement('button');
-                    closeBtn.className = 'close-flash';
-                    closeBtn.innerHTML = '&times;';
-                    closeBtn.setAttribute('aria-label', '알림 닫기');
-                    closeBtn.onclick = function() {
-                        message.classList.remove('show');
-                        setTimeout(() => {
-                            if (document.body.contains(message)) {
-                                message.remove();
-                            }
-                        }, 500);
-                    };
-                    
-                    message.appendChild(closeBtn);
-                }
-                
-                // 5초 후 메시지 숨기기
-                setTimeout(function() {
-                    if (document.body.contains(message)) {
-                        message.classList.remove('show');
-                        setTimeout(() => {
-                            if (document.body.contains(message)) {
-                                message.remove();
-                            }
-                        }, 500);
-                    }
-                }, 5000);
-                
-                // 컨테이너에 추가
-                if (container) {
-                    container.appendChild(message);
-                }
-            });
-        }
-    };
-    
-    // 위젯 접근성 개선
-    const enhanceWidgetsAccessibility = () => {
-        const widgets = document.querySelectorAll('.widget');
-        widgets.forEach(widget => {
-            // 위젯에 탭 인덱스 추가해 키보드 포커스 가능하게
-            widget.setAttribute('tabindex', '0');
-            
-            // 키보드 인터랙션 처리
-            widget.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    const link = this.querySelector('.widget-link');
-                    if (link) {
-                        e.preventDefault();
-                        link.click();
-                    }
-                }
-            });
-        });
-    };
 
-    // Handle mobile menu toggle
-    const initMobileMenu = () => {
-        // Create a mobile menu toggle button
-        const createMobileToggle = () => {
-            if (document.querySelector('.mobile-menu-toggle')) return;
-            
-            const header = document.querySelector('.header-nav');
-            if (!header) return;
-            
-            const toggleBtn = document.createElement('button');
-            toggleBtn.className = 'mobile-menu-toggle';
-            toggleBtn.setAttribute('aria-label', '메뉴 열기/닫기');
-            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            
-            // Only add mobile toggle in smaller screens
-            if (window.innerWidth <= 768) {
-                header.prepend(toggleBtn);
-                
-                toggleBtn.addEventListener('click', () => {
-                    const navMenu = document.querySelector('.nav-menu');
-                    if (navMenu) {
-                        navMenu.classList.toggle('show-mobile-menu');
-                        const isExpanded = navMenu.classList.contains('show-mobile-menu');
-                        toggleBtn.setAttribute('aria-expanded', isExpanded);
-                        
-                        // Change icon based on state
-                        toggleBtn.innerHTML = isExpanded ? 
-                            '<i class="fas fa-times"></i>' : 
-                            '<i class="fas fa-bars"></i>';
-                    }
-                });
-            }
-        };
-        
-        // Handle window resize for mobile menu
-        const handleResize = () => {
-            const navMenu = document.querySelector('.nav-menu');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-            
-            if (window.innerWidth <= 768) {
-                createMobileToggle();
-                
-                // Initialize dropdown click behavior on mobile
-                initMobileDropdowns();
-            } else {
-                // Remove mobile menu toggle on larger screens
-                if (toggleBtn) toggleBtn.remove();
-                
-                // Remove mobile-specific classes
-                if (navMenu) {
-                    navMenu.classList.remove('show-mobile-menu');
-                }
-                
-                // Reset dropdown click handlers
-                resetDropdowns();
-            }
-        };
-        
-        // Initialize mobile-friendly dropdowns
-        const initMobileDropdowns = () => {
-            const dropdownLinks = document.querySelectorAll('.nav-link-dropdown');
-            
-            dropdownLinks.forEach(link => {
-                // Skip if already initialized
-                if (link.dataset.mobileInitialized) return;
-                
-                link.dataset.mobileInitialized = 'true';
-                
-                link.addEventListener('click', function(e) {
-                    if (window.innerWidth <= 768) {
-                        e.preventDefault();
-                        
-                        // Find the dropdown content
-                        const parent = this.closest('.menu-item');
-                        if (parent) {
-                            const dropdown = parent.querySelector('.dropdown-content');
-                            if (dropdown) {
-                                // Toggle dropdown visibility
-                                const isVisible = dropdown.classList.contains('mobile-show');
-                                
-                                // Close all other dropdowns first
-                                document.querySelectorAll('.dropdown-content').forEach(el => {
-                                    el.classList.remove('mobile-show');
-                                });
-                                
-                                // Toggle this dropdown
-                                if (!isVisible) {
-                                    dropdown.classList.add('mobile-show');
-                                }
-                            }
-                        }
-                    }
-                });
-            });
-        };
-        
-        // Reset dropdowns when returning to desktop layout
-        const resetDropdowns = () => {
-            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                dropdown.classList.remove('mobile-show');
-            });
-        };
-        
-        // Add click handler to close dropdowns when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.menu-item') && window.innerWidth <= 768) {
-                document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                    dropdown.classList.remove('mobile-show');
-                });
-            }
-        });
-        
-        // Initialize and set up resize handler
-        createMobileToggle();
-        handleResize();
-        
-        // Throttled resize handler
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(handleResize, 250);
-        });
-    };
-
-    // Handle responsive sliders
+    // 반응형 슬라이더 높이 조정
     const enhanceResponsiveSlider = () => {
         const updateSliderHeight = () => {
             const swiperContainer = document.querySelector('.swiper-container');
             if (!swiperContainer) return;
             
-            // Adjust height based on screen width
+            // 화면 너비에 따른 높이 조정
             if (window.innerWidth <= 400) {
                 swiperContainer.style.height = '250px';
             } else if (window.innerWidth <= 576) {
@@ -534,42 +134,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        // Initialize
+        // 초기화
         updateSliderHeight();
         
-        // Update on resize
+        // 리사이즈 시 업데이트
         window.addEventListener('resize', updateSliderHeight);
     };
     
-    // 다크모드 변경 시 CSS 동기화를 위한 이벤트 리스너
-    document.addEventListener('darkModeChanged', function(event) {
-        // 특정 요소들의 스타일을 강제로 업데이트하기 위한 코드
-        const elementsToUpdate = document.querySelectorAll([
-            '.widget', '.widget-icon', '.widget-content h3', 
-            '.widget-content p', '.nav-link', '.dropdown-content',
-            '.header', '.header-top', '.header-nav', '.welcome-text',
-            '.footer-left', '.table-row-hover', '.search-button',
-            '.total-count strong', '.cctv-status.installed'
-        ].join(', '));
-        
-        elementsToUpdate.forEach(el => {
-            // 요소 강제 리페인트
-            el.style.transition = 'none';
-            el.offsetHeight; // 리플로우 강제 실행
-            el.style.transition = ''; // 원래 트랜지션 복원
-        });
-        
-        // body 강제 리페인트
-        document.body.style.transition = 'none';
-        document.body.offsetHeight;
-        document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
-    });
+    // 슬라이더 초기화
+    const swiper = initSwiper();
     
-    // 초기화 함수 실행
-    initDarkMode();
-    initLoginAlert();
-    handleFlashMessages();
-    enhanceWidgetsAccessibility();
-    initMobileMenu();
-    enhanceResponsiveSlider();
+    // 슬라이더 이미지 로드 및 반응형 처리
+    if (swiper) {
+        updateSwiperAfterImagesLoaded();
+        enhanceResponsiveSlider();
+        
+        // 다크모드 변경 시 스와이퍼 업데이트 (darkmode.js에서 발생하는 이벤트 수신)
+        document.addEventListener('darkModeChanged', function() {
+            if (window.swiperInstance) {
+                window.swiperInstance.update();
+            }
+        });
+    }
+    
+    // 슬라이더 함수들 외부 노출
+    window.sliderManager = {
+        update: function() {
+            if (window.swiperInstance) {
+                window.swiperInstance.update();
+            }
+        },
+        reinitialize: function() {
+            if (window.swiperInstance) {
+                window.swiperInstance.destroy();
+            }
+            initSwiper();
+            updateSwiperAfterImagesLoaded();
+        }
+    };
 });

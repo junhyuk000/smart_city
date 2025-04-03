@@ -1,3 +1,4 @@
+{# templates/user/inquiry_detail.html #}
 {% extends "base.html" %}
 {% block title %}문의 상세보기{% endblock %}
 
@@ -70,10 +71,8 @@
                     </div>
                 </div>
             </div>
-
-
+            {% endif %}
         </div>
-        {% endif %}
         
         <div class="inquiry-footer">
             <a href="{{ url_for('user_dashboard_inquiries_view') }}" class="back-button">
@@ -88,5 +87,6 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
