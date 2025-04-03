@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이션에서는 더 안전한 방법으로 설정해야 함if __name__ == '__main__':
 app.permanent_session_lifetime = timedelta(minutes=30)  # minutes = 만료시간
 manager = DBManager()
-KAKAO_API_KEY = "4cf7fc8fc69613ac8f18b4d883213352"
+KAKAO_API_KEY = "e2a4b674996140edc31a12f4a28adddd"
 
 
 # 파일 업로드 경로 설정
@@ -446,8 +446,16 @@ def user_dashboard_inquiries():
 @login_required
 def user_dashboard_inquiries_view():
     if request.method == 'GET':
-        posts = manager.get_posts_info()
-        return render_template('user/inquiries_view.html', posts=posts)
+        per_page = 10  # 한 페이지당 보여줄 개수
+        page = request.args.get('page', 1, type=int)  # 현재 페이지 (기본값 1)
+        offset = (page - 1) * per_page  # 오프셋 계산
+        inquiries, total_inquiries = manager.get_paginated_inquiries(per_page, offset)
+        total_pages = (total_inquiries + per_page - 1) // per_page
+        return render_template('user/inquiries_view.html',
+                                posts=inquiries,
+                                per_page=per_page,
+                                current_page=page,
+                                total_pages=total_pages)
 
     if request.method == 'POST':
         user_id =  request.form.get('user_id')
@@ -455,7 +463,11 @@ def user_dashboard_inquiries_view():
         inquiries_id = request.form.get('inquiries_id')
         print(user_id, inquiry_time, inquiries_id)
         posts = manager.get_inquiry_by_info(user_id,inquiries_id,inquiry_time)
-        return render_template('user/inquiry_detail.html', posts=posts)
+        if posts['answer_status'] == 'completed':
+            answer = manager.get_answer_by_id(user_id, inquiries_id, inquiry_time)
+            return render_template('user/inquiry_detail.html', posts=posts, answer=answer)
+        else : 
+            return render_template('user/inquiry_detail.html', posts=posts)
 
 # 회원탈퇴
 @app.route('/user_dashboard/delete_user', methods=['GET', 'POST'])
@@ -633,7 +645,7 @@ def staff_dashboard_cctv(street_light_id):
     mapped_id = street_light_id if street_light_id % 2 == 1 else street_light_id - 1
     sensor_data = manager.get_sensor_data(mapped_id)
     malfunction_status = manager.get_malfunction_status(street_light_id)
-    return render_template("staff/staff_dashboard_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
+    return render_template("staff/view_cctv.html", camera=camera, sensor_data=sensor_data, malfunction_status=malfunction_status)
     
 
 
@@ -641,7 +653,7 @@ def staff_dashboard_cctv(street_light_id):
 # 전체 가로등 조회
 @app.route('/staff/all_street_lights', methods=['GET'])
 @staff_required
-def admin_all_street_lights():
+def staff_all_street_lights():
     page = request.args.get("page", 1, type=int)
     search_type = request.args.get("search_type", "all")
     search_query = request.args.get("search_query", "").strip()
@@ -687,7 +699,7 @@ def street_light_view_location(street_light_id):
 # 고장난 가로등 조회
 @app.route('/staff/broken_light', methods=['GET'])
 @staff_required
-def admin_broken_light_check():
+def staff_broken_light_check():
     # 데이터베이스 연결
     manager.connect()
     
@@ -758,7 +770,7 @@ def street_light_register():
             manager.register_camera(street_light_id, ip)
 
         flash('가로등이 성공적으로 등록되었습니다.', 'success')
-        return redirect(url_for('admin_all_street_lights'))
+        return redirect(url_for('staff_all_street_lights'))
     return render_template('staff/street_light_register.html')
 
 # 철거된 가로등 삭제
@@ -804,6 +816,7 @@ def search_decommissioned_streetlights():
     finally:
         db.disconnect()
 
+
 @app.route('/api/decommissioned-streetlights/<int:id>', methods=['DELETE'])
 def delete_streetlight(id):
     db = DBManager()
@@ -831,7 +844,7 @@ def delete_streetlight(id):
 #자동차(도로) 단속 보드
 @app.route('/staff/road_car_board', methods=['GET'])
 @staff_required
-def admin_road_car_board():
+def staff_road_car_board():
     search_query = request.args.get("search_query", "").strip()
     search_type = request.args.get("search_type", "all")
     page = request.args.get("page", 1, type=int)
@@ -876,7 +889,7 @@ def admin_road_car_board():
 #자동차(도로) 단속 카메라
 @app.route("/staff/road_car")
 @staff_required
-def admin_road_car():
+def staff_road_car():
     adminid = session.get('admin_id')
     street_light_id = request.args.get("street_light_id", type=int)
 
@@ -901,7 +914,7 @@ def admin_road_car():
 #오토바이(인도) 단속 보드
 @app.route('/staff/sidewalk_motorcycle_board', methods=['GET'])
 @staff_required
-def admin_sidewalk_motorcycle_board():
+def staff_sidewalk_motorcycle_board():
     search_query = request.args.get("search_query", "").strip()
     search_type = request.args.get("search_type", "all")  # 기본값은 'all'
     page = request.args.get("page", 1, type=int)
@@ -947,7 +960,7 @@ def admin_sidewalk_motorcycle_board():
 #오토바이(인도) 단속
 @app.route("/staff/sidewalk_motorcycle")
 @staff_required
-def admin_sidewalk_motorcycle():
+def staff_sidewalk_motorcycle():
     adminid = session.get('admin_id')
     street_light_id = request.args.get("street_light_id", type=int)
 

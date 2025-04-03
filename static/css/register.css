@@ -150,7 +150,7 @@
 
 /* 다크모드 스타일 */
 .dark-mode .sign-form-container {
-    background-color: #2d2d2d;
+    background-color: #2a2a2a; /* 다크모드 배경색 일치 */
 }
 
 .dark-mode .signup-card {

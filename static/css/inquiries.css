@@ -75,7 +75,7 @@
 }
 
 .dark-mode {
-    --background-color: #2a2a2a;
+    --background-color: #2a2a2a; /* 다크모드 배경색 일치 */
     --text-color: #f0f0f0;
     --primary-color: #28a745;
     --primary-hover: #218838;
@@ -292,6 +292,7 @@ textarea.form-control {
     padding: 1.5rem;
     border-radius: 8px;
     border-left: 4px solid var(--primary-color);
+    height : 300px; 
 }
 
 .answer-meta {
@@ -309,7 +310,7 @@ textarea.form-control {
 
 .answer-content {
     background-color: var(--background-color);
-    padding: 1rem;
+    margin-top : 50px;
     border-radius: 6px;
     color: var(--text-color);
 }

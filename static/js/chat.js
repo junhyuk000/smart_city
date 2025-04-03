@@ -1,4 +1,4 @@
-// C:\Users\facec\Desktop\smart_city\static\js\chat.js
+//static\js\chat.js
 
 document.addEventListener('DOMContentLoaded', function() {
     initFloatingChat();
@@ -66,8 +66,13 @@ function initFloatingChat() {
         // 원래 패널 내용 저장
         const originalContent = panelBody.innerHTML;
         
-        // 패널 내용을 채팅 인터페이스로 교체
-        panelBody.innerHTML = `
+        // 패널 내용을 채팅 인터페이스로 교체 - 페이드인 적용
+        panelBody.innerHTML = '<div class="chat-interface-container chat-fade-in"></div>';
+        
+        const chatContainer = panelBody.querySelector('.chat-interface-container');
+        
+        // 즉시 채팅 인터페이스 표시 (딜레이 없음)
+        chatContainer.innerHTML = `
             <div id="chatMessages" class="chat-messages">
                 <div class="message system">
                     <div class="message-content">안녕하세요! 스마트 도시 고객센터입니다. 무엇을 도와드릴까요?</div>
@@ -80,6 +85,9 @@ function initFloatingChat() {
                 </button>
             </div>
         `;
+        
+        // 채팅 메시지 전송 기능 설정
+        setupChatMessageSending();
         
         // 뒤로가기 버튼 이벤트 설정
         mainBackButton.addEventListener('click', function(e) {
@@ -101,9 +109,6 @@ function initFloatingChat() {
                 });
             }
         });
-        
-        // 채팅 메시지 전송 기능 설정
-        setupChatMessageSending();
     }
     
     // 채팅 메시지 전송 기능 설정
@@ -182,4 +187,10 @@ function initFloatingChat() {
     chatPanel.addEventListener('click', function(e) {
         e.stopPropagation();
     });
+    
+    // 카카오톡 링크 업데이트
+    const kakaoLink = document.querySelector('.support-option.kakao .option-button');
+    if (kakaoLink) {
+        kakaoLink.href = "https://open.kakao.com/o/s68XDGmh";
+    }
 }

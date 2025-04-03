@@ -9,6 +9,8 @@
     --border-color: #e0e0e0;
     --icon-bg: #f8f9fa;
     --highlight-color: #e9f7ef;
+    --background-color: #f4f4f4;
+    --heading-color: #333333;
 }
 
 .dark-mode {
@@ -18,28 +20,47 @@
     --border-color: #444444;
     --icon-bg: #444444;
     --highlight-color: #2c3e50;
+    --background-color: #2a2a2a; /* 다크모드 배경색 일치 */
+    --heading-color: #ffffff;
+}
+
+body {
+    background-color: var(--background-color);
+    transition: background-color 0.5s ease;
+}
+
+.content-area {
+    background-color: var(--background-color);
+}
+
+/* 초기 로드 시 모든 애니메이션 요소를 숨김 처리 */
+.about-header, 
+.about-section, 
+.about-team, 
+.team-member {
+    opacity: 0;
 }
 
 .about-container {
     max-width: 1200px;
-    margin: 40px auto;
+    margin: 50px auto 40px;
     padding: 0 20px;
 }
 
 .about-header {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 60px;
 }
 
 .about-header h1 {
-    font-size: 2.2rem;
-    color: var(--text-color);
+    font-size: 32px; /* 인덱스 페이지와 동일하게 조정 */
+    color: var(--heading-color);
     margin-bottom: 15px;
     transition: color 0.3s ease;
 }
 
 .about-header .subtitle {
-    font-size: 1.2rem;
+    font-size: 18px; /* 인덱스 페이지와 동일하게 조정 */
     color: var(--text-light);
     margin: 0;
     transition: color 0.3s ease;
@@ -49,7 +70,7 @@
     display: flex;
     flex-direction: column;
     gap: 40px;
-    margin-bottom: 60px;
+    margin-bottom: 70px;
 }
 
 .about-section {
@@ -86,8 +107,8 @@
 .section-content h2 {
     margin-top: 0;
     margin-bottom: 15px;
-    color: var(--text-color);
-    font-size: 1.5rem;
+    color: var(--heading-color);
+    font-size: 20px; /* 인덱스 페이지와 동일하게 조정 */
     transition: color 0.3s ease;
 }
 
@@ -95,6 +116,7 @@
     color: var(--text-light);
     margin-bottom: 20px;
     line-height: 1.6;
+    font-size: 15px; /* 인덱스 페이지와 동일하게 조정 */
     transition: color 0.3s ease;
 }
 
@@ -106,6 +128,7 @@
 .feature-list li {
     color: var(--text-color);
     margin-bottom: 8px;
+    font-size: 15px; /* 인덱스 페이지와 동일하게 조정 */
     transition: color 0.3s ease;
 }
 
@@ -114,13 +137,13 @@
 }
 
 .about-team {
-    margin-top: 60px;
+    margin-top: 70px;
     text-align: center;
 }
 
 .about-team h2 {
-    font-size: 1.8rem;
-    color: var(--text-color);
+    font-size: 32px; /* 인덱스 페이지와 동일하게 조정 */
+    color: var(--heading-color);
     margin-bottom: 40px;
     transition: color 0.3s ease;
 }
@@ -159,11 +182,12 @@
     justify-content: center;
     font-size: 30px;
     margin: 0 auto 15px;
+    transition: background-color 0.3s ease;
 }
 
 .team-member h3 {
     margin: 0 0 5px;
-    color: var(--text-color);
+    color: var(--heading-color);
     font-size: 1.2rem;
     transition: color 0.3s ease;
 }
@@ -172,6 +196,7 @@
     color: var(--primary-green);
     font-weight: bold;
     margin: 0 0 10px;
+    font-size: 0.95rem;
 }
 
 .member-description {
@@ -182,7 +207,6 @@
     transition: color 0.3s ease;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
     .about-section {
         flex-direction: column;
@@ -201,15 +225,31 @@
         width: calc(50% - 10px);
         max-width: 200px;
     }
+    
+    .about-container {
+        margin: 40px auto 30px;
+    }
+    
+    .about-header {
+        margin-bottom: 40px;
+    }
+    
+    .about-header h1 {
+        font-size: 28px;
+    }
+    
+    .about-header .subtitle {
+        font-size: 16px;
+    }
 }
 
 @media (max-width: 576px) {
     .about-header h1 {
-        font-size: 1.8rem;
+        font-size: 24px;
     }
     
     .about-header .subtitle {
-        font-size: 1rem;
+        font-size: 15px;
     }
     
     .section-content {
@@ -217,11 +257,20 @@
     }
     
     .section-content h2 {
-        font-size: 1.3rem;
+        font-size: 18px;
+    }
+    
+    .section-content p,
+    .feature-list li {
+        font-size: 14px;
     }
     
     .team-member {
         width: 100%;
         max-width: 220px;
+    }
+    
+    .about-container {
+        margin: 30px auto 25px;
     }
 }

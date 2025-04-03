@@ -47,7 +47,7 @@ body {
 }
 
 .dark-mode {
-    --background-color: #1a1a1a;
+    --background-color: #2a2a2a; /* 다크모드 배경색 일치 */
     --text-color: #f0f0f0;
     --heading-color: #ffffff;
     --widget-green: #28a745; /* 다크모드에서도 동일한 초록색 사용 */
