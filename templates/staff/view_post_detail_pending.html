@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}문의 상세보기 페이지{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard_inquiries_detail.css') }}">
+<style>
+    :root {
+        --btn-bg: #4a8ae2;  
+        --btn-hover: #3a7ad2;  
+        --btn-color: white;  
+    }
+
+    /* 기존 답변 섹션 스타일 */
+    .answer-section {
+        margin-top: 30px;
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+    }
+    
+    .answer-form {
+        margin-top: 20px;
+    }
+    
+    .answer-textarea {
+        width: 100%;
+        min-height: 150px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-family: inherit;
+    }
+    
+    .answer-history {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    .answer-content {
+        white-space: pre-line;
+        line-height: 1.6;
+    }
+    
+    .answer-meta {
+        font-size: 0.85em;
+        color: #666;
+        margin-top: 10px;
+        text-align: right;
+    }
+    
+    .submit-btn {
+        background-color: var(--btn-bg);
+        color: var(--btn-color);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+        background-color: var(--btn-hover);
+    }
+    
+    .answer-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .status-completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .inquiry-wrapper {
+        background-color: var(--bg-color);
+    }
+
+    .page-header {
+        background-color: var(--header-bg);
+    }
+
+    .inquiry-body {
+        border-color: var(--border-color);
+    }
+
+    .answer-section {
+        border-color: var(--border-color);
+    }
+
+    .answer-textarea {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+
+    .answer-history {
+        background-color: var(--answer-bg);
+    }
+
+    .back-button {
+        background-color: var(--btn-bg);
+        color: var(--btn-color);
+        text-decoration: none;
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .back-button:hover {
+        background-color: var(--btn-hover);
+    }
+</style>
+{% endblock %}
+{% block navigation %}
+{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
+<nav class="header-nav">
+    <div class="nav-menu" id="favorites-nav">
+        <span class="favorites-label">즐겨찾기:</span>
+        <!-- 즐겨찾기 항목들이 여기에 자바스크립트로 추가됩니다 -->
+        <span id="no-favorites-message">등록된 즐겨찾기가 없습니다</span>
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="inquiry-wrapper">
+    <div class="inquiry-detail-container">
+        <!-- 상단 영역 -->
+        <div class="page-header">
+            <!-- 왼쪽 구석: 문의자 / 문의시간 -->
+            <div class="left-info">
+                <p class="user-name">문의자: {{ post.user_name }}</p>
+                <p class="inquiry-time">문의시간: {{ post.inquiry_time }}</p>
+            </div>
+            <!-- 중앙: 문의 상세보기 -->
+            <h2>문의 상세보기</h2>
+        </div>
+        
+        <!-- 본문 영역 -->
+        <div class="inquiry-body">
+            <!-- 문의 제목 -->
+            <div class="inquiry-title">
+                <h3>문의 유형</h3>
+                <p>{{ post.inquiry_reason }}</p>
+            </div>
+            
+            <!-- 문의 내용 -->
+            <div class="inquiry-content">
+                <h4>문의 상세 내용</h4>
+                <p class="detail-reason">{{ post.detail_reason }}</p>
+            </div>
+            
+            <!-- 첨부파일 -->
+            <div class="attachment-section">
+                <h4>첨부파일</h4>
+                {% if post.capture_file %}
+                    <img src="{{ url_for('capture_file', filename=post.capture_file) }}" alt="첨부 이미지" style="max-width: auto; height: auto;">
+                {% else %}
+                    <span>없음</span>
+                {% endif %}
+            </div>
+            
+            <!-- 관리자 답변 섹션 -->
+            <div class="answer-section">
+                <h3>문의 답변</h3>
+                
+                <!-- 답변 상태 표시 -->
+                <div class="answer-status status-pending">답변 대기 중</div>
+                <p>아직 답변이 등록되지 않았습니다.</p>
+                
+                <!-- 답변 등록/수정 폼 -->
+                    <div class="answer-form">
+                        <!-- 답변 등록 -->
+                        <form 
+                            action="{{ url_for('staff_answer_inquiry_pending') }}" 
+                            method="POST"
+                        >
+                        <h4>답변 작성</h4>
+                        <p>답변을 등록해주세요.</p>
+                        <input type="hidden" name="inquiries_id" value="{{ post.inquiries_id }}">
+                        <input type="hidden" name="user_id" value="{{ post.user_id }}"> 
+                        <input type="hidden" name="inquiry_time" value="{{ post.inquiry_time }}">
+                        <textarea 
+                            name="answer_content" 
+                            class="answer-textarea" 
+                            placeholder="답변 내용을 입력해주세요..." 
+                            required></textarea>   
+                        <div style="text-align: right;">
+                            <button type="submit" class="submit-btn">
+                            답변 등록
+                            </button>
+                        </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        <!-- 하단: 뒤로가기 버튼 -->
+        <div class="inquiry-footer">
+            <a href="{{ url_for('staff_inquiries_pending') }}" class="back-button">뒤로 가기</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
+{% endblock %}

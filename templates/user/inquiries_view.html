@@ -1,0 +1,238 @@
+{# templates/user/inquiries_view.html #}
+{% extends "base.html" %}
+{% block title %}문의 목록{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inquiries.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="content-area">
+    <div class="container">
+        <h2>문의 내역</h2>
+        <p class="subtitle">등록하신 문의사항과 답변 내용을 확인하실 수 있습니다.</p>
+        
+        {% if posts|length > 0 %}
+        <table class="inquiry-table">
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>작성자</th>
+                    <th>문의유형</th>
+                    <th>문의내용</th>
+                    <th>답변상태</th>
+                    <th>문의시간</th>
+                </tr>
+            </thead>
+            <tbody id="inquiryTableBody">
+                {% for post in posts %}
+                <tr class="inquiry-row" data-index="{{ loop.index }}">
+                    <td>{{ post.inquiries_id }}</td>
+                    <td>{{ post.user_name }}</td>
+                    <td>{{ post.inquiry_reason }}</td>
+                    <td>
+                        {% if session['user_id'] == post.user_id %}
+                        <div class="content-view-wrapper">
+                            <form action="{{ url_for('user_dashboard_inquiries_view') }}" method="POST">
+                                <input type="hidden" name="user_id" value="{{ post.user_id }}">
+                                <input type="hidden" name="inquiry_time" value="{{ post.inquiry_time}}">
+                                <input type="hidden" name="inquiries_id" value="{{ post.inquiries_id }}">
+                                <button type="submit" class="detail-button">내용보기</button>
+                                <i class="fas fa-lock-open"></i>
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="content-view-wrapper">
+                            <button disabled class="detail-button">내용보기</button>
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if post.answer_status == 'pending' %}
+                            <span class="status pending">답변 대기 중</span>
+                        {% else %}
+                            <span class="status completed">답변 완료</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ post.inquiry_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- 페이지네이션 -->
+        <div class="pagination-container">
+            <div class="pagination">
+                <span class="pagination-link first" id="firstPage" title="첫 페이지">
+                    <i class="fas fa-angle-double-left"></i>
+                </span>
+                <span class="pagination-link prev" id="prevPage" title="이전 페이지">
+                    <i class="fas fa-angle-left"></i>
+                </span>
+                
+                <div class="pagination-info">
+                    <span id="currentPage">1</span> / <span id="totalPages">1</span>
+                </div>
+                
+                <span class="pagination-link next" id="nextPage" title="다음 페이지">
+                    <i class="fas fa-angle-right"></i>
+                </span>
+                <span class="pagination-link last" id="lastPage" title="마지막 페이지">
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="no-inquiries">
+            <i class="fas fa-inbox fa-3x"></i>
+            <p>등록된 문의가 없습니다.</p>
+            <a href="{{ url_for('user_dashboard_inquiries') }}" class="btn-submit" style="max-width: 200px; margin: 20px auto;">문의하기</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 채팅 위젯 추가 -->
+    {% include 'public/chat_widget.html' %}
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 페이지네이션 설정
+    const itemsPerPage = 10;
+    const inquiryRows = document.querySelectorAll('.inquiry-row');
+    const totalItems = inquiryRows.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    let currentPage = 1;
+    
+    // 페이지 관련 DOM 요소
+    const firstPageBtn = document.getElementById('firstPage');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const lastPageBtn = document.getElementById('lastPage');
+    const currentPageEl = document.getElementById('currentPage');
+    const totalPagesEl = document.getElementById('totalPages');
+    
+    // 페이지 정보 업데이트
+    totalPagesEl.textContent = totalPages;
+    
+    // 초기 페이지 표시
+    showPage(currentPage);
+    updatePaginationButtons();
+    
+    // 페이지네이션 버튼 이벤트 리스너
+    firstPageBtn.addEventListener('click', function() {
+        if (currentPage !== 1) {
+            currentPage = 1;
+            showPage(currentPage);
+            updatePaginationButtons();
+        }
+    });
+    
+    prevPageBtn.addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+            updatePaginationButtons();
+        }
+    });
+    
+    nextPageBtn.addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            showPage(currentPage);
+            updatePaginationButtons();
+        }
+    });
+    
+    lastPageBtn.addEventListener('click', function() {
+        if (currentPage !== totalPages) {
+            currentPage = totalPages;
+            showPage(currentPage);
+            updatePaginationButtons();
+        }
+    });
+    
+    // 특정 페이지 표시 함수
+    function showPage(page) {
+        const startIdx = (page - 1) * itemsPerPage + 1;
+        const endIdx = Math.min(page * itemsPerPage, totalItems);
+        
+        inquiryRows.forEach((row, index) => {
+            const rowIndex = index + 1;
+            if (rowIndex >= startIdx && rowIndex <= endIdx) {
+                row.classList.add('active');
+            } else {
+                row.classList.remove('active');
+            }
+        });
+        
+        currentPageEl.textContent = page;
+    }
+    
+    // 페이지네이션 버튼 상태 업데이트
+    function updatePaginationButtons() {
+        // 첫 페이지, 이전 페이지 버튼
+        if (currentPage === 1) {
+            firstPageBtn.classList.add('disabled');
+            prevPageBtn.classList.add('disabled');
+        } else {
+            firstPageBtn.classList.remove('disabled');
+            prevPageBtn.classList.remove('disabled');
+        }
+        
+        // 다음 페이지, 마지막 페이지 버튼
+        if (currentPage === totalPages || totalPages === 0) {
+            nextPageBtn.classList.add('disabled');
+            lastPageBtn.classList.add('disabled');
+        } else {
+            nextPageBtn.classList.remove('disabled');
+            lastPageBtn.classList.remove('disabled');
+        }
+    }
+    
+    // 테이블 행 클릭 시 해당 행의 내용보기 버튼 클릭 이벤트 추가
+    const tableRows = document.querySelectorAll('.inquiry-table tbody tr');
+    
+    tableRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            // 클릭한 요소가 버튼이나 폼이 아닌 경우에만 처리
+            if (!e.target.closest('button') && !e.target.closest('form')) {
+                const detailButton = this.querySelector('.detail-button');
+                
+                // 잠금 상태가 아닌 내용보기 버튼만 클릭
+                if (detailButton && !detailButton.disabled) {
+                    detailButton.click();
+                }
+            }
+        });
+    });
+    
+    // 페이지네이션 링크에 호버 효과 추가
+    const paginationLinks = document.querySelectorAll('.pagination-link');
+    
+    paginationLinks.forEach(link => {
+        if (!link.classList.contains('disabled')) {
+            link.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('disabled')) {
+                    this.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--pagination-hover-bg');
+                }
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('disabled')) {
+                    this.style.backgroundColor = '';
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
