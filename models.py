@@ -962,52 +962,59 @@ class DBManager:
         finally:
             cursor.close()  # 커서 닫기
 
-    # 고장난 가로등 조회
-    def get_malfunctioning_lamps(self, per_page, offset, search_type="all", search_query="", status=None):
-        try:
-            self.connect()  # DB 연결 추가
-            
-            # 기본 WHERE 절과 파라미터 초기화
-            where_clauses = ["status = %s"]
-            params = ['malfunction']
-            
-            # 검색 로직
-            if search_type == "street_light_id" and search_query:
-                where_clauses.append("street_light_id LIKE %s")
-                params.append(f"%{search_query}%")
-            elif search_type == "street_light_location" and search_query:
-                where_clauses.append("location LIKE %s")
-                params.append(f"%{search_query}%")
-            
-            # WHERE 절 구성
-            where_sql = " WHERE " + " AND ".join(where_clauses)
-            
-            # 전체 레코드 수 계산 쿼리
-            count_query = f"SELECT COUNT(*) as total FROM street_lights {where_sql}"
-            
-            # 페이지네이션 쿼리
-            pagination_sql = f"SELECT * FROM street_lights {where_sql} LIMIT %s OFFSET %s"
-            
-            # 페이지네이션용 파라미터 추가
-            count_params = params.copy()
-            full_params = params + [per_page, offset]
-            
-            # 전체 레코드 수 실행
-            self.cursor.execute(count_query, count_params)
-            total_posts = self.cursor.fetchone()['total']
-            
-            # 페이지네이션 쿼리 실행
-            self.cursor.execute(pagination_sql, full_params)
-            lamps = self.cursor.fetchall()
-            
-            return lamps, total_posts
+    # 고장난 가로등 + 해당 가로등정보 조회
+    def get_malfunction_search_query(self, search_query, search_type, per_page, offset):
+        base_sql = """
+            SELECT m.*, s.location 
+            FROM malfunction_street_lights m
+            JOIN street_lights s ON m.street_light_id = s.street_light_id
+            WHERE m.repair_status = 'pending'
+        """
         
-        except Exception as error:
-            print(f"데이터베이스 쿼리 실행 실패: {error}")
-            return [], 0
+        if search_type == "street_light_id" and search_query:
+            sql = base_sql + " AND m.street_light_id LIKE %s"
+            values = (f"%{search_query}%", per_page, offset)
             
-        finally:
-            self.disconnect()  # DB 연결 해제 추가
+        elif search_type == "street_light_location" and search_query:
+            sql = base_sql + " AND s.location LIKE %s"
+            values = (f"%{search_query}%", per_page, offset)
+            
+        elif search_type == "all" and search_query:  # 전체 검색일 때 수정
+            sql = base_sql + " AND (m.street_light_id LIKE %s OR s.location LIKE %s)"
+            values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            
+        else:  # 검색어가 없는 경우
+            sql = base_sql
+            values = (per_page, offset)
+        
+        sql += " ORDER BY m.malfunction_occurred_at DESC LIMIT %s OFFSET %s"
+        return sql, values
+
+    def get_malfunction_count_query(self, search_query, search_type):
+        base_sql = """
+            SELECT COUNT(*) AS total 
+            FROM malfunction_street_lights m
+            JOIN street_lights s ON m.street_light_id = s.street_light_id
+            WHERE m.repair_status = 'pending'
+        """
+        
+        if search_type == "street_light_id" and search_query:
+            sql = base_sql + " AND m.street_light_id LIKE %s"
+            values = (f"%{search_query}%",)
+            
+        elif search_type == "street_light_location" and search_query:
+            sql = base_sql + " AND s.location LIKE %s"
+            values = (f"%{search_query}%",)
+            
+        elif search_type == "all" and search_query:  # 전체 검색일 때 수정
+            sql = base_sql + " AND (m.street_light_id LIKE %s OR s.location LIKE %s)"
+            values = (f"%{search_query}%", f"%{search_query}%")
+            
+        else:  # 검색어가 없는 경우
+            sql = base_sql
+            values = ()
+        
+        return sql, values
 
     
     # 문의 데이터 조회 (페이지네이션)
