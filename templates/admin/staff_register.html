@@ -139,8 +139,37 @@
             padding: 25px;
         }
     }
+/* 뒤로가기 버튼 스타일 */
+.back-btn {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.back-btn:hover {
+    background: linear-gradient(135deg, #5a6268, #343a40);
+    transform: scale(1.03);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+    
 </style>
 {% endblock %}
+
+{% block navigation %}
+
+{% endblock %}
+
 
 {% block content %}
 <div class="dark-mode-toggle">
@@ -174,6 +203,9 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Staff 등록</button>
         </form>
+        <div class="text-center mt-3">
+            <button class="back-btn" onclick="history.back()">뒤로가기</button>
+        </div>
     </div>
 </div>
 {% endblock %}

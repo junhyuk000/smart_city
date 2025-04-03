@@ -659,6 +659,11 @@ def staff_all_street_lights():
     search_query = request.args.get("search_query", "").strip()
     per_page = 10
 
+    # 전체 검색 시 검색 조건 없이 데이터 조회
+    if search_type == "all":
+        search_type = None  # 매니저 함수에서 모든 데이터를 가져오도록 설정
+        search_query = None
+
     # 매니저에서 데이터 조회
     lamp_cctv, total_posts = manager.get_paginated_street_lights(
         per_page=per_page,
@@ -680,8 +685,8 @@ def staff_all_street_lights():
         total_pages=total_pages,
         start_page=start_page,
         end_page=end_page,
-        search_type=search_type,
-        search_query=search_query
+        search_type=search_type if search_type else "all",  # 검색 타입 유지
+        search_query=search_query if search_query else ""
     )
 
 # 가로등 위치 보기
@@ -743,6 +748,7 @@ def staff_broken_light_check():
             next_page=next_page,
             search_type=search_type,
             search_query=search_query
+            
         )
 
     finally:
