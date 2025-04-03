@@ -7,12 +7,14 @@
 {% endblock %}
 
 {% block navigation %}
+{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <nav class="header-nav">
     <div class="nav-menu" id="favorites-nav">
         <span class="favorites-label">즐겨찾기:</span>
         <span id="no-favorites-message">등록된 즐겨찾기가 없습니다</span>
     </div>
 </nav>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -155,5 +157,5 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/cctv_list.js') }}"></script>
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 {% endblock %}

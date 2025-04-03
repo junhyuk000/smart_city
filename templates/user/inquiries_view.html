@@ -4,6 +4,29 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inquiries.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+<style>
+    /* 페이지네이션 스타일 */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    
+    .pagination a {
+        color: black;
+        padding: 8px 16px;
+        text-decoration: none;
+        border: 1px solid #ddd;
+        margin: 0 4px;
+    }
+    
+    .pagination a.active {
+        background-color: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+    }
+    
+</style>
 {% endblock %}
 
 {% block content %}
@@ -62,6 +85,25 @@
             <a href="{{ url_for('user_dashboard_inquiries') }}" class="btn-submit" style="max-width: 200px; margin: 20px auto;">문의하기</a>
         </div>
         {% endif %}
+        {% if total_pages > 1 %}
+        <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="{{ url_for('user_dashboard_inquiries_view', page=current_page-1) }}">&laquo; 이전</a>
+        {% endif %}
+
+        {% for num in range(1, total_pages + 1) %}
+            {% if num == current_page %}
+                <a class="active">{{ num }}</a>
+            {% else %}
+                <a href="{{ url_for('user_dashboard_inquiries_view', page=num) }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if current_page < total_pages %}
+            <a href="{{ url_for('user_dashboard_inquiries_view', page=current_page+1) }}">다음 &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
     </div>
     
     <!-- 채팅 위젯 추가 -->

@@ -7,12 +7,14 @@
 {% endblock %}
 
 {% block navigation %}
+{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <nav class="header-nav">
     <div class="nav-menu" id="favorites-nav">
         <span class="favorites-label">즐겨찾기:</span>
         <span id="no-favorites-message">등록된 즐겨찾기가 없습니다</span>
     </div>
 </nav>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -32,7 +34,7 @@
                 <span class="total-count">검색된 가로등: <strong>{{ total_posts }}</strong>개</span>
             </div>
             
-            <form method="get" action="{{ url_for('admin_sidewalk_motorcycle_board') }}" class="search-form">
+            <form method="get" action="{{ url_for('staff_sidewalk_motorcycle_board') }}" class="search-form">
                 <div class="form-group">
                     <label for="search_type">검색 타입:</label>
                     <select name="search_type" id="search_type" class="form-select">
@@ -72,7 +74,7 @@
                             {% if street_light.cctv_ip %}
                             <td class="cctv-cell">
                                 <div class="cctv-info">
-                                    <a href="{{ url_for('admin_sidewalk_motorcycle', street_light_id=street_light.street_light_id) }}" class="view-button">
+                                    <a href="{{ url_for('staff_sidewalk_motorcycle', street_light_id=street_light.street_light_id) }}" class="view-button">
                                         <i class="fas fa-video"></i> 상세 보기
                                     </a>
                                     <span class="cctv-status installed">
@@ -112,10 +114,10 @@
             {% if total_pages > 1 %}
                 <div class="pagination">
                     {% if prev_page %}
-                        <a href="{{ url_for('admin_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=1) }}" class="pagination-link first" title="첫 페이지">
+                        <a href="{{ url_for('staff_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=1) }}" class="pagination-link first" title="첫 페이지">
                             <i class="fas fa-angle-double-left"></i>
                         </a>
-                        <a href="{{ url_for('admin_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=prev_page) }}" class="pagination-link prev" title="이전 페이지">
+                        <a href="{{ url_for('staff_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=prev_page) }}" class="pagination-link prev" title="이전 페이지">
                             <i class="fas fa-angle-left"></i>
                         </a>
                     {% else %}
@@ -132,10 +134,10 @@
                     </div>
                     
                     {% if next_page %}
-                        <a href="{{ url_for('admin_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=next_page) }}" class="pagination-link next" title="다음 페이지">
+                        <a href="{{ url_for('staff_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=next_page) }}" class="pagination-link next" title="다음 페이지">
                             <i class="fas fa-angle-right"></i>
                         </a>
-                        <a href="{{ url_for('admin_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=total_pages) }}" class="pagination-link last" title="마지막 페이지">
+                        <a href="{{ url_for('staff_sidewalk_motorcycle_board', search_query=search_query, search_type=search_type, page=total_pages) }}" class="pagination-link last" title="마지막 페이지">
                             <i class="fas fa-angle-double-right"></i>
                         </a>
                     {% else %}
@@ -155,5 +157,5 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/cctv_list.js') }}"></script>
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 {% endblock %}

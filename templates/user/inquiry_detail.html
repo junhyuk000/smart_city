@@ -57,16 +57,17 @@
             </div>
             {% endif %}
             
-            {% if posts.answer_status == 'completed' and posts.answer %}
+            {% if posts.answer_status == 'completed' and answer %}
             <div class="inquiry-section answer-section">
                 <h3>답변</h3>
                 <div class="inquiry-answer">
                     <div class="answer-meta">
-                        <span class="answer-from">관리자</span>
-                        <span class="answer-time">{{ posts.answered_at }}</span>
+                        <span class="answer-from">담당자 : {{ answer.admin_id }}</span>
+                        <span class="answer-time">답변시간 : {{ answer.answer_time }}</span>
                     </div>
                     <div class="answer-content">
-                        <p>{{ posts.answer }}</p>
+                        <span class="answer-from">답변 내용</span>
+                        <p>{{ answer.answer_content }}</p>
                     </div>
                 </div>
             </div>

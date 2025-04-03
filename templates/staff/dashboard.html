@@ -108,7 +108,7 @@
 {% endblock %}
 
 {% block navigation %}
-{% if 'admin_id' in session %}
+{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <nav class="header-nav">
     <div class="nav-menu" id="favorites-nav">
         <span class="favorites-label">즐겨찾기:</span>
@@ -120,7 +120,7 @@
 {% endblock %}
 
 {% block content %}
-{% if 'admin_id' in session %}
+{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <div class="container">
     <!-- 기능 바로가기 섹션 -->
     <div class="section-title">
@@ -162,16 +162,16 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         설치된 가로등 조회
-                                        <span class="favorite-star" data-title="설치된 가로등 조회" data-url="{{ url_for('admin_all_street_lights') }}">★</span>
+                                        <span class="favorite-star" data-title="설치된 가로등 조회" data-url="{{ url_for('staff_all_street_lights') }}">★</span>
                                     </h5>
-                                    <a href="{{ url_for('admin_all_street_lights') }}" class="btn btn-primary">이동</a>
+                                    <a href="{{ url_for('staff_all_street_lights') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         고장난 가로등
-                                        <span class="favorite-star" data-title="고장난 가로등" data-url="{{ url_for('admin_broken_light_check') }}">★</span>
+                                        <span class="favorite-star" data-title="고장난 가로등" data-url="{{ url_for('staff_broken_light_check') }}">★</span>
                                     </h5>
-                                    <a href="{{ url_for('admin_broken_light_check') }}" class="btn btn-primary">이동</a>
+                                    <a href="{{ url_for('staff_broken_light_check') }}" class="btn btn-primary">이동</a>
                                 </div>
                             </div>
                         </div>
@@ -245,16 +245,16 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         불법 주정차 감지 가로등
-                                        <span class="favorite-star" data-title="불법 단속 자동차" data-url="{{ url_for('admin_road_car_board') }}">★</span>
+                                        <span class="favorite-star" data-title="불법 단속 자동차" data-url="{{ url_for('staff_road_car_board') }}">★</span>
                                     </h5>
-                                    <a href="{{ url_for('admin_road_car_board') }}" class="btn btn-primary">이동</a>
+                                    <a href="{{ url_for('staff_road_car_board') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         인도 주행 오토바이 감지 가로등
-                                        <span class="favorite-star" data-title="불법 단속 오토바이" data-url="{{ url_for('admin_sidewalk_motorcycle_board') }}">★</span>
+                                        <span class="favorite-star" data-title="불법 단속 오토바이" data-url="{{ url_for('staff_sidewalk_motorcycle_board') }}">★</span>
                                     </h5>
-                                    <a href="{{ url_for('admin_sidewalk_motorcycle_board') }}" class="btn btn-primary">이동</a>
+                                    <a href="{{ url_for('staff_sidewalk_motorcycle_board') }}" class="btn btn-primary">이동</a>
                                 </div>
                             </div>
                         </div>
@@ -301,5 +301,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 {% endblock %}
