@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 {% block title %}불법주정차 페이지{% endblock %}
-
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/cctv_list.css') }}">
 {% endblock %}
-
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
+{% endblock %}
 {% block navigation %}
 {% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <nav class="header-nav">

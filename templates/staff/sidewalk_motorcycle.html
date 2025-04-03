@@ -1,10 +1,14 @@
 {% extends "base.html" %}  
+{% block title %}인도(오토바이){% endblock %}
 {% block extra_css %}
 <style>
     body { font-family: Arial, sans-serif; text-align: center; }
     img { width: 50%; border: 2px solid black; margin-top: 20px; }
     #alert { font-size: 20px; font-weight: bold; color: red; }
 </style>
+{% endblock %}  
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
 {% endblock %}
 {% block navigation %}
 {% if 'admin_id' in session and session['admin_role'] == 'staff' %}
@@ -17,7 +21,6 @@
 </nav>
 {% endif %}
 {% endblock %}
-{% block title %}인도(오토바이){% endblock %}  
 
 {% block content %}
 <h1>🚨 오토바이 감지 시스템</h1>

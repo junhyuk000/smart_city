@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block title %}답변 미완료 문의 조회{% endblock %}  
-
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inquiries.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
@@ -28,7 +27,9 @@
     
 </style>
 {% endblock %}
-
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
+{% endblock %}
 {% block navigation %}
 {% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <nav class="header-nav">

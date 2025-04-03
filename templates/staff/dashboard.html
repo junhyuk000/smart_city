@@ -1,11 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}직원 대시보드{% endblock %}
-
-{% block head %}
-<meta name="admin_id" content="{{ session.get('admin_id') }}">
-{% endblock %}
-
 {% block extra_css %}
 <style>
     .outer-card {
@@ -110,7 +105,9 @@
 
 </style>
 {% endblock %}
-
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
+{% endblock %}
 {% block navigation %}
 {% if 'admin_id' in session %}
 <nav class="header-nav">
@@ -165,14 +162,14 @@
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        설치된 가로등 조회
+                                        전체 가로등 조회
                                         <span class="favorite-star" data-title="설치된 가로등 조회" data-url="{{ url_for('staff_all_street_lights') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_all_street_lights') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        고장난 가로등
+                                        고장난 가로등 조회
                                         <span class="favorite-star" data-title="고장난 가로등" data-url="{{ url_for('staff_broken_light_check') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_broken_light_check') }}" class="btn btn-primary">이동</a>
@@ -192,14 +189,14 @@
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        설치된 가로등 등록
+                                        설치 가로등 등록
                                         <span class="favorite-star" data-title="설치된 가로등 등록" data-url="{{ url_for('street_light_register') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('street_light_register') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        철거된 가로등 삭제 
+                                        철거 가로등 삭제 
                                         <span class="favorite-star" data-title="철거된 가로등 삭제" data-url="{{ url_for('street_light_delete') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('street_light_delete') }}" class="btn btn-primary">이동</a>
@@ -214,20 +211,20 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 category-col">
-                            <div class="category-title">CCTV</div>
+                            <div class="category-title">스마트 가로등 CCTV 및 제어</div>
                         </div>
                         <div class="col-md-9">
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        도로용 CCTV 보기
+                                        도로 CCTV 보기 및 제어 
                                         <span class="favorite-star" data-title="도로용 CCTV 보기" data-url="{{ url_for('staff_dashboard_road_cctv') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_dashboard_road_cctv') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        인도용 CCTV 보기
+                                        인도 CCTV 보기 및 제어
                                         <span class="favorite-star" data-title="인도용 CCTV 보기" data-url="{{ url_for('staff_sidewalk_cctv') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_sidewalk_cctv') }}" class="btn btn-primary">이동</a>
@@ -242,20 +239,20 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 category-col">
-                            <div class="category-title">불법 단속</div>
+                            <div class="category-title">불법 감시 카메라</div>
                         </div>
                         <div class="col-md-9">
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        불법 단속 자동차
+                                        도로 감시 카메라 보기
                                         <span class="favorite-star" data-title="불법 단속 자동차" data-url="{{ url_for('staff_road_car_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_road_car_board') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        불법 단속 오토바이
+                                        인도 감시 카메라 보기
                                         <span class="favorite-star" data-title="불법 단속 오토바이" data-url="{{ url_for('staff_sidewalk_motorcycle_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_sidewalk_motorcycle_board') }}" class="btn btn-primary">이동</a>
@@ -305,5 +302,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 {% endblock %}

@@ -1,4 +1,7 @@
 {% extends "base.html" %}  
+
+
+{% block title %}도로(차){% endblock %}  
 {% block extra_css %}
 <style>
     body {
@@ -45,8 +48,13 @@
         border-radius: 8px;
         display: inline-block;
     }
+
 </style>
 {% endblock %}
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
+{% endblock %}
+
 {% block navigation %}
 {% if 'admin_id' in session and session['admin_role'] == 'staff' %}
 <nav class="header-nav">
@@ -58,8 +66,6 @@
 </nav>
 {% endif %}
 {% endblock %}
-
-{% block title %}도로(차){% endblock %}  
 
 {% block content %}
 <div id="container">

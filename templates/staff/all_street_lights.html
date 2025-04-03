@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}전체 가로등 확인{% endblock %}
-
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/cctv_list.css') }}">
 <style>
@@ -21,12 +20,15 @@
     }
 </style>
 {% endblock %}
-
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
+{% endblock %}
 {% block navigation %}
-{% if 'admin_id' in session and session['admin_role'] == 'staff' %}
+{% if 'admin_id' in session %}
 <nav class="header-nav">
     <div class="nav-menu" id="favorites-nav">
         <span class="favorites-label">즐겨찾기:</span>
+        <!-- 즐겨찾기 항목들이 여기에 자바스크립트로 추가됩니다 -->
         <span id="no-favorites-message">등록된 즐겨찾기가 없습니다</span>
     </div>
 </nav>
