@@ -22,8 +22,8 @@
 <main class="content-area">
     <div class="page-container">
         <div class="page-header">
-            <h1><i class="fas fa-road"></i> 전체 설치된 가로등 조회</h1>
-            <p class="page-description">도로에 설치된 가로등 및 CCTV 정보를 확인하실 수 있습니다.</p>
+            <h1><i class="fas fa-road"></i>고장난 가로등 조회</h1>
+            <p class="page-description">도로에 설치된 고장난 가로등 및 가로등 위치를 확인하실 수 있습니다.</p>
         </div>
 
         <!-- 고장난 가로등 조회 폼 -->
@@ -48,18 +48,35 @@
         </div>
 
         <!-- 고장난 가로등 목록 테이블 -->
+        {% if malfunction_street_lights %}
         <table>
             <thead>
                 <tr>
                     <th>가로등 번호</th>
+                    <th>고장 원인</th>
+                    <th>고장 시간</th>
+                    <th>수리/점검 상태</th>
                     <th>위치</th>
-                    <th>위치 상세보기</th>
+                    <th>위치 상세 보기</th>
                 </tr>
             </thead>
             <tbody>
-                {% for street_light in lamp_cctv %}
+                {% for street_light in malfunction_street_lights %}
                     <tr>
                         <td>{{ street_light.street_light_id }}</td>
+                        <td>{% if street_light.reason_led == 1 %} 
+                            조명 고장
+                            {% elif street_light.reason_tilt == 1 %}
+                            기울어짐
+                            {% elif street_light.reason_led == 1 and street_light.reason_tilt == 1 %}
+                            조명, 기울기 고장
+                            {% endif %}
+                        </td>
+                        <td>{{ street_light.malfunction_occurred_at }}</td>
+                        <td>{% if street_light.repair_status == 'pending' %}
+                            수리대기중
+                            {% endif %}
+                        </td>
                         <td>{{ street_light.location }}</td>
                         <td>
                             <button class="btn btn-danger view-location-btn" data-street-light-id="{{ street_light.street_light_id }}">
@@ -74,7 +91,7 @@
                 {% endfor %}
             </tbody>
         </table>
-
+        {% endif %}
         <!-- 위치 정보를 표시할 모달 -->
         <div class="modal fade" id="locationModal" tabindex="-1" role="dialog" aria-labelledby="locationModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">

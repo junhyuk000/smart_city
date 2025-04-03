@@ -962,52 +962,18 @@ class DBManager:
         finally:
             cursor.close()  # 커서 닫기
 
-    # 고장난 가로등 조회
-    def get_malfunctioning_lamps(self, per_page, offset, search_type="all", search_query="", status=None):
-        try:
-            self.connect()  # DB 연결 추가
-            
-            # 기본 WHERE 절과 파라미터 초기화
-            where_clauses = ["status = %s"]
-            params = ['malfunction']
-            
-            # 검색 로직
-            if search_type == "street_light_id" and search_query:
-                where_clauses.append("street_light_id LIKE %s")
-                params.append(f"%{search_query}%")
-            elif search_type == "street_light_location" and search_query:
-                where_clauses.append("location LIKE %s")
-                params.append(f"%{search_query}%")
-            
-            # WHERE 절 구성
-            where_sql = " WHERE " + " AND ".join(where_clauses)
-            
-            # 전체 레코드 수 계산 쿼리
-            count_query = f"SELECT COUNT(*) as total FROM street_lights {where_sql}"
-            
-            # 페이지네이션 쿼리
-            pagination_sql = f"SELECT * FROM street_lights {where_sql} LIMIT %s OFFSET %s"
-            
-            # 페이지네이션용 파라미터 추가
-            count_params = params.copy()
-            full_params = params + [per_page, offset]
-            
-            # 전체 레코드 수 실행
-            self.cursor.execute(count_query, count_params)
-            total_posts = self.cursor.fetchone()['total']
-            
-            # 페이지네이션 쿼리 실행
-            self.cursor.execute(pagination_sql, full_params)
-            lamps = self.cursor.fetchall()
-            
-            return lamps, total_posts
-        
+    # 고장난 가로등 + 해당 가로등정보 조회
+    def get_malfunction_info(self):
+        try: 
+            self.connect()
+            sql="SELECT msl.*, sl.location FROM malfunction_street_lights msl LEFT JOIN street_lights sl ON msl.street_light_id = sl.street_light_id"    
+            self.cursor.execute(sql,)
+            return self.cursor.fetchall()
         except Exception as error:
-            print(f"데이터베이스 쿼리 실행 실패: {error}")
-            return [], 0
-            
+            print(f"고장난 가로등 조회 실패: {error}")
+            return False
         finally:
-            self.disconnect()  # DB 연결 해제 추가
+            self.disconnect()
 
     
     # 문의 데이터 조회 (페이지네이션)
