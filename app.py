@@ -1,15 +1,11 @@
-# C:\Users\facec\Desktop\smart_city\app.py
-from flask import Flask, session, url_for, render_template, flash, before_render_template, send_from_directory, jsonify, request, redirect, Response
+from flask import Flask, session, url_for, render_template, flash, send_from_directory, jsonify, request, redirect, Response
 import os
 import requests
 from datetime import datetime, timedelta
 from functools import wraps
 from models import DBManager
 from markupsafe import Markup
-import json
-import re
 import mysql.connector
-import threading
 import license_plate
 import cv2
 import motorcycle
