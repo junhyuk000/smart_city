@@ -963,17 +963,58 @@ class DBManager:
             cursor.close()  # 커서 닫기
 
     # 고장난 가로등 + 해당 가로등정보 조회
-    def get_malfunction_info(self):
-        try: 
-            self.connect()
-            sql="SELECT msl.*, sl.location FROM malfunction_street_lights msl LEFT JOIN street_lights sl ON msl.street_light_id = sl.street_light_id"    
-            self.cursor.execute(sql,)
-            return self.cursor.fetchall()
-        except Exception as error:
-            print(f"고장난 가로등 조회 실패: {error}")
-            return False
-        finally:
-            self.disconnect()
+    def get_malfunction_search_query(self, search_query, search_type, per_page, offset):
+        base_sql = """
+            SELECT m.*, s.location 
+            FROM malfunction_street_lights m
+            JOIN street_lights s ON m.street_light_id = s.street_light_id
+            WHERE m.repair_status = 'pending'
+        """
+        
+        if search_type == "street_light_id" and search_query:
+            sql = base_sql + " AND m.street_light_id LIKE %s"
+            values = (f"%{search_query}%", per_page, offset)
+            
+        elif search_type == "street_light_location" and search_query:
+            sql = base_sql + " AND s.location LIKE %s"
+            values = (f"%{search_query}%", per_page, offset)
+            
+        elif search_type == "all" and search_query:  # 전체 검색일 때 수정
+            sql = base_sql + " AND (m.street_light_id LIKE %s OR s.location LIKE %s)"
+            values = (f"%{search_query}%", f"%{search_query}%", per_page, offset)
+            
+        else:  # 검색어가 없는 경우
+            sql = base_sql
+            values = (per_page, offset)
+        
+        sql += " ORDER BY m.malfunction_occurred_at DESC LIMIT %s OFFSET %s"
+        return sql, values
+
+    def get_malfunction_count_query(self, search_query, search_type):
+        base_sql = """
+            SELECT COUNT(*) AS total 
+            FROM malfunction_street_lights m
+            JOIN street_lights s ON m.street_light_id = s.street_light_id
+            WHERE m.repair_status = 'pending'
+        """
+        
+        if search_type == "street_light_id" and search_query:
+            sql = base_sql + " AND m.street_light_id LIKE %s"
+            values = (f"%{search_query}%",)
+            
+        elif search_type == "street_light_location" and search_query:
+            sql = base_sql + " AND s.location LIKE %s"
+            values = (f"%{search_query}%",)
+            
+        elif search_type == "all" and search_query:  # 전체 검색일 때 수정
+            sql = base_sql + " AND (m.street_light_id LIKE %s OR s.location LIKE %s)"
+            values = (f"%{search_query}%", f"%{search_query}%")
+            
+        else:  # 검색어가 없는 경우
+            sql = base_sql
+            values = ()
+        
+        return sql, values
 
     
     # 문의 데이터 조회 (페이지네이션)

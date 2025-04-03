@@ -705,13 +705,53 @@ def street_light_view_location(street_light_id):
 @app.route('/staff/broken_light', methods=['GET'])
 @staff_required
 def staff_broken_light_check():
-    malfunction_street_lights = manager.get_malfunction_info()
-    print(malfunction_street_lights)
+    search_query = request.args.get("search_query", "").strip()
+    search_type = request.args.get("search_type", "all")
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
     
-    if malfunction_street_lights :
-        return render_template("staff/broken_light.html", malfunction_street_lights =  malfunction_street_lights)
-    else :
-        return render_template("staff/broken_light.html")
+    # 검색 조건에 따른 SQL 쿼리 생성
+    sql, values = manager.get_malfunction_search_query(search_query, search_type, per_page, offset)
+    count_sql, count_values = manager.get_malfunction_count_query(search_query, search_type)
+
+    # 고장난 가로등 목록 조회 
+    malfunction_street_lights = manager.execute_query(sql, values)
+
+    # 전체 게시물 수 조회
+    total_posts = manager.execute_count_query(count_sql, count_values)
+
+    # 페이지네이션 계산
+    total_pages = (total_posts + per_page - 1) // per_page
+    
+    # 표시할 페이지 범위 계산
+    window_size = 5
+    half_window = window_size // 2
+    
+    start_page = max(1, page - half_window)
+    end_page = min(total_pages, start_page + window_size - 1)
+    
+    # 시작 페이지 조정
+    if end_page - start_page + 1 < window_size:
+        start_page = max(1, end_page - window_size + 1)
+
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        "staff/broken_light.html",
+        malfunction_street_lights=malfunction_street_lights,
+        search_query=search_query,
+        search_type=search_type,
+        page=page,
+        total_posts=total_posts,
+        total_pages=total_pages,
+        start_page=start_page,
+        end_page=end_page,
+        prev_page=prev_page,
+        next_page=next_page
+    )
 
 # 설치된 가로등 등록
 @app.route('/staff/street_light_register', methods=['GET', 'POST'])
