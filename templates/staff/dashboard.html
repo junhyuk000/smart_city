@@ -2,6 +2,10 @@
 
 {% block title %}관리자 대시보드{% endblock %}
 
+{% block head %}
+<meta name="admin_id" content="{{ session.get('admin_id') }}">
+{% endblock %}
+
 {% block extra_css %}
 <style>
     .outer-card {
@@ -210,7 +214,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 category-col">
-                            <div class="category-title">스마트 거리 CCTV</div>
+                            <div class="category-title">CCTV</div>
                         </div>
                         <div class="col-md-9">
                             <div class="row inner-row">
@@ -238,20 +242,20 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 category-col">
-                            <div class="category-title">스마트 거리 실시간 탐지</div>
+                            <div class="category-title">불법 단속</div>
                         </div>
                         <div class="col-md-9">
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        불법 주정차 감지 가로등
+                                        불법 단속 자동차
                                         <span class="favorite-star" data-title="불법 단속 자동차" data-url="{{ url_for('admin_road_car_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('admin_road_car_board') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        인도 주행 오토바이 감지 가로등
+                                        불법 단속 오토바이
                                         <span class="favorite-star" data-title="불법 단속 오토바이" data-url="{{ url_for('admin_sidewalk_motorcycle_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('admin_sidewalk_motorcycle_board') }}" class="btn btn-primary">이동</a>
@@ -273,16 +277,16 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         전체 문의 보기
-                                        <span class="favorite-star" data-title="전체 문의 보기" data-url="{{ url_for('staff_inquiries_view') }}">★</span>
+                                        <span class="favorite-star" data-title="전체 문의 보기" data-url="{{ url_for('admin_inquiries_view') }}">★</span>
                                     </h5>
-                                    <a href="{{ url_for('staff_inquiries_view') }}" class="btn btn-primary">이동</a>
+                                    <a href="{{ url_for('admin_inquiries_view') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        미답변 문의 보기
-                                        <span class="favorite-star" data-title="문의 완료 처리" data-url="{{ url_for('staff_inquiries_pending') }}">★</span>
+                                        문의 완료 처리
+                                        <span class="favorite-star" data-title="문의 완료 처리" data-url="{{ url_for('admin_inquiries_pending') }}">★</span>
                                     </h5>
-                                    <a href="{{ url_for('staff_inquiries_pending') }}" class="btn btn-primary">이동</a>
+                                    <a href="{{ url_for('admin_inquiries_pending') }}" class="btn btn-primary">이동</a>
                                 </div>
                             </div>
                         </div>
