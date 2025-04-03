@@ -24,10 +24,22 @@
     --text-color: #f0f0f0;
     --text-muted: #adb5bd;
     --border-color: #495057;
-    --background-color: #343a40;
+    --background-color: #2a2a2a; /* 다크모드 배경색 일치 */
     --card-bg: #2a2a2a;
     --input-bg: #212529;
     --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .form-control:disabled {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .strength-meter {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .password-requirements {
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 .update-profile-container {

@@ -124,5 +124,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+<script src="{{ url_for('static', filename='js/slider.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

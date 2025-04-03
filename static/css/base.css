@@ -460,11 +460,6 @@ body {
     background-color: var(--nav-link-hover-bg);
 }
 
-/* 키보드 포커스 스타일 */
-.nav-link:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
 
 /* 드롭다운 관련 스타일 */
 .nav-link-dropdown {
