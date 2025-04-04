@@ -83,12 +83,14 @@ function updateFavoritesNav(adminId) {
         // 즐겨찾기 링크 추가
         favorites.forEach(fav => {
             const link = document.createElement('a');
-            link.href = fav.url;
+            // 절대 경로로 링크 생성
+            link.href = window.location.origin + fav.url;
             link.className = 'nav-link';
             link.textContent = fav.title;
-            
+        
             favoritesNav.appendChild(link);
         });
+        
     }
 }
 
