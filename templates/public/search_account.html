@@ -174,7 +174,7 @@
         <div class="result-container">
             <div class="result-message">
                 {% if search_type == 'id' and userid %}
-                <p>찾으신 아이디는 <span class="result-info">{{ userid }}</span> 입니다.</p>
+                <p>찾으신 아이디는 <span class="result-info">{{ userid.user_id }}</span> 입니다.</p>
                 {% elif search_type == 'password' and password %}
                 <p>비밀번호는 <span class="result-info">{{ password }}</span> 입니다.</p>
                 <a href="{{ url_for('edit_password', userid=userid) }}" class="btn btn-primary mt-3">비밀번호 변경하기</a>

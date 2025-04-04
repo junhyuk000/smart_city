@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가로등 위치</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body>
+    <h2>가로등 위치 지도</h2>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Flask에서 전달한 데이터
+        const lat = {{ streetlight_info.latitude }};
+        const lon = {{ streetlight_info.longitude }};
+        const purpose = "{{ streetlight_info.purpose }}";
+
+        // Leaflet 지도 초기화
+        var map = L.map('map').setView([lat, lon], 16);
+
+        // OpenStreetMap 타일 레이어 추가
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 가로등 아이콘 설정
+        var streetlightIcon = L.divIcon({
+            className: 'custom-streetlight-icon',
+            html: '🏮',  // 가로등 이모지 아이콘
+            iconSize: [30, 30],
+            popupAnchor: [0, -15]
+        });
+
+        // 마커 추가
+        L.marker([lat, lon], { icon: streetlightIcon })
+            .addTo(map)
+            .bindPopup("가로등 위치 (" + purpose + ")").openPopup();
+    </script>
+</body>
+</html>

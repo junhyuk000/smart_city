@@ -504,7 +504,8 @@ def search_account():
     if request.method == 'POST':
         search_type = request.form.get('search_type')
         username = request.form.get('username')
-        regnumber = request.form.get('regnumber')
+        regnumber_str = request.form.get('regnumber')
+        regnumber = regnumber_str[:6] + '-' + regnumber_str[6:]
         userid = None  # 기본값 설정
 
         if search_type == "id":
@@ -689,7 +690,7 @@ def staff_all_street_lights():
         search_query=search_query if search_query else ""
     )
 
-# 가로등 위치 보기
+# 직원 가로등 위치 보기
 @app.route("/staff/view_location/<int:street_light_id>")
 @staff_required
 def street_light_view_location(street_light_id):
@@ -700,6 +701,16 @@ def street_light_view_location(street_light_id):
 
     return render_template("staff/street_light_view_location.html", streetlight_info=streetlight_info)
 
+# 유저 가로등 위치 보기
+@app.route("/user/view_location/<int:street_light_id>")
+@login_required
+def user_street_light_view_location(street_light_id):
+    streetlight_info = manager.get_streetlight_location_by_id_api_key(street_light_id, KAKAO_API_KEY)
+
+    if not streetlight_info:
+        return "❌ 가로등 정보를 찾을 수 없습니다.", 404
+
+    return render_template("user/street_light_view_location.html", streetlight_info=streetlight_info)
 
 # 고장난 가로등 조회
 @app.route('/staff/broken_light', methods=['GET'])
