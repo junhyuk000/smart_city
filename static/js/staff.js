@@ -84,7 +84,8 @@ function updateFavoritesNav(adminId) {
         favorites.forEach(fav => {
             const link = document.createElement('a');
             // 절대 경로로 링크 생성
-            link.href = window.location.origin + fav.url;
+            link.href = window.location.origin + (fav.url.startsWith('/') ? fav.url : '/' + fav.url);
+
             link.className = 'nav-link';
             link.textContent = fav.title;
         
