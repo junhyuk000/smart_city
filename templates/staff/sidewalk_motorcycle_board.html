@@ -22,8 +22,8 @@
 <main class="content-area">
     <div class="page-container">
         <div class="page-header">
-            <h1><i class="fas fa-walking"></i> 인도 오토바이 CCTV 목록</h1>
-            <p class="page-description">인도 관련 가로등 및 CCTV 정보를 확인하실 수 있습니다.</p>
+            <h1><i class="fas fa-walking"></i> 인도 감시카메라 목록</h1>
+            <p class="page-description">카메라가 설치된 인도를 모니터링하며, AI가 인도 주행 오토바이를 감지합니다.</p>
         </div>
 
         <!-- 가로등 조회 폼 -->
@@ -62,9 +62,9 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="15%">가로등 번호</th>
-                        <th width="55%">위치</th>
-                        <th width="30%">실시간 CCTV</th>
+                        <th width="15%" class="text-center">가로등 번호</th>
+                        <th width="30%" class="text-center">위치</th>
+                        <th width="15%" class="text-center">실시간 CCTV</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -157,6 +157,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
 <script src="{{ url_for('static', filename='js/cctv_list.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 {% endblock %}

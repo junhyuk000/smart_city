@@ -52,19 +52,19 @@
         <table>
             <thead>
                 <tr>
-                    <th>가로등 번호</th>
-                    <th>고장 원인</th>
-                    <th>고장 시간</th>
-                    <th>수리/점검 상태</th>
-                    <th>위치</th>
-                    <th>위치 상세 보기</th>
+                    <th width="10%" class="text-center">가로등 번호</th>
+                    <th width="9%" class="text-center">고장 원인</th>
+                    <th width="15%" class="text-center">고장 시간</th>
+                    <th width="15%" class="text-center">수리/점검 상태</th>
+                    <th width="38%" class="text-center">위치</th>
+                    <th width="12%" class="text-center">위치 상세 보기</th>
                 </tr>
             </thead>
             <tbody>
                 {% for street_light in malfunction_street_lights %}
                     <tr>
-                        <td>{{ street_light.street_light_id }}</td>
-                        <td>{% if street_light.reason_led == 1 %} 
+                        <td class="text-center">{{ street_light.street_light_id }}</td>
+                        <td class="text-center">{% if street_light.reason_led == 1 %} 
                             조명 고장
                             {% elif street_light.reason_tilt == 1 %}
                             기울어짐
@@ -72,13 +72,13 @@
                             조명, 기울기 고장
                             {% endif %}
                         </td>
-                        <td>{{ street_light.malfunction_occurred_at }}</td>
-                        <td>{% if street_light.repair_status == 'pending' %}
+                        <td class="text-center">{{ street_light.malfunction_occurred_at }}</td>
+                        <td class="text-center">{% if street_light.repair_status == 'pending' %}
                             수리대기중
                             {% endif %}
                         </td>
-                        <td>{{ street_light.location }}</td>
-                        <td>
+                        <td class="text-left">{{ street_light.location }}</td>
+                        <td class="text-center">
                             <button class="btn btn-danger view-location-btn" data-street-light-id="{{ street_light.street_light_id }}">
                                 위치 보기
                             </button>
@@ -138,6 +138,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 <script>
     document.querySelectorAll(".view-location-btn").forEach(button => {

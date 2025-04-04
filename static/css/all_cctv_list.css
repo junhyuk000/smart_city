@@ -252,6 +252,22 @@ table td {
     font-weight: 600;
 }
 
+/* 위치 보기 버튼 기본 스타일 보완 (선택 사항) */
+.view-location-btn {
+    transition: all 0.3s ease-in-out;
+    font-weight: bold;
+}
+
+/* Hover 시 스타일 */
+.view-location-btn:hover {
+    background-color: #0d6efd; /* 더 진한 파랑 */
+    border-color: #0b5ed7;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(13, 110, 253, 0.5); /* 파란 글로우 효과 */
+    transform: scale(1.05); /* 약간 커지기 */
+}
+
+
 /* 다크 모드 조정 */
 .dark-mode .search-container,
 .dark-mode table {

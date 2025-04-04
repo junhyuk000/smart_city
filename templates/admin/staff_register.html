@@ -211,6 +211,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
 <script>
 // 다크 모드 토글 스크립트
 document.addEventListener('DOMContentLoaded', function() {

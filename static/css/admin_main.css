@@ -13,6 +13,7 @@
 }
 
 
+
 /* 직원 등록 버튼 개별 스타일 */
 .staff-register {
     background: linear-gradient(135deg, #ff9800, #ff5722) !important;
@@ -76,4 +77,30 @@
     object-fit: contain; /* 이미지 비율 유지하면서 잘리지 않도록 설정 */
     border-radius: 0; /* 네모난 이미지 유지 */
     background-color: transparent; /* 배경 투명하게 */
+}
+
+/* ✅ 다크모드: 배경 색상 */
+.dark-mode .full-height {
+    background: linear-gradient(135deg, #1c1c1c, #2a2a2a);
+}
+
+/* ✅ 다크모드: 버튼 스타일 */
+.dark-mode .circle-btn {
+    background: linear-gradient(135deg, #444, #222);
+    box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+/* ✅ 다크모드: 버튼 hover 효과 */
+.dark-mode .circle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(255, 255, 255, 0.1);
+}
+
+/* ✅ 다크모드: 이미지 밝기 조정 */
+.dark-mode .circle-btn img {
+    filter: brightness(1.2);
+}
+.dark-mode .circle-btn img {
+    filter: brightness(0) invert(1);  /* 흰색처럼 보이게 만듦 */
 }

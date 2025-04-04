@@ -688,6 +688,7 @@ footer {
     border-radius: 5px;
     font-size: 16px;
     z-index: 1000;
+    pointer-events: none;
     width: 450px;
     max-width: 90vw;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -981,13 +982,13 @@ footer {
         margin-right: 4px;
     }
     
-    /* Flash message adjustments */
+    /* Flash message adjustments
     .flash-message {
         width: 90%;
         max-width: 300px;
         padding: 10px;
         font-size: 14px;
-    }
+    } */
     
     .toggle-label:before {
         height: 20px;

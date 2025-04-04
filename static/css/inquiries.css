@@ -337,7 +337,6 @@ textarea.form-control {
 }
 
 .back-button:hover {
-    background-color: #5a6268;
     transform: translateY(-2px);
 }
 

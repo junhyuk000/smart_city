@@ -103,6 +103,56 @@
         align-items: center;
     }
 
+        /* 다크모드 전체 배경과 텍스트 */
+    .dark-mode {
+        background-color: #121212;
+        color: #f1f1f1;
+    }
+
+    /* 카드 전체 배경/테두리 변경 */
+    .dark-mode .outer-card,
+    .dark-mode .inner-card {
+        background-color: #1e1e1e;
+        border-color: #444;
+        color: #f1f1f1;
+    }
+
+    /* 카드 제목 컬러 보정 */
+    .dark-mode .card-title {
+        color: #f1f1f1;
+    }
+
+    /* 점선 구분선 컬러 변경 */
+    .dark-mode .category-col,
+    .dark-mode .inner-card-item:not(:last-child) {
+        border-right: 1px dashed #555;
+    }
+
+    /* 버튼은 밝게 유지 (명확한 대비용) */
+    .dark-mode .btn-primary,
+    .dark-mode .btn-success {
+        background-color: #1e88e5;
+        border-color: #1e88e5;
+        color: #fff;
+    }
+
+    .dark-mode .btn-primary:hover,
+    .dark-mode .btn-success:hover {
+        background-color: #1565c0;
+        border-color: #1565c0;
+    }
+
+    /* 즐겨찾기 별 컬러 */
+    .dark-mode .favorite-star {
+        color: #888;
+    }
+    .dark-mode .favorite-star.active {
+        color: #ffcc00;
+    }
+    .dark-mode #favorites-nav a {
+    color: #f1f1f1 !important;
+}
+
 </style>
 {% endblock %}
 {% block head %}
@@ -163,14 +213,14 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         전체 가로등 조회
-                                        <span class="favorite-star" data-title="설치된 가로등 조회" data-url="{{ url_for('staff_all_street_lights') }}">★</span>
+                                        <span class="favorite-star" data-title="전체 가로등 조회" data-url="{{ url_for('staff_all_street_lights') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_all_street_lights') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         고장난 가로등 조회
-                                        <span class="favorite-star" data-title="고장난 가로등" data-url="{{ url_for('staff_broken_light_check') }}">★</span>
+                                        <span class="favorite-star" data-title="고장난 가로등 조회" data-url="{{ url_for('staff_broken_light_check') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_broken_light_check') }}" class="btn btn-primary">이동</a>
                                 </div>
@@ -190,14 +240,14 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         가로등 등록
-                                        <span class="favorite-star" data-title="설치된 가로등 등록" data-url="{{ url_for('street_light_register') }}">★</span>
+                                        <span class="favorite-star" data-title="가로등 등록" data-url="{{ url_for('street_light_register') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('street_light_register') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         가로등 삭제 
-                                        <span class="favorite-star" data-title="철거된 가로등 삭제" data-url="{{ url_for('street_light_delete') }}">★</span>
+                                        <span class="favorite-star" data-title="가로등 삭제" data-url="{{ url_for('street_light_delete') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('street_light_delete') }}" class="btn btn-primary">이동</a>
                                 </div>
@@ -218,14 +268,14 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         도로 CCTV 보기 및 제어 
-                                        <span class="favorite-star" data-title="도로용 CCTV 보기" data-url="{{ url_for('staff_dashboard_road_cctv') }}">★</span>
+                                        <span class="favorite-star" data-title="도로 CCTV 보기 및 제어" data-url="{{ url_for('staff_dashboard_road_cctv') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_dashboard_road_cctv') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         인도 CCTV 보기 및 제어
-                                        <span class="favorite-star" data-title="인도용 CCTV 보기" data-url="{{ url_for('staff_sidewalk_cctv') }}">★</span>
+                                        <span class="favorite-star" data-title="인도 CCTV 보기 및 제어" data-url="{{ url_for('staff_sidewalk_cctv') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_sidewalk_cctv') }}" class="btn btn-primary">이동</a>
                                 </div>
@@ -245,15 +295,15 @@
                             <div class="row inner-row">
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        도로 감시 카메라 보기
-                                        <span class="favorite-star" data-title="불법 단속 자동차" data-url="{{ url_for('staff_road_car_board') }}">★</span>
+                                        불법 주정차 단속
+                                        <span class="favorite-star" data-title="불법 주정차 단속" data-url="{{ url_for('staff_road_car_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_road_car_board') }}" class="btn btn-primary">이동</a>
                                 </div>
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
-                                        인도 감시 카메라 보기
-                                        <span class="favorite-star" data-title="불법 단속 오토바이" data-url="{{ url_for('staff_sidewalk_motorcycle_board') }}">★</span>
+                                        인도 위 오토바이 단속
+                                        <span class="favorite-star" data-title="인도 위 오토바이 단속" data-url="{{ url_for('staff_sidewalk_motorcycle_board') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_sidewalk_motorcycle_board') }}" class="btn btn-primary">이동</a>
                                 </div>
@@ -281,7 +331,7 @@
                                 <div class="col-md-6 inner-card-item">
                                     <h5 class="card-title">
                                         미답변 문의 보기
-                                        <span class="favorite-star" data-title="문의 완료 처리" data-url="{{ url_for('staff_inquiries_pending') }}">★</span>
+                                        <span class="favorite-star" data-title="미답변 문의 보기" data-url="{{ url_for('staff_inquiries_pending') }}">★</span>
                                     </h5>
                                     <a href="{{ url_for('staff_inquiries_pending') }}" class="btn btn-primary">이동</a>
                                 </div>
@@ -302,5 +352,6 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff.js') }}"></script>
 {% endblock %}
