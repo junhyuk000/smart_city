@@ -63,19 +63,19 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="15%">가로등 번호</th>
-                        <th width="55%">위치</th>
-                        <th width="15%">설치목적</th>
-                        <th width="15%">위치확인</th>
+                        <th width="15%" class="text-center">가로등 번호</th>
+                        <th width="30%" class="text-center">위치</th>
+                        <th width="15%" class="text-center">설치목적</th>
+                        <th width="15%" class="text-center">위치확인</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for street_light in lamp_cctv %}
                         <tr class="data-row">
                             <td class="text-center">{{ street_light.street_light_id }}</td>
-                            <td>{{ street_light.location }}</td>
-                            <td>{{ street_light.purpose }}</td>
-                            <td>
+                            <td class="text-left">{{ street_light.location }}</td>
+                            <td class="text-center">{{ street_light.purpose }}</td>
+                            <td class="text-center">
                                 <button class="btn btn-info view-location-btn" data-street-light-id="{{ street_light.street_light_id }}">
                                     위치 보기
                                 </button>
