@@ -77,13 +77,14 @@
 
 ## 📬 Contact
 
-| 이름   | 이메일                    | GitHub                                  | Notion                                                                 | Portfolio                         |
-|--------|---------------------------|------------------------------------------|------------------------------------------------------------------------|-----------------------------------|
-| 신준혁 | junhyuk000@naver.com      | [junhyuk000](https://github.com/junhyuk000) | [Notion](https://fossil-bag-18e.notion.site/Programming-172e285b7865800ea4d7da30b8c6dc8f) | [Portfolio](https://junhyuk000.monster/) |
-| 황수용 | ghkdtndyd122@naver.com    | [Suyong-Hwang](https://github.com/Suyong-Hwang) | - | - |
-| 손유빈 | dbqls3197@naver.com       | [dbqls3197](https://github.com/dbqls3197) | - | - |
-| 안기부 | -                         | -                                        | - | - |
-| 이지엽 | Olzlduq1@gmail.com        | [leewu08](https://github.com/leewu08)    | - | - |
+| 이름   | 이메일                      | GitHub                                       | Notion                                                                 | Portfolio                         |
+|--------|-----------------------------|-----------------------------------------------|------------------------------------------------------------------------|-----------------------------------|
+| 신준혁 | junhyuk000@naver.com        | [junhyuk000](https://github.com/junhyuk000)  | [Notion](https://fossil-bag-18e.notion.site/Programming-172e285b7865800ea4d7da30b8c6dc8f) | [Portfolio](https://junhyuk000.monster/) |
+| 황수용 | ghkdtndyd122@naver.com      | [Suyong-Hwang](https://github.com/Suyong-Hwang) | - | - |
+| 손유빈 | dbqls3197@naver.com         | [dbqls3197](https://github.com/dbqls3197)    | - | - |
+| 안기부 | facecom2000@gmail.com       | [gibupanda](https://github.com/gibupanda)    | - | - |
+| 이지엽 | Olzlduq1@gmail.com          | [leewu08](https://github.com/leewu08)        | - | - |
+
 
 
 
