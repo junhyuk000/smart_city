@@ -53,7 +53,7 @@
             <thead>
                 <tr>
                     <th width="10%" class="text-center">가로등 번호</th>
-                    <th width="9%" class="text-center">고장 원인</th>
+                    <th width="10%" class="text-center">고장 원인</th>
                     <th width="15%" class="text-center">고장 시간</th>
                     <th width="15%" class="text-center">수리/점검 상태</th>
                     <th width="38%" class="text-center">위치</th>
@@ -64,12 +64,13 @@
                 {% for street_light in malfunction_street_lights %}
                     <tr>
                         <td class="text-center">{{ street_light.street_light_id }}</td>
-                        <td class="text-center">{% if street_light.reason_led == 1 %} 
+                        <td class="text-center">{% if street_light.reason_led == 1 and street_light.reason_tilt == 0  %} 
                             조명 고장
-                            {% elif street_light.reason_tilt == 1 %}
-                            기울어짐
+                            {% elif street_light.reason_tilt == 1 and street_light.reason_led == 0 %}
+                            가로등 파손
                             {% elif street_light.reason_led == 1 and street_light.reason_tilt == 1 %}
-                            조명, 기울기 고장
+                            조명 고장 <br>
+                            가로등 파손
                             {% endif %}
                         </td>
                         <td class="text-center">{{ street_light.malfunction_occurred_at }}</td>

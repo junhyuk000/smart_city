@@ -1335,77 +1335,26 @@ def set_command():
 
 @app.route('/staff/fix_lights', methods=['GET'])
 def staff_fix_lights():
-    db_manager = DBManager()
-    db_manager.connect()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    search_type = request.args.get('search_type', 'all')
+    search_query = request.args.get('search_query', '')
 
-    try:
-        # 페이지네이션 설정
-        page = request.args.get('page', 1, type=int)
-        per_page = 10
-        offset = (page - 1) * per_page
+    repaired_street_lights, total_posts, total_pages, prev_page, next_page = manager.get_repaired_street_lights(
+        page, per_page, search_type, search_query
+    )
 
-        # 검색 파라미터
-        search_type = request.args.get('search_type', 'all')
-        search_query = request.args.get('search_query', '')
-
-        # 기본 쿼리
-        base_query = """
-        FROM repaired_street_lights r
-        JOIN street_lights s ON r.street_light_id = s.street_light_id
-        """
-
-        # 조건절 및 파라미터
-        conditions = []
-        params = []
-
-        if search_type == 'street_light_id' and search_query:
-            conditions.append("CAST(r.street_light_id AS CHAR) LIKE %s")
-            params.append(f"%{search_query}%")
-        elif search_type == 'location' and search_query:
-            conditions.append("s.location LIKE %s")
-            params.append(f"%{search_query}%")
-        elif search_type == 'all' and search_query:
-            conditions.append("(CAST(r.street_light_id AS CHAR) LIKE %s OR s.location LIKE %s)")
-            params.extend([f"%{search_query}%", f"%{search_query}%"])
-            
-        # 조건절 붙이기
-        if conditions:
-            base_query += " WHERE " + " AND ".join(conditions)
-
-        # 게시물 수 계산
-        count_query = f"SELECT COUNT(*) as total {base_query}"
-        db_manager.cursor.execute(count_query, tuple(params))
-        total_posts = db_manager.cursor.fetchone()['total']
-        total_pages = (total_posts + per_page - 1) // per_page
-
-        # 데이터 가져오기
-        select_query = f"""
-        SELECT r.*, s.location
-        {base_query}
-        ORDER BY r.repair_completed_at DESC
-        LIMIT %s OFFSET %s
-        """
-        db_manager.cursor.execute(select_query, tuple(params) + (per_page, offset))
-        repaired_street_lights = db_manager.cursor.fetchall()
-
-        # 이전/다음 페이지
-        prev_page = page - 1 if page > 1 else None
-        next_page = page + 1 if page < total_pages else None
-
-        return render_template(
-            'staff/fix_lights.html',
-            repaired_street_lights=repaired_street_lights,
-            total_posts=total_posts,
-            total_pages=total_pages,
-            page=page,
-            prev_page=prev_page,
-            next_page=next_page,
-            search_type=search_type,
-            search_query=search_query
-        )
-    finally:
-        db_manager.disconnect()
-
+    return render_template(
+        'staff/fix_lights.html',
+        repaired_street_lights=repaired_street_lights,
+        total_posts=total_posts,
+        total_pages=total_pages,
+        page=page,
+        prev_page=prev_page,
+        next_page=next_page,
+        search_type=search_type,
+        search_query=search_query
+    )
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)

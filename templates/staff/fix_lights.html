@@ -65,11 +65,12 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="15%" class="text-center">가로등 번호</th>
-                        <th width="25%" class="text-center">위치</th>
+                        <th width="10%" class="text-center">가로등 번호</th>
+                        <th width="20%" class="text-center">위치</th>
+                        <th width="20%" class="text-center">고장 시간</th>
+                        <th width="20%" class="text-center">수리 시작 시간</th>
                         <th width="20%" class="text-center">수리 완료 시간</th>
-                        <th width="15%" class="text-center">수리 (LED)</th>
-                        <th width="15%" class="text-center">수리 (기울기)</th>
+                        <th width="10%" class="text-center">고장원인</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,9 +78,19 @@
                         <tr class="data-row">
                             <td class="text-center">{{ repair.street_light_id }}</td>
                             <td>{{ repair.location }}</td>
-                            <td class="text-center">{{ repair.repair_completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                            <td class="text-center">{{ '예' if repair.reason_led else '아니오' }}</td>
-                            <td class="text-center">{{ '예' if repair.reason_tilt else '아니오' }}</td>
+                            <td class="text-center">{{ repair.malfunction_occurred_at }}</td>
+                            <td class="text-center">{{ repair.repair_started_at }}</td>
+                            <td class="text-center">{{ repair.repair_completed_at }}</td>
+                            <td class="text-center">
+                                {% if repair.reason_led == 1 and repair.reason_tilt == 0 %}
+                                    LED 고장
+                                {% elif repair.reason_tilt == 1 and repair.reason_led == 0 %}
+                                    가로등 파손
+                                {% elif repair.reason_led == 1 and repair.reason_tilt == 1 %}
+                                    LED고장 <br>
+                                    가로등 파손
+                                {% endif %}
+                            </td>
                         </tr>
                     {% else %}
                         <tr class="no-data">

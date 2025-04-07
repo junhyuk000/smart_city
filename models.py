@@ -1269,3 +1269,53 @@ class DBManager:
             return None
         finally:
             self.disconnect()
+
+    def get_repaired_street_lights(self, page=1, per_page=10, search_type='all', search_query=''):
+        try:
+            self.connect()
+            offset = (page - 1) * per_page
+
+            base_query = """
+            FROM repaired_street_lights r
+            JOIN street_lights s ON r.street_light_id = s.street_light_id
+            """
+
+            conditions = []
+            params = []
+
+            if search_type == 'street_light_id' and search_query:
+                conditions.append("CAST(r.street_light_id AS CHAR) LIKE %s")
+                params.append(f"%{search_query}%")
+            elif search_type == 'location' and search_query:
+                conditions.append("s.location LIKE %s")
+                params.append(f"%{search_query}%")
+            elif search_type == 'all' and search_query:
+                conditions.append("(CAST(r.street_light_id AS CHAR) LIKE %s OR s.location LIKE %s)")
+                params.extend([f"%{search_query}%", f"%{search_query}%"])
+
+            if conditions:
+                base_query += " WHERE " + " AND ".join(conditions)
+
+            count_query = f"SELECT COUNT(*) as total {base_query}"
+            self.cursor.execute(count_query, tuple(params))
+            total_posts = self.cursor.fetchone()['total']
+            total_pages = (total_posts + per_page - 1) // per_page
+
+            select_query = f"""
+            SELECT r.*, s.location
+            {base_query}
+            ORDER BY r.repair_completed_at DESC
+            LIMIT %s OFFSET %s
+            """
+            self.cursor.execute(select_query, tuple(params) + (per_page, offset))
+            repaired_street_lights = self.cursor.fetchall()
+
+            prev_page = page - 1 if page > 1 else None
+            next_page = page + 1 if page < total_pages else None
+
+            return repaired_street_lights, total_posts, total_pages, prev_page, next_page
+        except mysql.connector.Error as error:
+            print(f"❌ 수리된 가로등 조회 오류: {error}")
+            return False
+        finally:
+            self.disconnect()
