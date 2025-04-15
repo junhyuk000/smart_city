@@ -132,7 +132,7 @@ def save_detected_plate(plate_text, full_image):
     send_alert_to_police(plate_text, save_path)
 
 def send_alert_to_police(plate_text, image_path):
-    POLICE_SERVER_URL = "http://10.0.66.89:5002/receive_alert"
+    POLICE_SERVER_URL = "http://10.0.66.9:5002/receive_alert"
     data = {
         "license_plate": plate_text,
         "image_path": f"http://10.0.66.94:5010/static/car_images/{os.path.basename(image_path)}",
