@@ -75,7 +75,7 @@ last_switch_state = "1"
 
 # SOS 함수
 def send_sos_alert_to_police(location, stream_url):
-    SOS_API_URL = "http://10.0.66.11:5002/sos_alert"
+    SOS_API_URL = "http://10.0.66.9:5002/sos_alert"
 
     data = {
         "type": "SOS",
